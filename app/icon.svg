@@ -1,12 +1,1 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Move Along">
-  <rect width="64" height="64" rx="14" fill="#0a0b0d" />
-  <path
-    d="M20 36 32 24l12 12"
-    fill="none"
-    stroke="#b8c4ff"
-    stroke-width="6"
-    stroke-linecap="round"
-    stroke-linejoin="round"
-  />
-  <circle cx="32" cy="45" r="4" fill="#f2f3f5" />
-</svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><path fill="#7152d6" d="M8 0h48v8h8v48h-8v8H8v-8H0V8h8Z"/><path fill="#fff" d="M27 12h10v10h5v5h10v10H42v5h-5v10H27V42h-5v-5H12V27h10v-5h5Z"/></svg>

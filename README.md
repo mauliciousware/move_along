@@ -1,38 +1,35 @@
 # Move Along
 
-A camera-controlled movement game with short routines, exercise teaching,
-personal calibration, and rhythm feedback. Camera tracking is intended to run
-locally in the browser — no accounts, uploads, or stored camera frames.
+Learn a movement, make it yours, and play it to the beat.
 
-**Status: Phase 0 scaffold.** Only the app shell and landing page exist. There is
-no camera tracking, calibration, routine flow, audio, or gameplay yet. The
-product and execution plan is in [`plan.md`](./plan.md).
+A camera-controlled movement game with guided learning, personal calibration and
+short routines. The interface uses the owner-selected [8bitcn/ui](https://www.8bitcn.com)
+components, original pixel movement artwork and self-hosted fonts.
 
-## Stack
+## Current milestone
 
-- Next.js 16 (App Router) with Turbopack
-- React 19
-- TypeScript, strict
-- Tailwind CSS 4
-- Vitest 5
+**Phase 1: navigable interface preview.** Landing, safety acknowledgement, routine
+selection, movement library, Learn, camera setup, calibration, practice, countdown,
+game layout, rest, pause and results are connected. Camera processing, movement
+measurement, audio and scoring are not active yet. Every relevant screen labels
+this limitation; the preview does not invent workout results.
 
-## Requirements
+Choose **Let’s move** to walk through a routine, or **The moves** to explore the
+three planned exercise modes: squats, knee raises and push-ups.
 
-- Node.js 24 LTS (`.nvmrc` is included)
-- npm
+## Run
 
-## Run locally
+Use Node 24 (`.nvmrc`) and npm:
 
 ```sh
-npm install
+npm ci
 npm run dev
 ```
 
-Open <http://localhost:3000>.
+Open http://localhost:3000. To serve the production build, run `npm run build`
+then `npm start`. No environment variables are needed by application code.
 
 ## Checks
-
-Run all four before committing:
 
 ```sh
 npm run typecheck
@@ -41,52 +38,45 @@ npm run test
 npm run build
 ```
 
-`npm start` serves the production build.
+The same checks are configured in `.github/workflows/checks.yml`. The workflow
+has not been run remotely for these unpushed changes.
 
-## Project structure
+## Project
 
-```text
-app/                 App shell, landing page and global styles
-lib/shared/          Product constants (gameplay config will live here)
-public/              Static assets
-plan.md              Product, safety and execution plan
-```
+- `plan.md`: complete product scope and sequential execution gates.
+- `BUILD_PROMPT.md` and `AGENTS.md`: current project instructions.
+- `docs/PROGRESS.md`: checks and browser verification evidence.
+- `docs/DESIGN.md`: the selected visual direction.
+- `docs/ASSETS.md`: component, artwork and font provenance.
+- `components/screens/`: current interface flow.
+- `components/ui/8bit/`: installed retro components.
+- `lib/shared/`: central config, types and navigation reducer.
+- `data/catalog.ts`: movement content and routine definitions.
 
-## Deploy to Vercel
+## Next milestone
 
-The project builds with the default Next.js settings and needs no environment
-variables.
+Phase 2 adds self-hosted MediaPipe lite, worker inference, the local camera feed,
+exercise-specific visibility checks and measured tracking performance. It has not
+started. Later phases connect calibration, movement detectors and rhythm gameplay.
 
-1. Create the GitHub repository and push `main`.
-2. In Vercel, choose **Add New → Project** and import the repository.
-3. Keep the detected **Next.js** framework preset, leave the root directory as
-   the repository root, and deploy.
+## Privacy and scope
 
-Vercel serves the app over HTTPS. That matters later: browsers only allow camera
-access on secure origins (`localhost` or HTTPS).
+Currently only the safety acknowledgement is stored in sessionStorage. There is
+no camera permission request, recording, upload, analytics or score storage. Fonts
+and UI assets are served locally. Future inference must process frames locally
+without saving them. The app provides game feedback, not posture diagnoses,
+medical assessments or predictions of a future body.
 
-## Putting this folder on GitHub
+## Repository and deployment
 
-This folder lives inside the existing Pushbeat working tree, so it needs its own
-repository before anything is staged:
+This directory is an independent repository with origin
+https://github.com/mauliciousware/move_along. Run all commands inside this folder.
+The parent Pushbeat project is a reference, not the active app.
 
-```sh
-cd move_along
-git init -b main
-git add .
-git commit -m "chore: scaffold Move Along Next.js app"
-gh repo create mauliciousware/move-along --public --source=. --remote=origin --push
-```
+Import this repository into a compatible Next.js host for HTTPS phone testing.
+No new deployment or remote push was performed during Phase 1.
 
-Without `git init`, `git add .` stages into Pushbeat instead of a new repository.
+## Licensing
 
-## Privacy intent
-
-The release is designed to process camera frames locally and make no network
-requests beyond its own static assets. Nothing is implemented yet, and no
-analytics, accounts, or persistence exist in this scaffold.
-
-## License
-
-No license has been chosen yet. The repository is public, so a license decision
-should be made before release.
+Third-party notices are in `docs/licenses/`. The application owner has not chosen
+a license for original project code. No commercial audio was copied into this app.

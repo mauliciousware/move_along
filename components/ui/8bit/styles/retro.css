@@ -1,0 +1,6 @@
+.retro {
+  font-family: var(--font-pixel), monospace;
+  line-height: 1.6;
+  letter-spacing: 0;
+}
+.pixelated { image-rendering: pixelated; }
