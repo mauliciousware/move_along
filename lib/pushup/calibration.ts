@@ -10,10 +10,12 @@ export type CalibrationState = { step: number; phase: 'measuring' | 'retry' | 'r
 export function validCalibration(value: unknown): value is Calibration {
   if (!value || typeof value !== 'object') return false;
   const c = value as Calibration;
-  const coordinates = [c.neutralHeadY, c.topHeadY, c.bottomHeadY, c.neutralHeadX];
+  if (c.joint !== 'nose' && c.joint !== 'waist') return false;
+  const coordinates = [c.centerY, c.topY, c.bottomY, c.centerX];
   return coordinates.every(n => typeof n === 'number' && Number.isFinite(n) && n >= 0 && n <= 1) &&
-    Number.isFinite(c.shoulderWidth) && c.shoulderWidth >= CONFIG.pose.minShoulderWidth && c.shoulderWidth <= Math.SQRT2 &&
-    c.topHeadY <= c.neutralHeadY && c.bottomHeadY - c.topHeadY >= CONFIG.calibration.minVerticalRange * c.shoulderWidth;
+    Number.isFinite(c.scale) && c.scale >= CONFIG.pose.minShoulderWidth && c.scale <= Math.SQRT2 &&
+    c.topY <= c.centerY && c.centerY <= c.bottomY &&
+    c.bottomY - c.topY >= CONFIG.calibration.minVerticalRange * c.scale;
 }
 export function loadCalibration(): Calibration | null {
   try { const value: unknown = JSON.parse(sessionStorage.getItem(CONFIG.sessionKeys.calibration) ?? 'null'); return validCalibration(value) ? value : null; } catch { return null; }
@@ -90,7 +92,7 @@ export class CalibrationSession {
     } else if (this.state.step === 1 && this.neutral) {
       this.top = Math.min(this.neutral.y, y); this.enter(2, now);
     } else if (this.neutral) {
-      const result: Calibration = { neutralHeadX: this.neutral.x, neutralHeadY: this.neutral.y, shoulderWidth: this.neutral.sw, topHeadY: this.top, bottomHeadY: y };
+      const result: Calibration = { joint: 'nose', centerX: this.neutral.x, centerY: this.neutral.y, scale: this.neutral.sw, topY: this.top, bottomY: y };
       if (!validCalibration(result)) { this.enter(1, now, 'The camera could not distinguish that range. Adjust its placement and try again, or stop.'); return; }
       this.result = result; this.progress = 1; this.change({phase: 'ready', message: 'Tracking ready · Try your movement'});
     }

@@ -46,7 +46,7 @@ export function GameCanvas({ preview = false, engine, videoRef, calibration, run
         body.draw(display, frame, video, width, height, now, runtime?.bodyOverlay ?? modeRef.current, !runtime, motion.matches, hit && hit.grade !== 'miss' ? runtime!.songMs-hit.time : Infinity);
         if (runtime) renderer.draw(display, width, height, runtime, now, motion.matches, dev);
         marker.draw(display, frame, video, width, height, motion.matches, dev, runtime?.game.flow ? runtime.game.current?.meter?.ratio : runtime?.game.notes.find(n => n.status === 'pending' && n.meter && runtime.songMs >= n.note.time - CONFIG.hold.entryMs && runtime.songMs <= n.note.time + n.note.duration)?.meter?.ratio);
-        if (!runtime) drawPositionGauge(display, frame, calibration, width, height, fontFamily);
+        if (!runtime) drawPositionGauge(display, frame, calibration, width, height, fontFamily, calibration?.joint ?? 'nose');
       } else { marker.reset(); body.reset(); if (runtime) renderer.draw(display, width, height, runtime, now, motion.matches, dev); }
       engine?.noteDraw();
       if (engine || runtime) animation = requestAnimationFrame(render);

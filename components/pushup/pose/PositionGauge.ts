@@ -1,10 +1,11 @@
 import { PUSHUP_CONFIG as CONFIG } from '@/lib/shared/config';
-import type { Calibration, PoseFrame } from '@/lib/shared/pushup-types';
+import type { Calibration, PoseFrame, TrackedJoint } from '@/lib/shared/pushup-types';
 import { normalizePose } from '@/lib/pushup/signals';
 
-export function drawPositionGauge(ctx: CanvasRenderingContext2D, frame: PoseFrame, cal: Calibration | undefined, w: number, h: number, fontFamily = "monospace") {
+export function drawPositionGauge(ctx: CanvasRenderingContext2D, frame: PoseFrame, cal: Calibration | undefined, w: number, h: number, fontFamily = "monospace", joint: TrackedJoint = 'nose') {
   // Before Phase 3 calibration, show image position explicitly, without fake zones.
-  const p = cal ? normalizePose(frame, cal).p : 1 - frame.nose.y;
+  const tracked = joint === 'waist' ? frame.waist : frame.nose;
+  const p = cal ? normalizePose(frame, cal).p : 1 - tracked.y;
   const x = w * CONFIG.overlay.gaugeX, y = h * CONFIG.overlay.gaugeY;
   const width = w * CONFIG.overlay.gaugeWidth, height = h * CONFIG.overlay.gaugeHeight;
   ctx.save(); ctx.fillStyle = '#ffffff22'; ctx.fillRect(x, y, width, height);

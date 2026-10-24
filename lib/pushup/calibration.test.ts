@@ -1,11 +1,11 @@
 import { describe, expect, it, vi, afterEach } from 'vitest';
 import { CalibrationSession, validCalibration, saveCalibration, loadCalibration } from './calibration';
 import type { PoseFrame } from '../shared/pushup-types';
-const pose=(t:number,y:number,ok=true):PoseFrame=>({tPerfMs:t,nose:{x:.5,y},shoulderWidth:.4,confidence:ok?.9:0,ok});
+const pose=(t:number,y:number,ok=true):PoseFrame=>({tPerfMs:t,nose:{x:.5,y},waist:{x:.5,y},shoulderWidth:.4,confidence:ok?.9:0,ok});
 function steady(session:CalibrationSession,start:number,end:number,y:number) {
   for(let t=start;t<=end;t+=50) session.update(pose(t,y),t);
 }
-const valid={neutralHeadX:.5,neutralHeadY:.4,topHeadY:.35,bottomHeadY:.6,shoulderWidth:.4};
+const valid={joint:'nose' as const,centerX:.5,centerY:.4,topY:.35,bottomY:.6,scale:.4};
 afterEach(()=>vi.unstubAllGlobals());
 describe('hands-free calibration',()=>{
   it('collects stable medians and completes MIDDLE -> UP -> DOWN once',()=>{
@@ -13,7 +13,7 @@ describe('hands-free calibration',()=>{
     steady(session,0,2600,.45);expect(session.state.step).toBe(1);
     steady(session,2650,5200,.35);expect(session.state.step).toBe(2);
     steady(session,5250,7900,.65);expect(session.state.phase).toBe('ready');
-    expect(session.result).toEqual({neutralHeadX:.5,neutralHeadY:.45,topHeadY:.35,bottomHeadY:.65,shoulderWidth:.4});
+    expect(session.result).toEqual({joint:'nose',centerX:.5,centerY:.45,topY:.35,bottomY:.65,scale:.4});
     const changes=onChange.mock.calls.length;steady(session,7950,12000,.65);expect(onChange).toHaveBeenCalledTimes(changes);
   });
   it('gives the user time to settle before measuring the middle position',()=>{
@@ -33,7 +33,7 @@ describe('hands-free calibration',()=>{
     steady(session,5250,7800,.38);expect(session.state.step).toBe(2);
     steady(session,7850,10400,.50);expect(session.state.phase).toBe('measuring');expect(session.result).toBeNull();
     steady(session,10450,13000,.62);expect(session.state.phase).toBe('ready');
-    expect(session.result?.topHeadY).toBe(.38);expect(session.result?.bottomHeadY).toBe(.62);
+    expect(session.result?.topY).toBe(.38);expect(session.result?.bottomY).toBe(.62);
   });
   it('repeats instruction at ten seconds, offers retry at twenty, and restarts on a stable middle',()=>{
     const session=new CalibrationSession(0,()=>{});
@@ -56,10 +56,10 @@ describe('session calibration storage',()=>{
   it('validates untrusted stored data and persists only valid calibration',()=>{
     const store=new Map<string,string>();vi.stubGlobal('sessionStorage',{getItem:(k:string)=>store.get(k)??null,setItem:(k:string,v:string)=>store.set(k,v)});
     expect(validCalibration(valid)).toBe(true);saveCalibration(valid);expect(loadCalibration()).toEqual(valid);
-    expect(validCalibration({...valid,bottomHeadY:.36})).toBe(false);
-    expect(validCalibration({...valid,shoulderWidth:NaN})).toBe(false);
-    expect(validCalibration({...valid,neutralHeadX:2})).toBe(false);
-    expect(()=>saveCalibration({...valid,bottomHeadY:.36})).toThrow('Invalid calibration');
+    expect(validCalibration({...valid,bottomY:.36})).toBe(false);
+    expect(validCalibration({...valid,scale:NaN})).toBe(false);
+    expect(validCalibration({...valid,centerX:2})).toBe(false);
+    expect(()=>saveCalibration({...valid,bottomY:.36})).toThrow('Invalid calibration');
   });
   it('tolerates denied storage',()=>{
     vi.stubGlobal('sessionStorage',{getItem:()=>{throw Error('denied');},setItem:()=>{throw Error('denied');}});

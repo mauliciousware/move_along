@@ -5,9 +5,12 @@ export interface BodyPoint { x: number; y: number; visibility: number }
 export type InputType = "UP" | "DOWN" | "LEFT" | "RIGHT";
 export type NoteType = InputType | "HOLD" | "LH" | "RH";
 export interface InputEvent { type: InputType; tPerfMs: number }
+export type TrackedJoint = 'nose' | 'waist';
 export interface PoseFrame {
   tPerfMs: number;
   nose: { x: number; y: number };
+  /** Midpoint of the left and right hips; equals the nose when hips are hidden. */
+  waist: { x: number; y: number };
   shoulderWidth: number;
   confidence: number;
   ok: boolean;
@@ -17,9 +20,11 @@ export interface PoseFrame {
 }
 export type TrackingStatus = "TRACKING" | "LOST" | "LOST_LONG";
 export interface Calibration {
-  neutralHeadY: number; topHeadY: number; bottomHeadY: number;
-  neutralHeadX: number;
-  shoulderWidth: number; scaleTop?: number; scaleBottom?: number;
+  joint: TrackedJoint;
+  centerX: number; centerY: number;
+  topY: number; bottomY: number;
+  scale: number;
+  scaleTop?: number; scaleBottom?: number;
 }
 export interface Note {
   id: string; time: number; type: NoteType; duration: number;

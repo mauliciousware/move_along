@@ -27,7 +27,7 @@ export class PoseEngine {
     this.camera.onFrame(frame => {
       const { nose, leftShoulder, rightShoulder, ...joints } = frame.joints;
       const shoulderWidth = leftShoulder && rightShoulder ? Math.hypot(leftShoulder.x-rightShoulder.x, leftShoulder.y-rightShoulder.y) : 0;
-      this.current = { tPerfMs: frame.tPerfMs, nose: nose ?? {x:0,y:0}, shoulderWidth, confidence: frame.confidence,
+      this.current = { tPerfMs: frame.tPerfMs, nose: nose ?? {x:0,y:0}, waist: nose ?? {x:0,y:0}, shoulderWidth, confidence: frame.confidence,
         ok: frame.usable && shoulderWidth >= CONFIG.pose.minShoulderWidth,
         joints: {...joints, face:nose, leftShoulder, rightShoulder} };
       for (const fn of this.frames) fn(this.current);

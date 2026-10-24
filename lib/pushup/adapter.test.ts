@@ -12,7 +12,7 @@ vi.mock('@/lib/pose-engine/engine',()=>({PoseEngine:class {
  change(setup:string){this.setupId=setup;for(const fn of this.listeners)fn();}
 }}));
 import { PoseEngine } from './engine';
-const cal={neutralHeadY:.4,topHeadY:.3,bottomHeadY:.6,neutralHeadX:.5,shoulderWidth:.3};
+const cal={joint:'nose' as const,centerY:.4,topY:.3,bottomY:.6,centerX:.5,scale:.3};
 describe('push-up adapter',()=>{
  it('maps head/shoulders and immediately rejects unusable frames without React frame notifications',()=>{
   const engine=new PoseEngine(),status=vi.fn(),frame=vi.fn();engine.subscribe(status);engine.onFrame(frame);
