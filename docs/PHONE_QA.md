@@ -62,9 +62,11 @@ set the pace.
    only from stable observed samples; insufficient range offers a placement retry.
 3. Calibration leads straight into the countdown and game. There is no rest or
    BREATHE screen at any point.
-4. The first target says `GO DOWN`. Take your time: the ring must never expire, and
-   no timing bar, early/late marker or MISS may appear. Close the ring, then the
-   next instruction (`GO UP`) must appear immediately.
+4. Both rings are visible: `UP` on top and `DOWN` below. The `DOWN` ring is lit
+   first. Take your time: the target must never expire, and no timing bar,
+   early/late marker or MISS may appear. Fill the `DOWN` ring, then the `UP` ring
+   must light immediately. A small comet should travel from the completed ring to
+   the next one, with a pop and directional sparks.
 5. Complete 8 controlled reps. The third set entry is a `PLANK` hold counting down
    from 10 seconds, followed by 8 more reps, another 10-second hold, 8 reps and a
    final 8-second hold. Reps and hold seconds must match the on-screen counts.

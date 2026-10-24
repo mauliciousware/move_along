@@ -68,9 +68,12 @@ export class GameSession {
         const dt=Math.max(0,Math.min(ms-last,CONFIG.game.maxFrameMs));
         const inZone=Number.isFinite(p) && p>=CONFIG.flow.holdZone;
         if (tracking && signalStable && inZone && dt>0) {
+          const wholeSeconds=Math.floor(n.meter.valueMs/1000);
           const credit=Math.min(n.meter.duration-n.meter.valueMs,dt);
           n.meter.valueMs+=credit;
           this.stats.plankTimeMs+=credit;
+          // Publish the HUD clock once per second, never per frame.
+          if(Math.floor(n.meter.valueMs/1000)!==wholeSeconds)this.revision++;
         }
         // A hold only advances while it is observed; it never drains or fails.
         if (n.meter.valueMs>=n.meter.duration) this.finishNote(n,'perfect',ms);

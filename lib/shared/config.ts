@@ -39,8 +39,16 @@ export const PUSHUP_CONFIG = {
   standing: { stableMs: 1000, stableStd: .025, minSamples: 15, minKneeRange: .08, minHipRange: .08, minLift: .12, returnTolerance: .08, repeatTolerance: .12, coherence: .5, liftThreshold: .7, resetThreshold: .25, timeoutMs: 20000, maxSamples: 90 },
   audioSession: { unlockTimeoutMs: 4000, loadTimeoutMs: 20000, unlockToneMs: 100 },
   workout: { minGapMs: 2000, maxWorkMs: 30000, restMs: 15000, holdMs: 3000, pairs: 4, readyMs: 2000 },
-  /** Self-paced push-up flow: one target at a time, no rests, no timing window. */
-  flow: { repsPerSet: 8, holdsMs: [10000, 10000, 8000], maxHoldMs: 15000, holdZone: 0.40 },
+  /** Self-paced push-up flow: two position rings, no rests, no timing window. */
+  flow: {
+    repsPerSet: 8, holdsMs: [10000, 10000, 8000], maxHoldMs: 15000, holdZone: 0.40,
+    upY: 0.29, downY: 0.69, radiusWidth: 0.27, radiusHeight: 0.145, maxRadius: 118,
+    idleOpacity: 0.32, captionScale: 0.105,
+    finishMs: 520, popScale: 0.09,
+    sparkCount: 18, sparkSpeed: 190, sparkMs: 520, sparkRadius: 2.5,
+    handoffDelayMs: 90, handoffMs: 430, wakeMs: 280, wakeScale: 0.07,
+    cometRadius: 4, cometTrail: 3, connectorOpacity: 0.10, washOpacity: 0.10,
+  },
   windows: { perfect: 150, good: 300, ok: 500 },
   points: { perfect: 100, good: 75, ok: 40, miss: 0 },
   holdPointsFactor: 2,

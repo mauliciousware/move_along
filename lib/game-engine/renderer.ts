@@ -14,6 +14,8 @@ export class GameRenderer {
   private particles = Array.from({ length: Math.max(...CONFIG.particles.tierCaps) }, () => ({ x: 0, y: 0, vx: 0, vy: 0, life: 0, color: '' }));
   private lastJudgment = 0;
   private lastNow = 0;
+  private flowLastJudgment = 0;
+  private flowLastNow = 0;
 
   draw(ctx: CanvasRenderingContext2D, w: number, h: number, run: GameRuntime, now: number, reduced: boolean, dev: boolean) {
     if (run.game.flow) { this.drawFlow(ctx, w, h, run, now, reduced, dev); return; }
@@ -140,52 +142,183 @@ export class GameRenderer {
     ctx.restore();
   }
 
-  /** One large ring, one instruction. The song never moves this target. */
+  /** Two fixed position rings. The flow script only changes which one fills. */
   private drawFlow(ctx: CanvasRenderingContext2D, w: number, h: number, run: GameRuntime, now: number, reduced: boolean, dev: boolean) {
     const { game } = run;
+    const layout = CONFIG.flow;
     const playing = run.getSnapshot().phase === 'playing';
     const tracked = run.keyboard || run.tracking === 'TRACKING' && now - run.signalAt <= CONFIG.camera.staleMs;
     const target = flowTarget(game, run.p, tracked);
-    const radius = Math.min(w * 0.30, h * 0.22, 140);
-    const cx = w / 2, cy = h * 0.47;
-    const color = target.kind === 'UP' ? CONFIG.colors.up : target.kind === 'DOWN' ? CONFIG.colors.down : CONFIG.colors.hold;
+    const radius = Math.min(w * layout.radiusWidth, h * layout.radiusHeight, layout.maxRadius);
+    const cx = w / 2;
+    const cyUp = h * layout.upY;
+    const cyDown = h * layout.downY;
+    const upColor = CONFIG.colors.up, downColor = CONFIG.colors.down, holdColor = CONFIG.colors.hold;
     const judgment = game.judgment;
     const age = judgment ? run.songMs - judgment.time : Infinity;
+    const dt = Math.min(CONFIG.game.maxFrameMs, Math.max(0, now - this.flowLastNow));
+    this.flowLastNow = now;
+    const completed: 'UP' | 'DOWN' | 'HOLD' | null = judgment && judgment.grade !== 'miss' && age >= 0 && age < layout.finishMs
+      ? judgment.type === 'HOLD' ? 'HOLD' : judgment.type === 'UP' ? 'UP' : judgment.type === 'DOWN' ? 'DOWN' : null
+      : null;
+    const next = game.current;
+    const nextKind: 'UP' | 'DOWN' | 'HOLD' | null = !next ? null : next.meter ? 'HOLD' : next.note.type === 'UP' ? 'UP' : next.note.type === 'DOWN' ? 'DOWN' : null;
+    const completedY = completed === 'DOWN' ? cyDown : completed ? cyUp : null;
+    const nextY = nextKind === 'DOWN' ? cyDown : nextKind ? cyUp : null;
+    const wakeAt = layout.handoffDelayMs + layout.handoffMs;
+    const wake = age >= wakeAt && age < wakeAt + layout.wakeMs ? 1 - (age - wakeAt) / layout.wakeMs : 0;
+    const finishProgress = completed ? Math.min(1, age / layout.finishMs) : 0;
+    const pop = completed ? 1 + layout.popScale * Math.sin(Math.PI * Math.min(1, finishProgress * 1.6)) : 1;
 
     ctx.save();
     ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+
     if (playing && target.kind !== 'DONE') {
+      const activeColor = target.kind === 'UP' ? upColor : target.kind === 'DOWN' ? downColor : holdColor;
       const wash = ctx.createLinearGradient(0, 0, 0, h);
-      wash.addColorStop(0, (target.kind === 'UP' ? color : CONFIG.colors.down) + '26');
-      wash.addColorStop(0.5, '#00000000');
-      wash.addColorStop(1, (target.kind === 'DOWN' ? color : CONFIG.colors.up) + '18');
-      ctx.fillStyle = wash; ctx.fillRect(0, 0, w, h);
+      if (target.kind === 'DOWN') {
+        wash.addColorStop(0, '#00000000'); wash.addColorStop(0.55, '#00000000'); wash.addColorStop(1, activeColor);
+      } else {
+        wash.addColorStop(0, activeColor); wash.addColorStop(0.45, '#00000000'); wash.addColorStop(1, '#00000000');
+      }
+      ctx.save(); ctx.globalAlpha = layout.washOpacity; ctx.fillStyle = wash; ctx.fillRect(0, 0, w, h); ctx.restore();
     }
-    this.ring(ctx, cx, cy, radius, color, playing ? target.fill : 0, playing);
-    ctx.fillStyle = color;
-    if (target.kind === 'HOLD') {
-      ctx.font = `${radius * 0.2}px ${this.displayFont}`;
-      this.text(ctx, 'PLANK', cx, cy - radius * 0.3, radius * 1.4);
-      ctx.font = `${radius * 0.52}px ${this.displayFont}`;
-      this.text(ctx, `${target.seconds}`, cx, cy + radius * 0.02, radius * 1.2);
-    } else {
-      ctx.font = `${radius * 0.3}px ${this.displayFont}`;
-      this.text(ctx, target.label, cx, cy - radius * 0.05, radius * 1.7);
+
+    // A quiet rail connects the two positions and gives the handoff comet a path.
+    if (playing && target.kind !== 'DONE' && cyDown - radius > cyUp + radius) {
+      ctx.save();
+      ctx.globalAlpha = layout.connectorOpacity;
+      ctx.strokeStyle = CONFIG.colors.text;
+      ctx.lineWidth = 1;
+      ctx.setLineDash([2, 7]);
+      ctx.beginPath();
+      ctx.moveTo(cx, cyUp + radius + 6);
+      ctx.lineTo(cx, cyDown - radius - 6);
+      ctx.stroke();
+      ctx.restore();
     }
-    ctx.fillStyle = CONFIG.colors.text;
-    ctx.font = `${Math.max(10, radius * 0.11)}px ${this.displayFont}`;
-    this.text(ctx, playing ? target.sub : 'GET READY', cx, cy + radius * 0.42, radius * 1.6);
-    if (target.kind === 'DOWN' || target.kind === 'UP') this.chevron(ctx, cx, cy + radius * 0.7, radius * 0.13, target.kind);
-    if (age >= 0 && age < CONFIG.animation.hitMs && !reduced) {
-      const burst = age / CONFIG.animation.hitMs;
-      ctx.save(); ctx.globalAlpha = 1 - burst; ctx.strokeStyle = color; ctx.lineWidth = cfg.ringWidth * (1 - burst);
-      ctx.beginPath(); ctx.arc(cx, cy, radius * (1 + burst * cfg.burstScale), 0, TAU); ctx.stroke(); ctx.restore();
+
+    const drawRing = (kind: 'UP' | 'DOWN', cy: number, view: { fill: number; active: boolean }, isHold = false) => {
+      const isCompleted = completed === 'HOLD' ? kind === 'UP' : completed === kind;
+      const active = isHold || view.active || isCompleted;
+      const color = isHold || (isCompleted && completed === 'HOLD') ? holdColor : kind === 'UP' ? upColor : downColor;
+      const fill = isHold ? target.hold.fill : isCompleted ? 1 : view.fill;
+      const isWake = wake > 0 && nextKind === kind;
+      const scale = (isCompleted ? pop : 1) + (isWake ? layout.wakeScale * wake : 0);
+
+      ctx.save();
+      if (!active) ctx.globalAlpha = layout.idleOpacity;
+      this.ring(ctx, cx, cy, radius * scale, color, playing ? fill : 0, active);
+
+      if (isCompleted && !reduced) {
+        ctx.save();
+        ctx.globalAlpha = (1 - finishProgress) * 0.8;
+        ctx.strokeStyle = '#FFFFFF';
+        ctx.lineWidth = Math.max(0.5, cfg.ringWidth * (1 - finishProgress));
+        ctx.beginPath(); ctx.arc(cx, cy, radius * (1 + finishProgress * cfg.burstScale), 0, TAU); ctx.stroke();
+        ctx.restore();
+      }
+
+      if (isWake && !reduced) {
+        ctx.save();
+        ctx.globalAlpha = wake * 0.55;
+        ctx.strokeStyle = target.hold.active ? holdColor : kind === 'UP' ? upColor : downColor;
+        ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.arc(cx, cy, radius * (1.02 + (1 - wake) * 0.16), 0, TAU); ctx.stroke();
+        ctx.restore();
+      }
+
+      ctx.fillStyle = color;
+      if (isHold) {
+        ctx.font = `${Math.max(11, radius * 0.2)}px ${this.displayFont}`;
+        this.text(ctx, 'PLANK', cx, cy - radius * 0.30, radius * 1.5);
+        ctx.font = `${Math.max(20, radius * 0.52)}px ${this.displayFont}`;
+        this.text(ctx, `${target.hold.seconds}`, cx, cy + radius * 0.02, radius * 1.1);
+        ctx.fillStyle = CONFIG.colors.text;
+        ctx.font = `${Math.max(8, radius * layout.captionScale)}px ${this.displayFont}`;
+        this.text(ctx, tracked ? 'HOLD STEADY' : 'HOLD STILL', cx, cy + radius * 0.40, radius * 1.7);
+      } else {
+        const label = isCompleted ? `✓ ${completed === 'HOLD' ? 'PLANK' : kind}` : kind;
+        const labelColor = active || isCompleted ? color : CONFIG.colors.muted;
+        ctx.fillStyle = labelColor;
+        ctx.font = `${Math.max(12, radius * 0.32)}px ${this.displayFont}`;
+        this.text(ctx, label, cx, cy - radius * 0.10, radius * 1.7);
+        ctx.fillStyle = active || isCompleted ? color : CONFIG.colors.muted;
+        ctx.font = `${Math.max(8, radius * layout.captionScale)}px ${this.displayFont}`;
+        const sub = isCompleted ? 'COMPLETE' : active ? (tracked ? 'MOVE TO FILL' : 'FIND YOUR POSITION') : 'NEXT';
+        this.text(ctx, sub, cx, cy + radius * 0.20, radius * 1.75);
+        this.chevron(ctx, cx, cy + radius * 0.52, radius * 0.14, kind);
+      }
+      ctx.restore();
+    };
+
+    drawRing('UP', cyUp, target.rings.up, target.hold.active);
+    drawRing('DOWN', cyDown, target.rings.down);
+
+    // The comet carries the eye from the ring that just closed to the next one.
+    if (!reduced && completedY !== null && nextY !== null && age >= layout.handoffDelayMs && Math.abs(nextY - completedY) > radius * 1.4) {
+      const t = clamp((age - layout.handoffDelayMs) / layout.handoffMs);
+      const direction = Math.sign(nextY - completedY);
+      const from = completedY + direction * radius * 0.92;
+      const to = nextY - direction * radius * 0.92;
+      const eased = t * t * (3 - 2 * t);
+      const cometColor = nextKind === 'DOWN' ? downColor : nextKind === 'HOLD' ? holdColor : upColor;
+      ctx.save();
+      ctx.shadowColor = cometColor; ctx.shadowBlur = 14; ctx.fillStyle = cometColor;
+      for (let index = layout.cometTrail - 1; index >= 0; index--) {
+        const trail = Math.max(0, eased - index * 0.075);
+        const y = from + (to - from) * trail;
+        ctx.globalAlpha = (1 - index / layout.cometTrail) * (1 - t * 0.35);
+        ctx.beginPath(); ctx.arc(cx, y, layout.cometRadius * (1 - index * 0.22), 0, TAU); ctx.fill();
+      }
+      ctx.restore();
     }
+
+    if (judgment && judgment.serial !== this.flowLastJudgment) {
+      this.flowLastJudgment = judgment.serial;
+      if (!reduced && judgment.grade !== 'miss' && completedY !== null) this.spawnFlowSparks(judgment.type, cx, completedY, radius);
+    }
+    if (!reduced && playing) {
+      for (let index = 0; index < layout.sparkCount; index++) {
+        const particle = this.particles[index];
+        if (particle.life <= 0) continue;
+        particle.life -= dt;
+        particle.x += particle.vx * dt / 1000;
+        particle.y += particle.vy * dt / 1000;
+        if (particle.life <= 0) continue;
+        ctx.globalAlpha = clamp(particle.life / layout.sparkMs);
+        ctx.fillStyle = particle.color;
+        ctx.beginPath(); ctx.arc(particle.x, particle.y, layout.sparkRadius, 0, TAU); ctx.fill();
+      }
+    }
+    ctx.globalAlpha = 1;
+
     if (dev) {
       ctx.fillStyle = CONFIG.colors.good; ctx.font = `${cfg.captionSize}px ${this.displayFont}`;
       this.text(ctx, `${target.kind} · ${Math.round(target.fill * 100)}% · ${Math.round(run.flowMs)}ms`, cx, h * cfg.railEnd, w * 0.9);
     }
     ctx.restore();
+  }
+
+  private spawnFlowSparks(type: string, cx: number, cy: number, radius: number) {
+    const layout = CONFIG.flow;
+    const color = colorFor(type);
+    for (let index = 0; index < layout.sparkCount; index++) {
+      const particle = this.particles[index];
+      const spread = type === 'UP' ? -1 : type === 'DOWN' ? 1 : 0;
+      const angle = type === 'HOLD'
+        ? (index / layout.sparkCount) * TAU
+        : spread * (Math.PI * 0.15 + (index / Math.max(1, layout.sparkCount - 1)) * Math.PI * 0.70);
+      const speed = layout.sparkSpeed * (0.72 + (index % 5) * 0.09);
+      Object.assign(particle, {
+        x: cx + Math.cos(angle) * radius * 0.92,
+        y: cy + Math.sin(angle) * radius * 0.92,
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed,
+        life: layout.sparkMs * (0.8 + (index % 4) * 0.06),
+        color,
+      });
+    }
   }
 
   private text(ctx: CanvasRenderingContext2D, text: string, x: number, y: number, maxWidth: number) {

@@ -334,3 +334,35 @@ test that would fail if song time ended the session, and cover-crop projection;
 `npm run build` succeeds. These are local mouse/keyboard and unit results. The
 portrait camera result is not yet observed on physical iPhone hardware; use
 `docs/PHONE_QA.md` on an HTTPS build before treating the camera fix as verified.
+
+## Two-ring push-up targets — 2026-10-24
+
+Owner feedback: the single flow ring felt boring. Restore the two-circle layout
+from the rhythm modes: `UP` on top, `DOWN` below, with the active direction
+filling as the player moves.
+
+- Push-up flow now renders both position rings at all times. Only the current
+  direction is lit and filled; the other stays dim with a `NEXT` label so the
+  sequence remains visible. The top ring becomes the orange `PLANK` ring during a
+  hold, which keeps the hold at the position the player is already in.
+- Completion feedback is canvas-only and reduced-motion aware: the finished ring
+  pops and flashes, directional sparks fall for `DOWN` and rise for `UP`, and a
+  small comet travels along a quiet connector rail to wake the next ring. No
+  React state or per-frame component updates were added.
+- `PUSHUP_CONFIG.flow` now centralises the two-ring layout, idle opacity,
+  completion timing, spark budget and handoff timing. `flowTarget()` returns both
+  ring views plus the hold view, so the renderer never duplicates session logic.
+- A browser check exposed that the HUD hold clock stayed at `0s` during a hold.
+  The flow tick now increments the session revision only when a whole hold second
+  crosses, so the HUD updates once per second without per-frame React renders.
+- Copy and phone QA steps now describe two rings instead of one. The scoring,
+  calibration, hold rules, audio clock and STOP behaviour are unchanged.
+- No new dependencies, camera captures, uploads or persisted scores.
+
+Verification: `npm run typecheck` and `npm run lint` pass; `npm run test` passes
+175 tests in 23 files, including the new two-ring view and hold-clock cases; the
+prebuild audio check and `npm run build` pass. A headless Chrome keyboard-demo
+walkthrough at a 390×844 portrait viewport confirmed the two-ring layout, both
+completion animations, the handoff comet, the plank ring and the live hold clock.
+These are local browser, unit and build results. The two-ring animation has not
+been observed on a physical iPhone, and no camera evidence is claimed.

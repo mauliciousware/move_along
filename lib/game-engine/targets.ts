@@ -25,26 +25,44 @@ export function targetCue(game: GameSession, songMs: number) {
   };
 }
 
+/** Both position rings stay on screen; only the current direction fills. */
+export interface FlowRingView { kind: 'UP' | 'DOWN'; fill: number; active: boolean }
+export interface FlowHoldView { active: boolean; fill: number; seconds: number }
 /** One self-paced instruction: no clock, no preview, no early/late state. */
-export interface FlowTargetView { kind: 'DOWN' | 'UP' | 'HOLD' | 'DONE'; label: string; fill: number; seconds: number; sub: string }
+export interface FlowTargetView {
+  kind: 'DOWN' | 'UP' | 'HOLD' | 'DONE';
+  label: string; fill: number; seconds: number; sub: string;
+  rings: { up: FlowRingView; down: FlowRingView };
+  hold: FlowHoldView;
+}
 export function flowTarget(game: GameSession, p: number, tracked: boolean): FlowTargetView {
   const current = game.current;
-  if (!current) return { kind: 'DONE', label: 'DONE', fill: 1, seconds: 0, sub: 'SESSION COMPLETE' };
+  const ring = (kind: 'UP' | 'DOWN'): FlowRingView => {
+    const active = !!current && !current.meter && current.note.type === kind;
+    return { kind, active, fill: active && tracked ? movementFill(kind, p) : 0 };
+  };
+  const rings = { up: ring('UP'), down: ring('DOWN') };
+  const idleHold: FlowHoldView = { active: false, fill: 0, seconds: 0 };
+  if (!current) return { kind: 'DONE', label: 'DONE', fill: 1, seconds: 0, sub: 'SESSION COMPLETE', rings, hold: idleHold };
   if (current.meter) {
     const seconds = Math.max(0, Math.ceil((current.meter.duration - current.meter.valueMs) / 1000));
+    const fill = current.meter.ratio;
     return {
-      kind: 'HOLD', label: 'PLANK', fill: current.meter.ratio, seconds,
+      kind: 'HOLD', label: 'PLANK', fill, seconds,
       sub: tracked ? 'HOLD STEADY AT THE TOP' : 'HOLD STILL — TRACKING',
+      rings, hold: { active: true, fill, seconds },
     };
   }
   if (current.note.type === 'DOWN' || current.note.type === 'UP') {
+    const active = current.note.type === 'DOWN' ? rings.down : rings.up;
     return {
       kind: current.note.type, label: current.note.type === 'DOWN' ? 'GO DOWN' : 'GO UP',
-      fill: tracked ? movementFill(current.note.type, p) : 0, seconds: 0,
-      sub: tracked ? 'MOVE TO CLOSE THE RING' : 'FIND YOUR POSITION',
+      fill: active.fill, seconds: 0,
+      sub: tracked ? 'MOVE TO FILL THE RING' : 'FIND YOUR POSITION',
+      rings, hold: idleHold,
     };
   }
-  return { kind: 'DONE', label: 'READY', fill: 0, seconds: 0, sub: '' };
+  return { kind: 'DONE', label: 'READY', fill: 0, seconds: 0, sub: '', rings, hold: idleHold };
 }
 
 /** Readable instructions are independent of fill: a full ring never implies a hit. */

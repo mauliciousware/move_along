@@ -121,7 +121,7 @@ export default function Workout({ exercise = 'pushup' }: { exercise?: ExerciseId
       {screen === 'ready' && <section className="screen narrow exercise-ready">
         <Link href="/" className="exercise-back">← All movements</Link>
         <h1>{movement.name}.</h1>
-        <p>{exercise === 'march' ? 'Lift the named knee. Return both feet between steps.' : exercise === 'pushup' ? 'One ring at a time. Close it with your movement, then follow the next direction. The song is background music.' : 'Lower for DOWN. Rise for UP. Follow the beat.'}</p>
+        <p>{exercise === 'march' ? 'Lift the named knee. Return both feet between steps.' : exercise === 'pushup' ? 'Two rings: lower to fill DOWN, rise to fill UP. The lit ring shows your next move. The song is background music.' : 'Lower for DOWN. Rise for UP. Follow the beat.'}</p>
         <div className="compact-track"><label htmlFor="soundtrack">Soundtrack</label><select id="soundtrack" value={song.id} onChange={event => setSong(songs.find(track => track.id === event.target.value)!)}>{songs.map(track => <option key={track.id} value={track.id}>{track.title} · {track.artist}</option>)}</select><span>{song.description}</span></div>
         <Button onClick={() => play()}>PLAY</Button>
         <p className="ready-hint">Allow the camera, get into position, and follow automatic calibration. The game starts when you’re ready.</p>

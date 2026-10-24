@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { songsFor } from '../shared/pushup-songs';
 import { flowNotes } from './flow';
 import { GameSession } from './session';
+import { flowTarget } from './targets';
 import { validateMap } from './validator';
 
 const flow = () => new GameSession(songsFor('pushup')[0].map);
@@ -37,6 +38,42 @@ describe('flow push-up script', () => {
   });
 });
 
+describe('flow two-ring view', () => {
+  it('keeps both rings visible and fills only the current direction', () => {
+    const game = flow();
+    const start = flowTarget(game, 0.65, true);
+    expect(start.rings.down.active).toBe(true);
+    expect(start.rings.up.active).toBe(false);
+    expect(start.rings.down.fill).toBeCloseTo(0.5);
+    expect(start.rings.up.fill).toBe(0);
+
+    game.input('DOWN', 1000, true);
+    const next = flowTarget(game, 1, true);
+    expect(next.rings.up.active).toBe(true);
+    expect(next.rings.down.active).toBe(false);
+    expect(next.rings.up.fill).toBe(1);
+    expect(next.rings.down.fill).toBe(0);
+  });
+
+  it('keeps the active ring lit but empty while tracking is missing', () => {
+    const game = flow();
+    const view = flowTarget(game, 0, false);
+    expect(view.rings.down.active).toBe(true);
+    expect(view.rings.down.fill).toBe(0);
+  });
+
+  it('hands the active ring to the top for a plank hold', () => {
+    const game = flow();
+    for (let index = 0; index < 16; index++) game.input(index % 2 ? 'UP' : 'DOWN', index, true);
+    const view = flowTarget(game, 1, true);
+    expect(view.kind).toBe('HOLD');
+    expect(view.hold.active).toBe(true);
+    expect(view.hold.seconds).toBe(10);
+    expect(view.rings.up.active).toBe(false);
+    expect(view.rings.down.active).toBe(false);
+  });
+});
+
 describe('flow push-up session', () => {
   it('waits for each direction and ignores wrong or untracked input', () => {
     const game = flow();
@@ -58,6 +95,22 @@ describe('flow push-up session', () => {
     game.tick(60000, true, 1, true);
     expect(game.stats.miss).toBe(0);
     expect(game.current?.note.type).toBe('DOWN');
+  });
+
+  it('publishes hold time at whole-second boundaries, not every frame', () => {
+    const game = flow();
+    for (let index = 0; index < 16; index++) game.input(index % 2 ? 'UP' : 'DOWN', index, true);
+    let time = 0;
+    game.tick(time, true, 1, true);
+    const start = game.revision;
+    for (let frame = 0; frame < 5; frame++) game.tick(time += 100, true, 1, true);
+    expect(game.revision).toBe(start);
+    for (let frame = 0; frame < 5; frame++) game.tick(time += 100, true, 1, true);
+    expect(game.revision).toBe(start + 1);
+    for (let frame = 0; frame < 5; frame++) game.tick(time += 100, true, 1, true);
+    expect(game.revision).toBe(start + 1);
+    for (let frame = 0; frame < 5; frame++) game.tick(time += 100, true, 1, true);
+    expect(game.revision).toBe(start + 2);
   });
 
   it('counts a hold only while tracking is present and steady', () => {

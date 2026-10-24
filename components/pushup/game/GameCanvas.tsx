@@ -55,5 +55,5 @@ export function GameCanvas({ preview = false, engine, videoRef, calibration, run
     observer.observe(canvas); draw(); render(performance.now());
     return () => { observer.disconnect(); cancelAnimationFrame(animation); };
   }, [engine, videoRef, calibration, runtime]);
-  return <canvas ref={ref} className={`game-canvas ${preview ? "preview-canvas" : ""}`} aria-label={runtime ? (runtime.game.flow ? "One movement ring with the current DOWN, UP or plank instruction" : "Fixed UP and DOWN targets with movement fill and beat timing") : engine ? "Live head marker and position gauge" : "Movement overlay"} role="img" />;
+  return <canvas ref={ref} className={`game-canvas ${preview ? "preview-canvas" : ""}`} aria-label={runtime ? (runtime.game.flow ? "Two movement rings: UP on top and DOWN below. The active direction fills as you move; the top ring becomes the plank hold." : "Fixed UP and DOWN targets with movement fill and beat timing") : engine ? "Live head marker and position gauge" : "Movement overlay"} role="img" />;
 }

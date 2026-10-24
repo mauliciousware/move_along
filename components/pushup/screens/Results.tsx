@@ -83,7 +83,7 @@ export function Results({ title, stats, onReplay, onDone, feedback, exercise, an
       <ol>{EXERCISES[exercise].instructions.map(line => <li key={line}>{line}</li>)}</ol>
       <p>{analysis.coverage !== null && analysis.coverage < 100 ? 'If tracking drops, check the camera placement and recalibrate. ' : ''}{flow ? 'Play again to recalibrate. The camera reads movement, not form.' : 'Play again to recalibrate and make the targets repeatable. Timing scores do not tell you whether a rep had good form.'}</p>
     </section>
-    <p className="session-signoff">{flow ? 'Your pace. Your movement. One ring at a time.' : 'Your pace. Your rhythm. A little time for movement.'}</p>
+    <p className="session-signoff">{flow ? 'Your pace. Your movement. Two rings, one breath.' : 'Your pace. Your rhythm. A little time for movement.'}</p>
     <Button variant="secondary" onClick={onDone}>ALL MOVEMENTS</Button>
     <Button onClick={onReplay}>PLAY AGAIN</Button>
     <small className="muted">{flow ? 'Scores are for fun, stay in memory and measure game performance only. Nothing leaves your device.' : 'Ranks are for fun and measure game performance only. Scores aren’t saved. Nothing leaves your device.'}</small>
