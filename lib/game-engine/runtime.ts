@@ -7,7 +7,8 @@ export type Phase = 'idle'|'loading'|'countdown'|'playing'|'paused'|'lost'|'reen
 export class GameRuntime {
   readonly game: GameSession;
   readonly audio: AudioTransport;
-  bodySamples=0; bodyVisibleSamples=0;
+  bodySamples=0; bodyVisibleSamples=0; observedFrames=0; validFrames=0;
+  observeTracking(valid:boolean){this.observedFrames++;if(valid)this.validFrames++;}
   bodyOverlay: import('../shared/pushup-types').BodyOverlayMode='on';
   readonly title: string;
   readonly artist: string;
@@ -30,8 +31,10 @@ export class GameRuntime {
   private publish(update: Partial<typeof this.state>={}) {this.state={...this.state,...update,revision:this.state.revision+1};for(const f of this.listeners)f();}
   async start() {
     if(!['idle','error'].includes(this.state.phase))return;
+    if(this.state.phase==='error' && this.audio.hasParked){this.reenter();return;}
+    const activation=this.audio.unlock();
     const generation=++this.generation;this.publish({phase:'loading',error:''});
-    try {const buffer=await this.audio.load();if(generation!==this.generation)return;await this.audio.start(buffer);if(generation!==this.generation){this.audio.stop();return;}this.publish({phase:'countdown'});}
+    try {const [buffer]=await Promise.all([this.audio.load(),activation]);if(generation!==this.generation)return;await this.audio.start(buffer);if(generation!==this.generation){this.audio.stop();return;}this.publish({phase:'countdown'});}
     catch(error) {if(generation===this.generation)this.publish({phase:'error',error:error instanceof Error?error.message:'Unable to start audio.'});}
   }
   setKeyboard(value: boolean) {this.keyboard=value;}
@@ -60,7 +63,17 @@ export class GameRuntime {
     await this.audio.parkForCalibration();
     return generation===this.generation;
   }
-  reenter() {void this.audio.unlock();if(this.state.phase==='idle'){void this.start();return;}if(this.tracking!=='TRACKING' && !this.keyboard){this.publish({phase:'lost'});return;}this.resuming=false;this.resumeAt=performance.now()+3*CONFIG.animation.countdownMs;this.publish({phase:'reentry',count:'3'});}
+  reenter() {
+    if(this.state.phase==='idle'){void this.start();return;}
+    if(this.tracking!=='TRACKING' && !this.keyboard){this.publish({phase:'lost'});return;}
+    const generation=++this.generation;
+    this.resuming=true; this.publish({phase:'reentry',count:'3'});
+    void this.audio.unlock().then(()=>{
+      if(generation!==this.generation)return;
+      this.resuming=false; this.resumeAt=performance.now()+3*CONFIG.animation.countdownMs;
+    }).catch(error=>{if(generation===this.generation){this.resuming=false;this.publish({phase:'error',error:error instanceof Error?error.message:'Tap Retry audio to continue.'});}});
+  }
+
   async resume() {
     const generation=this.generation;this.resuming=true;
     try {await this.audio.resume();if(generation!==this.generation)return;this.publish({phase:this.audio.getSongTimeMs()<0?'countdown':'playing'});}

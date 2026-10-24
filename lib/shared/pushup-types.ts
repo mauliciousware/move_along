@@ -2,7 +2,7 @@ export type BodyOverlayMode = 'on' | 'minimal' | 'off';
 export const BODY_JOINTS = ['face', 'leftShoulder', 'rightShoulder', 'leftElbow', 'rightElbow', 'leftWrist', 'rightWrist'] as const;
 export type BodyJoint = typeof BODY_JOINTS[number];
 export interface BodyPoint { x: number; y: number; visibility: number }
-export type InputType = "UP" | "DOWN";
+export type InputType = "UP" | "DOWN" | "LEFT" | "RIGHT";
 export type NoteType = InputType | "HOLD" | "LH" | "RH";
 export interface InputEvent { type: InputType; tPerfMs: number }
 export interface PoseFrame {
@@ -31,6 +31,7 @@ export interface Section {
 }
 export interface RestWindow { startMs: number; endMs: number }
 export interface BeatMap {
+  exercise?: import("./types").ExerciseId;
   version: 1; songId: string; difficulty: "intermediate";
   bpm: number; firstBeatMs: number; durationMs: number;
   sections: Section[]; rests: RestWindow[]; notes: Note[];

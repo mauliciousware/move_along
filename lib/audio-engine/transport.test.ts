@@ -13,7 +13,7 @@ describe('audio clock',()=>{
   try {
    const first=new AudioTransport('/audio/test-first.mp3',25),second=new AudioTransport('/audio/test-second.mp3',-10);
    await first.load();await first.load();await second.load();
-   expect(fetcher.mock.calls).toEqual([['/audio/test-first.mp3'],['/audio/test-second.mp3']]);
+   expect(fetcher.mock.calls).toEqual([['/audio/test-first.mp3',expect.objectContaining({signal:expect.any(AbortSignal)})],['/audio/test-second.mp3',expect.objectContaining({signal:expect.any(AbortSignal)})]]);
    expect(first.offsetMs).toBe(25);expect(second.offsetMs).toBe(-10);
   } finally {vi.unstubAllGlobals();}
  });
@@ -24,7 +24,7 @@ describe('audio clock',()=>{
   expect(audio.perfToSongMs(2900)).toBeCloseTo(100);
   audio.offsetMs=10;expect(audio.getSongTimeMs()).toBeCloseTo(990);
   await audio.pause();fixture.ctx.currentTime+=20;expect(audio.getSongTimeMs()).toBeCloseTo(990);
-  await audio.resume();expect(fixture.ctx.resume).toHaveBeenCalled();audio.stop();
+  await audio.resume();expect(audio.getSongTimeMs()).toBeCloseTo(990);audio.stop();
  });
  it('parks the source for calibration and resumes at the identical audio position',async()=>{
   const audio=new AudioTransport();fixture.ctx.currentTime=10;await audio.start({} as AudioBuffer);fixture.ctx.currentTime=20;
@@ -37,4 +37,15 @@ describe('audio clock',()=>{
   fixture.ctx.getOutputTimestamp.mockReturnValueOnce({contextTime:0,performanceTime:0});
   vi.spyOn(performance,'now').mockReturnValueOnce(2000);expect(audio.perfToSongMs(1900)).toBeCloseTo(1080);vi.restoreAllMocks();audio.stop();
  });
+ it('STOP cancels delayed start and resume before either can recreate a source',async()=>{
+  const audio=new AudioTransport();
+  let resolve!:()=>void;
+  vi.spyOn(audio,'unlock').mockImplementation(()=>new Promise<void>(done=>{resolve=done;}));
+  const before=fixture.ctx.createBufferSource.mock.calls.length;
+  const pending=audio.start({} as AudioBuffer);audio.stop();resolve();await pending;
+  expect(fixture.ctx.createBufferSource.mock.calls.length).toBe(before);
+  const resume=audio.resume();audio.stop();resolve();await resume;
+  expect(fixture.ctx.createBufferSource.mock.calls.length).toBe(before);
+ });
+
 });

@@ -1,8 +1,23 @@
 import { PUSHUP_CONFIG as CONFIG } from '../shared/config';
 let context: AudioContext | null = null;
 /** Shared with the forthcoming song clock: never create a second audio context. */
-export function getAudioContext() { return context ??= new AudioContext(); }
-export async function unlockAudio() { try { await getAudioContext().resume(); } catch { /* Visual instructions remain usable. */ } }
+export function getAudioContext() { if(!context || context.state==='closed')context=new AudioContext(); return context; }
+/** Call directly from a tap, before fetch/decode, to activate Safari's audio output. */
+export async function unlockAudio(): Promise<boolean> {
+  const ctx=getAudioContext();
+  try {
+    const resumed=ctx.resume();
+    const tone=ctx.createOscillator(), gain=ctx.createGain();
+    gain.gain.value=0; tone.connect(gain).connect(ctx.destination);
+    tone.start(); tone.stop(ctx.currentTime+CONFIG.audioSession.unlockToneMs/1000);
+    tone.onended=()=>{tone.disconnect();gain.disconnect();};
+    let timer:ReturnType<typeof setTimeout>|undefined;
+    try { await Promise.race([resumed,new Promise<never>((_,reject)=>{timer=setTimeout(()=>reject(new Error('Audio activation timed out')),CONFIG.audioSession.unlockTimeoutMs);})]); }
+    finally {clearTimeout(timer);}
+    return ctx.state==='running';
+  } catch {return false;}
+}
+
 export function calibrationCue(step: number) {
   if (!context || context.state !== 'running') return;
   const oscillator = context.createOscillator(), gain = context.createGain();

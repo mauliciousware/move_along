@@ -204,3 +204,22 @@ Typecheck, lint, 144 tests and production build passed before final CSS cleanup;
 final checks are recorded below.
 
 Final typography checks: typecheck, lint, all 144 tests and production build pass; diff whitespace check clean.
+
+## Safari/setup and individual exercise completion — 2026-10-24
+
+Continued the existing uncommitted implementation, without accessing the parent
+working tree. Repaired missing result-analysis code and standing calibration type
+errors. Automatic framing, calibration and practice progression now connect all
+three exercise modes. Standing calibration checks two repeated cycles. Added
+finite/stale input guards for marching, exercise-specific result labels, explicit
+accuracy/coverage maths and an illustrative movement review (not posture scoring).
+Typography now follows the main app: pixel headings and readable Geist copy.
+Song selection activates the shared AudioContext in the tap handler and reports
+load errors; STOP invalidates pending transport start/resume. Existing local
+Shakira asset remains available for local testing. No new dependencies.
+
+Typecheck, 155 tests and build passed. Lint passed with one existing unused begin
+warning, to be removed when reconnecting routine selection. Tests now simulate
+complete maps for push-ups, squats and marching with holds where supported.
+The owner says Safari works with some bugs and explicitly deferred device testing.
+No physical calibration, observed ten-rep test or listening/sync gate is claimed.

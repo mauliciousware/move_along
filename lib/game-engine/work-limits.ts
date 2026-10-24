@@ -10,7 +10,7 @@ export function validateWorkLimits(map:BeatMap):string[]{
    start??=note.time;
    if(note.time+note.duration-start>CONFIG.workout.maxWorkMs)errors.push(`${note.id}: work including holds exceeds 30 seconds`);
    if(note.type==='HOLD'&&(note.position!=='TOP'||note.duration!==CONFIG.workout.holdMs))errors.push(`${note.id}: only three-second TOP holds are supported`);
-   if(note.type==='DOWN'||note.type==='UP'){
+   if(note.type==='DOWN'||note.type==='UP'||note.type==='LEFT'||note.type==='RIGHT'){
      if(note.time-previousVertical<CONFIG.workout.minGapMs)errors.push(`${note.id}: phase cues must be at least two seconds apart`);
      previousVertical=note.time;
    }

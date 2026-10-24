@@ -1,17 +1,17 @@
 import { describe,it,expect } from 'vitest';
-import { PUSHUP_SONGS } from '../shared/pushup-songs';
+import { PUSHUP_SONGS, songsFor } from '../shared/pushup-songs';
 import { GameSession } from './session';
 import { validateMap } from './validator';
 import { validateWorkLimits } from './work-limits';
 import { accuracy } from './scoring';
 
 describe('playable Move Along push-up maps',()=>{
- for(const song of PUSHUP_SONGS){
+ for(const song of ['pushup','squat','march'].flatMap(exercise=>songsFor(exercise as 'pushup'|'squat'|'march'))){
   it(`${song.title} passes grammar and work/rest limits`,()=>{expect(validateMap(song.map)).toEqual([]);expect(validateWorkLimits(song.map)).toEqual([]);});
   it(`${song.title} completes end to end with perfect input and holds`,()=>{
    const game=new GameSession(song.map);let cursor=0;
    for(let t=0;t<=song.map.durationMs;t+=10){
-    while(cursor<game.notes.length&&game.notes[cursor].note.time+game.latency<=t){const note=game.notes[cursor++].note;if(note.type==='UP'||note.type==='DOWN')game.input(note.type,note.time,true);}
+    while(cursor<game.notes.length&&game.notes[cursor].note.time+game.latency<=t){const note=game.notes[cursor++].note;if(note.type==='UP'||note.type==='DOWN'||note.type==='LEFT'||note.type==='RIGHT')game.input(note.type,note.time,true);}
     game.tick(t,true,1,true);
    }
    expect(game.stats.perfect).toBe(song.map.notes.length);expect(game.stats.miss).toBe(0);expect(accuracy(game.stats)).toBe(1);

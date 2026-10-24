@@ -1,12 +1,13 @@
 import { PUSHUP_CONFIG as CONFIG } from '../shared/config';
 import type { PlayedNote } from './session';
+import type { ExerciseId } from '../shared/types';
 import type { Stats } from './scoring';
 export interface SessionFeedback { highlight: string; next: string; tracking?: string }
-export function sessionFeedback(notes: readonly PlayedNote[], stats: Stats, camera = false, bodySamples = 0, bodyVisibleSamples = 0): SessionFeedback {
+export function sessionFeedback(notes: readonly PlayedNote[], stats: Stats, camera = false, bodySamples = 0, bodyVisibleSamples = 0, exercise: ExerciseId = 'pushup'): SessionFeedback {
   const cfg = CONFIG.feedback;
   const hits = notes.filter(n => n.status === 'perfect' || n.status === 'good' || n.status === 'ok');
-  const vertical = hits.filter(n => n.note.type === 'UP' || n.note.type === 'DOWN');
-  let highlight = stats.pushups > 0 ? `You completed ${stats.pushups} ${stats.pushups === 1 ? 'rep' : 'reps'} this session.` : 'You made time for a session. Go at your own pace.';
+  const vertical = hits.filter(n => n.note.type !== 'HOLD');
+  let highlight = stats.pushups > 0 ? `You completed ${stats.pushups} ${exercise==='march'?(stats.pushups===1?'step':'steps'):(stats.pushups===1?'rep':'reps')} this session.` : 'You made time for a session. Go at your own pace.';
   let next = 'Watch the timing bar. Reach the active target as the bar fills.';
   const holds = hits.filter(n => n.note.type === 'HOLD' && (n.status === 'perfect' || n.status === 'good'));
   if (holds.length) highlight = `You kept the hold meter steady through ${holds.length} ${holds.length === 1 ? 'hold' : 'holds'}.`;
@@ -27,7 +28,7 @@ export function sessionFeedback(notes: readonly PlayedNote[], stats: Stats, came
     }
   }
   let tracking: string | undefined;
-  if (camera) {
+  if (camera && exercise==='pushup') {
     if (bodySamples < cfg.minBodySamples) tracking = 'Not enough body-tracking data for a camera-setup observation.';
     else if (bodyVisibleSamples / bodySamples < cfg.minBodyCoverage) {
       next = 'Your elbows were not consistently visible to the tracker. Adjust the camera framing if you want the full arm overlay.';

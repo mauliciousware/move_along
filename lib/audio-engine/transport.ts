@@ -1,8 +1,9 @@
 import { PUSHUP_CONFIG as CONFIG } from '../shared/config';
-import { getAudioContext } from './cues';
+import { getAudioContext, unlockAudio } from './cues';
 const buffers = new Map<string, Promise<AudioBuffer>>();
 /** All time comes from the same Web Audio context used for calibration cues. */
 export class AudioTransport {
+  private generation = 0;
   private source: AudioBufferSourceNode | null = null;
   private gain: GainNode | null = null;
   private filter: BiquadFilterNode | null = null;
@@ -15,15 +16,18 @@ export class AudioTransport {
   async load() {
     let pending=buffers.get(this.file);
     if(!pending) {
-      pending=fetch(this.file).then(response=>{if(!response.ok)throw new Error('The selected track could not load.');return response.arrayBuffer();}).then(bytes=>this.ctx.decodeAudioData(bytes));
+      const controller=new AbortController();
+      const timeout=setTimeout(()=>controller.abort(),CONFIG.audioSession.loadTimeoutMs);
+      pending=fetch(this.file,{signal:controller.signal}).then(response=>{if(!response.ok)throw new Error('This track is missing from this build. Retry or choose the practice beat.');return response.arrayBuffer();}).then(bytes=>this.ctx.decodeAudioData(bytes)).finally(()=>clearTimeout(timeout));
       buffers.set(this.file,pending);
       pending.catch(()=>buffers.delete(this.file));
     }
     return pending;
   }
   async start(buffer: AudioBuffer) {
-    await this.ctx.resume();
-    if(this.ctx.state!=='running')throw new Error('Tap RETRY AUDIO to enable sound.');
+    const generation = ++this.generation;
+    await this.unlock();
+    if (generation !== this.generation) return;
     this.stop();
     this.connect(buffer);
     this.startCtxTime=this.ctx.currentTime+4*CONFIG.animation.countdownMs/1000;
@@ -48,7 +52,8 @@ export class AudioTransport {
     return this.getSongTimeMs()-(performance.now()-t);
   }
   get isRunning() { return this.ctx.state === 'running'; }
-  unlock() { return this.ctx.resume(); }
+  get hasParked() { return !!this.parked; }
+  async unlock() { if(this.ctx.state==='running')return; if(!await unlockAudio())throw new Error('Safari needs a tap to enable sound. Tap Retry audio, with Safari in the foreground.'); }
   pause() {
     if (this.parked || !this.source?.buffer) return Promise.resolve();
     const saved = {buffer:this.source.buffer, offset:this.ctx.currentTime-this.startCtxTime, songMs:this.getSongTimeMs()};
@@ -57,7 +62,9 @@ export class AudioTransport {
   }
   async parkForCalibration() { await this.pause(); await this.ctx.resume(); }
   async resume() {
-    await this.ctx.resume();
+    const generation = ++this.generation;
+    await this.unlock();
+    if (generation !== this.generation) return;
     if(this.ctx.state!=='running')throw new Error('Tap Resume to enable audio.');
     if(this.parked) {
       const saved=this.parked;this.parked=null;this.connect(saved.buffer);
@@ -69,7 +76,7 @@ export class AudioTransport {
     if(!this.gain || !this.filter)return;
     const t=this.ctx.currentTime, attack=CONFIG.audio.attackMs/1000, recover=CONFIG.audio.recoverMs/1000;
     for(const [param,low,normal] of [[this.gain.gain,CONFIG.audio.missGain,1],[this.filter.frequency,CONFIG.audio.missCutoff,CONFIG.audio.normalCutoff]] as const) {
-      param.cancelAndHoldAtTime(t);param.linearRampToValueAtTime(low,t+attack);param.linearRampToValueAtTime(normal,t+attack+recover);
+      if(typeof param.cancelAndHoldAtTime==='function')param.cancelAndHoldAtTime(t);else {param.cancelScheduledValues(t);param.setValueAtTime(param.value,t);}param.linearRampToValueAtTime(low,t+attack);param.linearRampToValueAtTime(normal,t+attack+recover);
     }
   }
   hit() {this.tone(this.ctx.currentTime,CONFIG.audio.hitFrequency,CONFIG.audio.hitGain,CONFIG.audio.hitDurationMs);}
@@ -78,5 +85,5 @@ export class AudioTransport {
     gain.gain.setValueAtTime(0,t);gain.gain.linearRampToValueAtTime(volume,t+CONFIG.cues.rampMs/1000);gain.gain.linearRampToValueAtTime(0,t+duration/1000);
     oscillator.connect(gain).connect(this.ctx.destination);oscillator.start(t);oscillator.stop(t+duration/1000);this.tones.add(oscillator);oscillator.onended=()=>{this.tones.delete(oscillator);oscillator.disconnect();gain.disconnect();};
   }
-  stop() {this.parked=null;for(const tone of this.tones){tone.stop();tone.disconnect();}this.tones.clear();this.source?.stop();this.source?.disconnect();this.gain?.disconnect();this.filter?.disconnect();this.source=null;this.gain=null;this.filter=null;}
+  stop() {++this.generation;this.parked=null;for(const tone of this.tones){tone.stop();tone.disconnect();}this.tones.clear();this.source?.stop();this.source?.disconnect();this.gain?.disconnect();this.filter?.disconnect();this.source=null;this.gain=null;this.filter=null;}
 }

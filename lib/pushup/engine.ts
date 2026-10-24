@@ -1,21 +1,27 @@
 import { PoseEngine as LocalPoseEngine } from '@/lib/pose-engine/engine';
+import type { ExerciseId } from '@/lib/shared/types';
+import { standingFeatures, standingSignal, type StandingCalibration, type MovementSignal } from '@/lib/exercises/standing';
+import { normalizePose } from './signals';
 import { saveCalibration } from './calibration';
 import type { BodyOverlayMode, Calibration, PoseFrame } from '@/lib/shared/pushup-types';
 import { PUSHUP_CONFIG as CONFIG } from '@/lib/shared/config';
 
 /** Adapt the shared full-body tracker to the original push-up signal contract. */
 export class PoseEngine {
-  readonly camera = new LocalPoseEngine('pushup');
+  readonly camera:LocalPoseEngine;
+  standingCalibration:StandingCalibration|null=null;
   calibration: Calibration | null = null;
   private calibratedSetup = '';
   private listeners = new Set<() => void>();
   private frames = new Set<(frame: PoseFrame) => void>();
   private current: PoseFrame | null = null;
-  private state = { ...this.camera.getSnapshot(), calibrated: false };
-  constructor() {
+  private state: ReturnType<LocalPoseEngine['getSnapshot']> & {calibrated:boolean};
+  constructor(readonly exercise:ExerciseId = "pushup") {
+    this.camera=new LocalPoseEngine(exercise);
+    this.state={...this.camera.getSnapshot(),calibrated:false};
     this.camera.subscribe(() => {
-      if (this.camera.setupId !== this.calibratedSetup || this.camera.getSnapshot().phase === 'suspended') this.calibration = null;
-      this.state = { ...this.camera.getSnapshot(), calibrated: !!this.calibration };
+      if (this.camera.setupId !== this.calibratedSetup || this.camera.getSnapshot().phase === 'suspended') {this.calibration = null;this.standingCalibration=null;}
+      this.state = { ...this.camera.getSnapshot(), calibrated: !!(this.calibration||this.standingCalibration) };
       for (const fn of this.listeners) fn();
     });
     this.camera.onFrame(frame => {
@@ -41,6 +47,11 @@ export class PoseEngine {
   detach() { this.camera.detach(); }
   stop() { this.camera.stop(); this.current = null; this.clearCalibration(); }
   setCalibration(value: Calibration) { saveCalibration(value); this.calibration=value; this.calibratedSetup=this.camera.setupId; this.publish(); }
-  clearCalibration() { this.calibration=null; this.publish(); }
-  private publish() { if(this.state.calibrated===!!this.calibration)return; this.state={...this.state,calibrated:!!this.calibration}; for(const fn of this.listeners)fn(); }
+  signal(frame=this.frame):MovementSignal {
+    if(this.exercise!=='pushup')return standingSignal(standingFeatures(this.camera.frame),this.standingCalibration);
+    return {p:frame&&this.calibration?normalizePose(frame,this.calibration).p:1,left:0,right:0,ok:!!frame?.ok&&!!this.calibration};
+  }
+  setStandingCalibration(value:StandingCalibration){this.standingCalibration=value;this.calibratedSetup=this.camera.setupId;this.publish();}
+  clearCalibration() { this.calibration=null;this.standingCalibration=null; this.publish(); }
+  private publish() { if(this.state.calibrated===!!(this.calibration||this.standingCalibration))return; this.state={...this.state,calibrated:!!(this.calibration||this.standingCalibration)}; for(const fn of this.listeners)fn(); }
 }

@@ -37,6 +37,6 @@ export default function PoseView({ engine, lanes = false, runtime }: { engine: P
       <pre className="pose-diagnostics" ref={debug} />
     </div>
     {!runtime && <OverlayControl value={overlayMode} onChange={mode=>{engine.setBodyOverlay(mode);setOverlayMode(mode);}}/>}
-    {!runtime && state.phase === 'running' && <p className="tracking-caption" role="status"><span className={state.tracking === 'TRACKING' ? 'live-dot' : ''} />{state.tracking === 'TRACKING' ? 'Head tracking active' : 'Looking for your head and shoulders'} · camera stays on this device</p>}
+    {!runtime && state.phase === 'running' && <p className="tracking-caption" role="status"><span className={state.tracking === 'TRACKING' ? 'live-dot' : ''} />{state.tracking === 'TRACKING' ? (engine.exercise==='pushup'?'Upper-body tracking active':'Full-body tracking active') : (engine.exercise==='pushup'?'Looking for your head and shoulders':'Keep your hips, knees and feet in view')} · camera stays on this device</p>}
   </div>;
 }

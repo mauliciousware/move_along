@@ -358,3 +358,17 @@
 .pushup-experience .game-canvas { font-family: var(--font-pixel), monospace; }
 .brand { font-family: var(--font-pixel), monospace; font-size: clamp(11px, 1.5vw, 14px); font-weight: 400; letter-spacing: 0; line-height: 1.8; }
 .pushup-experience .console-artist { font-family: inherit; font-size: 7px; line-height: 1.8; }
+
+/* Match the main app: pixel display type, readable self-hosted body copy. */
+.pushup-experience, .pushup-dialog { font-family: var(--font-body), sans-serif; font-size: 16px; line-height: 1.6; }
+.pushup-experience :is(h1,h2,.chapter-label,.result-score strong,.arena-score,.combo-number),
+.pushup-dialog [data-slot=dialog-title] { font-family: var(--font-pixel), monospace; }
+.pushup-experience p { line-height: 1.65; }
+.pushup-experience .pushup-button, .pushup-dialog .pushup-button { font-family: var(--font-body), sans-serif; font-size: 16px; font-weight: 600; }
+.pushup-experience :is(.tracking-caption,.pushup-footer,.game-instruction,.console-artist),
+.pushup-dialog [data-slot=dialog-description] { font-size: 13px; }
+.pushup-experience .result-stat span { font-size: 12px; }
+.result-maths, .movement-review { border-top: 2px solid var(--border); margin-block: 24px; padding-top: 24px; }
+.movement-review .movement-art { max-height: 200px; margin: 20px auto; }
+.movement-review ol { padding-left: 24px; }
+.routine-block-result { padding-block: 20px; border-bottom: 1px solid var(--border); }
