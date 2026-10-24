@@ -1,9 +1,9 @@
 import { PUSHUP_CONFIG as CONFIG } from '../shared/config';
 import type { Calibration, PoseFrame } from '../shared/pushup-types';
 export const CALIBRATION_STEPS = [
-  { title: 'PLANK', instruction: 'Get into your push-up position. Hold still.' },
-  { title: 'UP', instruction: 'Find your comfortable top position.' },
-  { title: 'DOWN', instruction: 'Lower to a comfortable position, then hold still.' },
+  { title: 'MIDDLE', instruction: 'Start halfway down in a comfortable push-up. Hold still.' },
+  { title: 'UP', instruction: 'Push up to your comfortable top position and hold.' },
+  { title: 'DOWN', instruction: 'Lower to your comfortable bottom position and hold.' },
 ] as const;
 export type CalibrationState = { step: number; phase: 'measuring' | 'retry' | 'ready'; message: string; revision: number };
 
@@ -45,14 +45,15 @@ export class CalibrationSession {
     this.samples.length = 0; this.progress = 0; this.enteredAt = this.timeoutAt = now; this.timeoutCount = 0; this.retryAt = null;
     this.change({ step, phase: 'measuring', message });
   }
-  restart(now: number) { this.neutral = null; this.result = null; this.lastFrame = -Infinity; this.enter(0, now); }
+  restart(now: number) { this.neutral = null; this.top = 0; this.result = null; this.lastFrame = -Infinity; this.enter(0, now); }
   update(frame: PoseFrame | null, now: number) {
     if (this.state.phase === 'ready') return;
     const cfg = CONFIG.calibration;
     if (this.state.phase === 'measuring' && now - this.timeoutAt >= cfg.timeoutMs) {
       this.timeoutAt = now; this.timeoutCount++;
       this.samples.length = 0; this.progress = 0;
-      this.change({ phase: this.timeoutCount >= cfg.maxTimeouts ? 'retry' : 'measuring', message: this.timeoutCount >= cfg.maxTimeouts ? 'Try again, or hold your starting plank for 3 seconds.' : CALIBRATION_STEPS[this.state.step].instruction });
+      if (this.timeoutCount >= cfg.maxTimeouts) { this.neutral = null; this.top = 0; }
+      this.change({ phase: this.timeoutCount >= cfg.maxTimeouts ? 'retry' : 'measuring', message: this.timeoutCount >= cfg.maxTimeouts ? 'Try again, or hold your middle push-up position for 3 seconds.' : CALIBRATION_STEPS[this.state.step].instruction });
     }
     if (!frame?.ok || now - frame.tPerfMs > CONFIG.camera.staleMs) { this.samples.length = 0; this.progress = 0; this.retryAt = null; return; }
     if (frame.tPerfMs <= this.lastFrame) return;
@@ -69,16 +70,17 @@ export class CalibrationSession {
     const span = frame.tPerfMs - this.samples[0].t;
     if (!quiet) { this.progress = 0; this.retryAt = null; return; }
     if (this.state.phase === 'retry') {
-      const inPlank = !this.neutral || Math.abs(meanY - this.neutral.y) <= cfg.retryTolerance * this.neutral.sw;
-      if (!inPlank) { this.retryAt = null; return; }
+      const inMiddle = !this.neutral || Math.abs(meanY - this.neutral.y) <= cfg.retryTolerance * this.neutral.sw;
+      if (!inMiddle) { this.retryAt = null; return; }
       this.retryAt ??= frame.tPerfMs;
       this.progress = Math.min(1, (frame.tPerfMs - this.retryAt) / cfg.retryPlankMs);
       if (this.progress >= 1) this.restart(now);
       return;
     }
     let appropriate = true;
-    if (this.state.step === 1 && this.neutral) appropriate = meanY <= this.neutral.y + cfg.upTolerance * this.neutral.sw;
-    if (this.state.step === 2 && this.neutral) appropriate = meanY >= this.top + cfg.downDifference * this.neutral.sw;
+    // The first step is the middle of the comfortable range, so UP and DOWN each need real movement.
+    if (this.state.step === 1 && this.neutral) appropriate = meanY <= this.neutral.y - cfg.minUpLift * this.neutral.sw;
+    if (this.state.step === 2 && this.neutral) appropriate = meanY >= this.neutral.y + cfg.minDownDrop * this.neutral.sw;
     this.progress = appropriate ? Math.min(1, span / cfg.stableMs) : 0;
     if (!appropriate || span < cfg.stableMs || n < cfg.minSamples || now - this.enteredAt < cfg.stepSettleMs) return;
     const y = median(this.samples.map(p => p.y));

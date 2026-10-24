@@ -72,7 +72,7 @@ export const PUSHUP_CONFIG = {
   feedback: { minHits: 6, minDirectionHits: 3, biasRatio: 0.65, minBodySamples: 90, minBodyCoverage: 0.65, qualityDifference: 0.1 },
   overlay: { glow: 12, trailOpacity: 0.45, gaugeX: 0.04, gaugeY: 0.18, gaugeWidth: 0.018, gaugeHeight: 0.35, dotRadius: 3, fontSize: 11 },
   smoothing: { minCutoff: 1.2, beta: 0.05, dCutoff: 1 },
-  calibration: { stableMs: 1000, stableStd: 0.006, timeoutMs: 10000, maxTimeouts: 2, retryPlankMs: 3000, readyMs: 1500, minVerticalRange: 0.25, stepSettleMs: 1500, minSamples: 12, upTolerance: 0.04, downDifference: 0.08, retryTolerance: 0.12, sampleCapacity: 96, demoMs: 2400 },
+  calibration: { stableMs: 1000, stableStd: 0.006, timeoutMs: 10000, maxTimeouts: 2, retryPlankMs: 3000, readyMs: 1500, minVerticalRange: 0.25, stepSettleMs: 2500, minSamples: 12, minUpLift: 0.10, minDownDrop: 0.16, retryTolerance: 0.12, sampleCapacity: 96, demoMs: 2400 },
   cues: { frequencies: [440, 554, 659], durationMs: 180, gain: 0.06, rampMs: 12 },
   reps: { minMs: 500, maxMs: 8000 },
   animation: { hitMs: 350, hitScale: 1.25, missMs: 250, pulseMs: 120, pulseStrength: 0.06, judgmentMs: 500, screenMs: 180, tierResetMs: 400, resultMs: 1200, countdownMs: 700 },

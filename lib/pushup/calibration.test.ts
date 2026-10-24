@@ -8,26 +8,34 @@ function steady(session:CalibrationSession,start:number,end:number,y:number) {
 const valid={neutralHeadX:.5,neutralHeadY:.4,topHeadY:.35,bottomHeadY:.6,shoulderWidth:.4};
 afterEach(()=>vi.unstubAllGlobals());
 describe('hands-free calibration',()=>{
-  it('collects stable medians and completes PLANK -> UP -> DOWN once',()=>{
+  it('collects stable medians and completes MIDDLE -> UP -> DOWN once',()=>{
     const onChange=vi.fn();const session=new CalibrationSession(0,onChange);
-    steady(session,0,1500,.4);expect(session.state.step).toBe(1);
-    steady(session,1550,3050,.35);expect(session.state.step).toBe(2);
-    steady(session,3100,4600,.6);expect(session.state.phase).toBe('ready');
-    expect(session.result).toEqual(valid);
-    const changes=onChange.mock.calls.length;steady(session,4650,9000,.6);expect(onChange).toHaveBeenCalledTimes(changes);
+    steady(session,0,2600,.45);expect(session.state.step).toBe(1);
+    steady(session,2650,5200,.35);expect(session.state.step).toBe(2);
+    steady(session,5250,7900,.65);expect(session.state.phase).toBe('ready');
+    expect(session.result).toEqual({neutralHeadX:.5,neutralHeadY:.45,topHeadY:.35,bottomHeadY:.65,shoulderWidth:.4});
+    const changes=onChange.mock.calls.length;steady(session,7950,12000,.65);expect(onChange).toHaveBeenCalledTimes(changes);
   });
-  it('allows UP to equal an already extended starting plank, but never accepts the same position for DOWN',()=>{
+  it('gives the user time to settle before measuring the middle position',()=>{
     const session=new CalibrationSession(0,()=>{});
-    steady(session,0,3050,.4);expect(session.state.step).toBe(2);
-    steady(session,3100,5000,.4);expect(session.result).toBeNull();expect(session.state.step).toBe(2);
-    steady(session,5050,6550,.6);expect(session.result?.topHeadY).toBe(.4);
+    steady(session,0,2000,.45);expect(session.state.step).toBe(0);
+    steady(session,2050,2600,.45);expect(session.state.step).toBe(1);
   });
-  it('rejects insufficient vertical range and repeats UP/DOWN',()=>{
+  it('stays on UP instead of jumping to DOWN while the middle position is held',()=>{
     const session=new CalibrationSession(0,()=>{});
-    steady(session,0,3050,.4);steady(session,3100,4600,.46);
-    expect(session.state.step).toBe(1);expect(session.state.message).toContain('Adjust its placement');expect(session.result).toBeNull();
+    steady(session,0,15000,.45);
+    expect(session.state.step).toBe(1);expect(session.state.phase).toBe('measuring');expect(session.result).toBeNull();
   });
-  it('repeats instruction at ten seconds, offers retry at twenty, and restarts on stable plank',()=>{
+  it('requires a real lift for UP and a real drop for DOWN',()=>{
+    const session=new CalibrationSession(0,()=>{});
+    steady(session,0,2600,.45);expect(session.state.step).toBe(1);
+    steady(session,2650,5200,.44);expect(session.state.step).toBe(1);
+    steady(session,5250,7800,.38);expect(session.state.step).toBe(2);
+    steady(session,7850,10400,.50);expect(session.state.phase).toBe('measuring');expect(session.result).toBeNull();
+    steady(session,10450,13000,.62);expect(session.state.phase).toBe('ready');
+    expect(session.result?.topHeadY).toBe(.38);expect(session.result?.bottomHeadY).toBe(.62);
+  });
+  it('repeats instruction at ten seconds, offers retry at twenty, and restarts on a stable middle',()=>{
     const session=new CalibrationSession(0,()=>{});
     session.update(null,10000);expect(session.state.phase).toBe('measuring');expect(session.state.revision).toBe(1);
     session.update(null,20000);expect(session.state.phase).toBe('retry');

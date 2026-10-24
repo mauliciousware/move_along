@@ -58,8 +58,9 @@ set the pace.
    a portrait video size (taller than wide) and that the camera preview fills the
    tall frame without a wide letterbox strip. If the phone is turned sideways, the
    `TURN PHONE UPRIGHT` guard should cover the screen and STOP must still work.
-2. Pass framing, then calibrate starting/top/lower positions. Steps must finish
-   only from stable observed samples; insufficient range offers a placement retry.
+2. Pass framing, then calibrate three positions in order: comfortable middle
+   (`MIDDLE`), `UP`, then `DOWN`. Each step must wait for real movement and finish
+   only from stable observed samples; holding the middle must never skip `UP`.
 3. Calibration leads straight into the countdown and game. There is no rest or
    BREATHE screen at any point.
 4. Both rings are visible: `UP` on top and `DOWN` below. The `DOWN` ring is lit

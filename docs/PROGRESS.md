@@ -366,3 +366,31 @@ walkthrough at a 390×844 portrait viewport confirmed the two-ring layout, both
 completion animations, the handoff comet, the plank ring and the live hold clock.
 These are local browser, unit and build results. The two-ring animation has not
 been observed on a physical iPhone, and no camera evidence is claimed.
+
+## Calibration order and auto-advance fix — 2026-10-24
+
+Owner report: calibration asked for the starting position and then jumped straight
+to `DOWN` without the player moving. Reproduction with the state machine confirmed
+that holding the starting position completed `PLANK` at 1.5s and `UP` at 3.0s,
+because `UP` accepted the same head height as the baseline.
+
+- Calibration is now three distinct positions in the requested order: a
+  comfortable middle (`MIDDLE`), `UP`, then `DOWN`.
+- `UP` requires the stable head height to rise at least `minUpLift` (10% of
+  shoulder width) above the measured middle. `DOWN` requires a drop of at least
+  `minDownDrop` (16% of shoulder width). Holding the middle can no longer advance
+  past `UP`.
+- The per-step settle time increased from 1.5s to 2.5s, so the instruction is
+  readable before measurement can complete.
+- The calibration demo figure now shifts up and down with the active step, so the
+  three positions are visually distinct. Instructions, voice text and the timeout
+  retry wording describe the middle position.
+- `PUSHUP_CONFIG.calibration` replaces the old `upTolerance`/`downDifference`
+  values with `minUpLift`/`minDownDrop`; the total range is still validated against
+  `minVerticalRange`.
+
+Verification: `npm run typecheck`, `npm run lint`, `npm run test` (176 tests in 23
+files) and `npm run build` pass. New tests cover the 2.5s settle, holding the
+middle without jumping to `DOWN`, the required lift/drop, the three-step medians,
+and the timeout/retry path. These are unit/build results only; the revised
+calibration has not been observed on a physical iPhone.

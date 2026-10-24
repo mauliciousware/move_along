@@ -53,7 +53,7 @@ export function Calibration({ onNext, engine }: { onNext: () => void; engine?: P
     </svg>
     <CameraSurface engine={engine} />
     <div className="calibration-progress" aria-label="Hold steady to complete this step"><div ref={progress} /></div>
-    {state.phase === 'measuring' && <p className="muted">Hold steady for one second. This step completes automatically.</p>}
+    {state.phase === 'measuring' && <p className="muted">Move only when the instruction changes. Each step completes when you hold still.</p>}
     {state.phase === 'retry' && <Button onClick={() => { void unlockAudio(); sessionRef.current?.restart(performance.now()); }}>TRY AGAIN</Button>}
     <Button variant="secondary" onClick={() => { const enabled = !voice; voiceRef.current = enabled; setVoice(enabled); if (!enabled) stopSpeech(); else speakLocally(state.message); }}>VOICE {voice ? 'ON' : 'OFF'}</Button>
   </section>;

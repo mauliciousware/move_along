@@ -250,6 +250,9 @@
   .step-indicator span { height:5px; background:var(--border); flex:1; }
   .step-indicator span.active { background:var(--primary); }
   .calibration-demo { height:90px; width:100%; }
+  .calibration-demo .demo-body { transform:translateY(-8px); transition:transform .45s ease; }
+  .calibration-demo.demo-1 .demo-body { transform:translateY(-20px); }
+  .calibration-demo.demo-2 .demo-body { transform:translateY(0); }
   .calibration-progress { height:8px; background:var(--border); margin:16px 0; overflow:hidden; }
   .calibration-progress > div { height:100%; background:var(--primary); transform-origin:left; transform:scaleX(0); }
   .arena { position:relative; height:calc(100svh - 128px); min-height:500px; max-height:850px; background:#171426; color:#f4f4fa; border:2px solid #222039; box-shadow:5px 5px 0 #222039; }
