@@ -42,8 +42,7 @@ export function Gameplay({ onEnd, onCalibrate, engine, runtime, exercise="pushup
       const signal=engine.signal(frame);const ok=signal.ok && frame.ok && engine.getSnapshot().usable;
       runtime.observeTracking(ok);
       if(runtime.game.getRest(runtime.songMs)){movement.interrupt();return;}
-      const cue=runtime.game.notes.find(n=>n.status==='pending')?.note.type;
-      const p=exercise==='march'?(cue==='RIGHT'?signal.right:signal.left):signal.p;
+      const p=signal.p;
       const velocity=previousTime && frame.tPerfMs>previousTime ? (p-previousP)/((frame.tPerfMs-previousTime)/1000):Infinity;
       runtime.setSignal(p,velocity,ok?frame.tPerfMs:-Infinity);previousP=p;previousTime=frame.tPerfMs;
       movement.update(frame.tPerfMs,{...signal,ok});
@@ -56,9 +55,9 @@ export function Gameplay({ onEnd, onCalibrate, engine, runtime, exercise="pushup
       if(event.key==='[' || event.key===']') {if(new URLSearchParams(location.search).get('dev')==='1'){runtime.nudgeOffset(event.key===']'?1:-1);}return;}
       if(engine || runtime.getSnapshot().phase!=='playing' || runtime.game.getRest(runtime.songMs))return;
       if(event.code==='Space'){event.preventDefault();runtime.setSpace(true);return;}
-      const keys=exercise==='march'?['ArrowLeft','ArrowRight']:['ArrowDown','ArrowUp'];if(!keys.includes(event.key))return;
-      event.preventDefault();runtime.setSignal(exercise==='march'||event.key==='ArrowUp'?1:0,0,performance.now());
-      movement.input({type:event.key==='ArrowLeft'?'LEFT':event.key==='ArrowRight'?'RIGHT':event.key==='ArrowUp'?'UP':'DOWN',tPerfMs:performance.now()});
+      const keys=['ArrowDown','ArrowUp'];if(!keys.includes(event.key))return;
+      event.preventDefault();runtime.setSignal(event.key==='ArrowUp'?1:0,0,performance.now());
+      movement.input({type:event.key==='ArrowUp'?'UP':'DOWN',tPerfMs:performance.now()});
     }
     const keyup=(event:KeyboardEvent)=>{if(event.code==='Space')runtime.setSpace(false);};
     const blur=()=>{runtime.setSpace(false);movement.interrupt();runtime.pause();};
@@ -84,7 +83,7 @@ export function Gameplay({ onEnd, onCalibrate, engine, runtime, exercise="pushup
   const pause=(kind:'pause'|'stop')=>{runtime.pause();setSheet(kind);};
   const resume=()=>{setSheet(null);runtime.reenter();};
   const showPause=sheet==='pause' || state.phase==='paused' && !sheet;
-  const plannedReps=flow?summary.totalReps:runtime.game.map.notes.filter(note=>exercise==='march'?note.type==='LEFT'||note.type==='RIGHT':note.type==='UP').length;
+  const plannedReps=flow?summary.totalReps:runtime.game.map.notes.filter(note=>note.type==='UP').length;
   const tierProgress=Math.min(1,stats.combo/CONFIG.game.tierCombos[CONFIG.game.tierCombos.length-1]);
   return <section className="game-column pump-game" aria-label="MOVE ALONG workout">
     <div className="arena">
@@ -111,12 +110,12 @@ export function Gameplay({ onEnd, onCalibrate, engine, runtime, exercise="pushup
         <div className="ladder-meter"><div style={{transform:`scaleY(${tierProgress})`}}/></div>
       </aside>
       <footer className="workout-dock">
-        <div className="rep-readout"><span className="console-eyebrow">{exercise==='march'?'STEPS':'REPS'}</span><strong>{stats.pushups}<small> / {plannedReps}</small></strong></div>
+        <div className="rep-readout"><span className="console-eyebrow">REPS</span><strong>{stats.pushups}<small> / {plannedReps}</small></strong></div>
         <div className="dock-progress"><span className="console-eyebrow">{flow?'SESSION PROGRESS':'SONG PROGRESS'}</span>{!flow&&<div className="progress-milestones" ref={milestones} aria-hidden="true">{Array.from({length:CONFIG.targets.milestoneCount},(_,index)=><span key={index}>✦</span>)}</div>}<div className="music-progress" aria-label={flow?'Session progress':'Song progress'}><div ref={progress}/></div></div>
         <div className="accuracy-readout"><span className="console-eyebrow">{flow?'HOLD TIME':'ACCURACY'}</span><strong>{flow?`${Math.floor(stats.plankTimeMs/1000)}s`:accuracyLabel(stats)}</strong>{!flow&&<span className="accuracy-rule"/>}</div>
       </footer>
     </div>
-    <p className="game-instruction">{flow?'Two rings: lower to fill DOWN, rise to fill UP. The song is background music.':!engine?(exercise==='march'?'KEYBOARD · ← left knee · → right knee':'KEYBOARD · ↓ lower · ↑ rise · Space to hold'):(exercise==='march'?'Lift. Return. Alternate.':'Lower. Rise. Meet the beat.')}<span>Processed on this device</span></p>
+    <p className="game-instruction">{flow?'Two rings: lower to fill DOWN, rise to fill UP. The song is background music.':!engine?'KEYBOARD · ↓ lower · ↑ rise · Space to hold':'Lower. Rise. Meet the beat.'}<span>Processed on this device</span></p>
     <pre className="game-diagnostics" ref={diagnostics}/>
     {sheet==='stop' && <Modal title="End workout?" onClose={resume}><p>You can rest anytime.</p><Button variant="danger" onClick={finish}>END & SEE SCORE</Button><Button variant="secondary" onClick={resume}>KEEP GOING</Button></Modal>}
     {showPause && <Modal title={flow?'PAUSED.':'TAKE A BREATHER.'} onClose={resume}><Button onClick={resume}>RESUME</Button><>{engine && <OverlayControl value={overlayMode} onChange={mode=>{runtime.setBodyOverlay(mode);engine?.setBodyOverlay(mode);setOverlayMode(mode);}}/>}</>{!flow&&<Slider label="INPUT DELAY (ms)" value={delay} max={CONFIG.maxInputLatencyMs} onChange={value=>{setDelay(value);runtime.setLatency(value);}}/>}<Button variant="secondary" onClick={()=>{runtime.setSfx(!sfx);setSfx(!sfx);}}>HIT SOUND {sfx?'ON':'OFF'}</Button><Button variant="secondary" onClick={async()=>{if(await runtime.prepareCalibration())onCalibrate();}}>RECALIBRATE</Button><Button variant="danger" onClick={finish}>END WORKOUT</Button></Modal>}

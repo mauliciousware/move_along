@@ -1,15 +1,16 @@
 import { PoseEngine as LocalPoseEngine } from '@/lib/pose-engine/engine';
 import type { ExerciseId } from '@/lib/shared/types';
-import { standingFeatures, standingSignal, type StandingCalibration, type MovementSignal } from '@/lib/exercises/standing';
 import { normalizePose } from './signals';
 import { saveCalibration } from './calibration';
-import type { BodyOverlayMode, Calibration, PoseFrame } from '@/lib/shared/pushup-types';
+import type { BodyOverlayMode, Calibration, PoseFrame, TrackedJoint } from '@/lib/shared/pushup-types';
 import { PUSHUP_CONFIG as CONFIG } from '@/lib/shared/config';
 
-/** Adapt the shared full-body tracker to the original push-up signal contract. */
+export interface MovementSignal { p:number; left:number; right:number; ok:boolean }
+
+/** Adapt the shared full-body tracker to the exercise's tracked-centre signal contract. */
 export class PoseEngine {
   readonly camera:LocalPoseEngine;
-  standingCalibration:StandingCalibration|null=null;
+  readonly centerJoint: TrackedJoint;
   calibration: Calibration | null = null;
   private calibratedSetup = '';
   private listeners = new Set<() => void>();
@@ -17,20 +18,27 @@ export class PoseEngine {
   private current: PoseFrame | null = null;
   private state: ReturnType<LocalPoseEngine['getSnapshot']> & {calibrated:boolean};
   constructor(readonly exercise:ExerciseId = "pushup") {
+    this.centerJoint = exercise === 'pushup' ? 'nose' : 'waist';
     this.camera=new LocalPoseEngine(exercise);
     this.state={...this.camera.getSnapshot(),calibrated:false};
     this.camera.subscribe(() => {
-      if (this.camera.setupId !== this.calibratedSetup || this.camera.getSnapshot().phase === 'suspended') {this.calibration = null;this.standingCalibration=null;}
-      this.state = { ...this.camera.getSnapshot(), calibrated: !!(this.calibration||this.standingCalibration) };
+      if (this.camera.setupId !== this.calibratedSetup || this.camera.getSnapshot().phase === 'suspended') this.calibration = null;
+      this.state = { ...this.camera.getSnapshot(), calibrated: !!this.calibration };
       for (const fn of this.listeners) fn();
     });
     this.camera.onFrame(frame => {
-      const { nose, leftShoulder, rightShoulder, ...joints } = frame.joints;
+      const { nose, leftShoulder, rightShoulder, leftHip, rightHip, leftElbow, rightElbow, leftWrist, rightWrist } = frame.joints;
       const shoulderWidth = leftShoulder && rightShoulder ? Math.hypot(leftShoulder.x-rightShoulder.x, leftShoulder.y-rightShoulder.y) : 0;
-      this.current = { tPerfMs: frame.tPerfMs, nose: nose ?? {x:0,y:0}, waist: nose ?? {x:0,y:0}, shoulderWidth, confidence: frame.confidence,
-        ok: frame.usable && shoulderWidth >= CONFIG.pose.minShoulderWidth,
-        joints: {...joints, face:nose, leftShoulder, rightShoulder} };
-      for (const fn of this.frames) fn(this.current);
+      const hipsVisible = !!leftHip && !!rightHip &&
+        leftHip.visibility >= CONFIG.tracking.minConfidence && rightHip.visibility >= CONFIG.tracking.minConfidence;
+      const waist = hipsVisible
+        ? { x:(leftHip!.x+rightHip!.x)/2, y:(leftHip!.y+rightHip!.y)/2 }
+        : { x:nose?.x ?? 0, y:nose?.y ?? 0 };
+      const current: PoseFrame = { tPerfMs: frame.tPerfMs, nose: nose ?? {x:0,y:0}, waist, shoulderWidth, confidence: frame.confidence,
+        ok: frame.usable && shoulderWidth >= CONFIG.pose.minShoulderWidth && (this.centerJoint === 'nose' || hipsVisible),
+        joints: { face:nose, leftShoulder, rightShoulder, leftElbow, rightElbow, leftWrist, rightWrist } };
+      this.current = current;
+      for (const fn of this.frames) fn(current);
     });
   }
   get frame() { return this.camera.frame ? this.current : null; }
@@ -48,10 +56,9 @@ export class PoseEngine {
   stop() { this.camera.stop(); this.current = null; this.clearCalibration(); }
   setCalibration(value: Calibration) { saveCalibration(value); this.calibration=value; this.calibratedSetup=this.camera.setupId; this.publish(); }
   signal(frame=this.frame):MovementSignal {
-    if(this.exercise!=='pushup')return standingSignal(standingFeatures(this.camera.frame),this.standingCalibration);
-    return {p:frame&&this.calibration?normalizePose(frame,this.calibration).p:1,left:0,right:0,ok:!!frame?.ok&&!!this.calibration};
+    if (!frame || !this.calibration) return {p:1,left:0,right:0,ok:false};
+    return {p:normalizePose(frame,this.calibration).p,left:0,right:0,ok:frame.ok};
   }
-  setStandingCalibration(value:StandingCalibration){this.standingCalibration=value;this.calibratedSetup=this.camera.setupId;this.publish();}
-  clearCalibration() { this.calibration=null;this.standingCalibration=null; this.publish(); }
-  private publish() { if(this.state.calibrated===!!(this.calibration||this.standingCalibration))return; this.state={...this.state,calibrated:!!(this.calibration||this.standingCalibration)}; for(const fn of this.listeners)fn(); }
+  clearCalibration() { this.calibration=null; this.publish(); }
+  private publish() { if(this.state.calibrated===!!this.calibration)return; this.state={...this.state,calibrated:!!this.calibration}; for(const fn of this.listeners)fn(); }
 }

@@ -33,13 +33,13 @@ export function Results({ title, stats, onReplay, onDone, feedback, exercise, an
   const resultRank = rank(stats);
   const values: [string, string | number][] = flow
     ? [
-      [exercise === 'march' ? 'STEPS' : 'PUSH-UPS', stats.pushups],
+      ['PUSH-UPS', stats.pushups],
       ['PLANK HOLDS', `${analysis.holds} / ${analysis.totalHolds}`],
       ['HOLD TIME', `${Math.round(stats.plankTimeMs / 1000)}s`],
       ['SESSION TIME', time(stats.workoutTimeMs)],
     ]
     : [
-      [exercise === 'march' ? 'STEPS' : exercise === 'squat' ? 'SQUATS' : 'PUSH-UPS', stats.pushups],
+      ['PUSH-UPS', stats.pushups],
       ['ACCURACY', accuracyLabel(stats)], ['PERFECT', stats.perfect], ['GOOD', stats.good],
       ['OK', stats.ok], ['MISSES', stats.miss], ['MAX COMBO', stats.maxCombo],
       ['SONG TIME', time(stats.workoutTimeMs)], ['HOLD TIME', time(stats.plankTimeMs)],

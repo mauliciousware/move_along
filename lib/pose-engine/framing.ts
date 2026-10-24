@@ -7,7 +7,7 @@ export function visible(point: PosePoint | undefined): point is PosePoint {
     point.x >= 0 && point.x <= 1 && point.y >= 0 && point.y <= 1;
 }
 export function requiredJoints(exercise: ExerciseId): readonly PoseJoint[] {
-  return exercise === "pushup" ? CONFIG.pose.pushupJoints : CONFIG.pose.standingJoints;
+  return exercise === "pushup" ? CONFIG.pose.pushupJoints : CONFIG.pose.situpJoints;
 }
 export function assessFraming(frame: RawPoseFrame, exercise: ExerciseId): { usable: boolean; issue: FramingIssue; confidence: number } {
   const { joints } = frame;
@@ -17,10 +17,9 @@ export function assessFraming(frame: RawPoseFrame, exercise: ExerciseId): { usab
   if (!Object.values(joints).some(visible) || !Number.isFinite(frame.tPerfMs)) return result("person");
   if (!visible(joints.nose)) return result("head");
   if (!visible(joints.leftShoulder) || !visible(joints.rightShoulder)) return result("upper");
-  if (exercise !== "pushup") {
-    if (![joints.leftAnkle, joints.rightAnkle, joints.leftFoot, joints.rightFoot].every(visible)) return result("feet");
-    if (![joints.leftHip, joints.rightHip, joints.leftKnee, joints.rightKnee].every(visible)) return result("legs");
-  } else if (!visible(joints.leftElbow) || !visible(joints.rightElbow)) return result("upper");
+  if (exercise === "pushup") {
+    if (!visible(joints.leftElbow) || !visible(joints.rightElbow)) return result("upper");
+  } else if (![joints.leftHip, joints.rightHip, joints.leftKnee, joints.rightKnee].every(visible)) return result("legs");
   const margin = CONFIG.tracking.edgeMargin;
   if (required.some(name => {
     const p = joints[name]!;

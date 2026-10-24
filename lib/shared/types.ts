@@ -1,5 +1,5 @@
-export type ExerciseId = "squat" | "march" | "pushup";
-export type RoutineId = "standing" | "mix" | "single";
+export type ExerciseId = "pushup" | "situp";
+export type RoutineId = "mix" | "single";
 export type Screen = "landing" | "safety" | "routines" | "preview" | "library" | "how" | "learn" | "camera" | "calibration" | "practice" | "countdown" | "gameplay" | "rest" | "results";
 export interface Exercise {
   id: ExerciseId;

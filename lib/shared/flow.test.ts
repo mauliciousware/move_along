@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { ACTIVE_SCREENS, currentExercise, exerciseIds, flowReducer, INITIAL_FLOW } from "./flow";
 import type { FlowState } from "./flow";
-import { ROUTINE_IDS } from "@/data/catalog";
+import { EXERCISES, EXERCISE_IDS, ROUTINE_IDS } from "@/data/catalog";
+import { songsFor } from "./pushup-songs";
 
 describe("routine preview navigation", () => {
   it.each(ROUTINE_IDS)("reaches results without dead ends for %s", routine => {
@@ -38,7 +39,7 @@ describe("routine preview navigation", () => {
     const rest = flowReducer(state, { type: "skip" });
     expect(rest.screen).toBe("rest");
     const next = flowReducer(rest, { type: "next" });
-    expect(currentExercise(next)).toBe("march");
+    expect(currentExercise(next)).toBe("situp");
     expect(next.screen).toBe("learn");
     expect(flowReducer({ ...state, block: 2 }, { type: "skip" }).screen).toBe("results");
   });
@@ -48,6 +49,19 @@ describe("routine preview navigation", () => {
     const next = flowReducer(state, { type: "recalibrate" });
     expect(next.screen).toBe("calibration");
     expect(next.calibrationStep).toBe(0);
-    expect(currentExercise(next)).toBe("march");
+    expect(currentExercise(next)).toBe("situp");
+  });
+});
+
+describe("two-exercise lineup", () => {
+  it("ships exactly push-ups and sit-ups", () => {
+    expect(EXERCISE_IDS).toEqual(["pushup", "situp"]);
+    expect(EXERCISES.situp.name).toBe("Sit-ups");
+  });
+
+  it("builds rest-free flow maps for sit-ups", () => {
+    const maps = songsFor("situp").map(song => song.map);
+    expect(maps.length).toBeGreaterThan(0);
+    expect(maps.every(map => map.mode === "flow" && map.exercise === "situp" && map.rests.length === 0)).toBe(true);
   });
 });

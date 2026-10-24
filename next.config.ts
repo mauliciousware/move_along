@@ -3,6 +3,12 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   cacheComponents: true,
   partialPrefetching: true,
+  async redirects() {
+    return [
+      { source: "/squat", destination: "/", permanent: true },
+      { source: "/march", destination: "/", permanent: true },
+    ];
+  },
   async headers() {
     const dev = process.env.NODE_ENV === "development";
     const csp = [

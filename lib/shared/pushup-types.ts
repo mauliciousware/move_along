@@ -2,8 +2,8 @@ export type BodyOverlayMode = 'on' | 'minimal' | 'off';
 export const BODY_JOINTS = ['face', 'leftShoulder', 'rightShoulder', 'leftElbow', 'rightElbow', 'leftWrist', 'rightWrist'] as const;
 export type BodyJoint = typeof BODY_JOINTS[number];
 export interface BodyPoint { x: number; y: number; visibility: number }
-export type InputType = "UP" | "DOWN" | "LEFT" | "RIGHT";
-export type NoteType = InputType | "HOLD" | "LH" | "RH";
+export type InputType = "UP" | "DOWN";
+export type NoteType = InputType | "HOLD";
 export interface InputEvent { type: InputType; tPerfMs: number }
 export type TrackedJoint = 'nose' | 'waist';
 export interface PoseFrame {

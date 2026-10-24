@@ -4,15 +4,17 @@ import { GameSession } from './session';
 import { validateMap } from './validator';
 import { validateWorkLimits } from './work-limits';
 import { accuracy } from './scoring';
+import type { ExerciseId } from '../shared/types';
 
-describe('playable Move Along push-up maps',()=>{
- for(const song of ['pushup','squat','march'].flatMap(exercise=>songsFor(exercise as 'pushup'|'squat'|'march'))){
+describe('playable Move Along exercise maps',()=>{
+ const exercises: ExerciseId[] = ['pushup','situp'];
+ for(const song of exercises.flatMap(exercise=>songsFor(exercise))){
   it(`${song.title} passes grammar and safe-work limits`,()=>{expect(validateMap(song.map)).toEqual([]);if(song.map.mode!=='flow')expect(validateWorkLimits(song.map)).toEqual([]);});
   if(song.map.mode==='flow')continue;
   it(`${song.title} completes end to end with perfect input and holds`,()=>{
    const game=new GameSession(song.map);let cursor=0;
    for(let t=0;t<=song.map.durationMs;t+=10){
-    while(cursor<game.notes.length&&game.notes[cursor].note.time+game.latency<=t){const note=game.notes[cursor++].note;if(note.type==='UP'||note.type==='DOWN'||note.type==='LEFT'||note.type==='RIGHT')game.input(note.type,note.time,true);}
+    while(cursor<game.notes.length&&game.notes[cursor].note.time+game.latency<=t){const note=game.notes[cursor++].note;if(note.type==='UP'||note.type==='DOWN')game.input(note.type,note.time,true);}
     game.tick(t,true,1,true);
    }
    expect(game.stats.perfect).toBe(song.map.notes.length);expect(game.stats.miss).toBe(0);expect(accuracy(game.stats)).toBe(1);

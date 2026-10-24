@@ -19,7 +19,7 @@ export function continueRoutine(state:RoutineState,now:number):RoutineState {
  return state.phase==='rest'&&now>=state.restUntil ? {...state,phase:'workout',index:state.index+1}:state;
 }
 export function aggregateRoutine(results:BlockResult[]) {
- const stats=newStats();const counts:Record<ExerciseId,number>={pushup:0,squat:0,march:0};
+ const stats=newStats();const counts:Record<ExerciseId,number>={pushup:0,situp:0};
  for(const result of results){
   counts[result.exercise]+=result.stats.pushups;
   for(const key of ['score','perfect','good','ok','miss','skipped','plankTimeMs','workoutTimeMs'] as const)stats[key]+=result.stats[key];

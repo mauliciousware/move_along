@@ -12,7 +12,7 @@ export interface FlowState {
   afterSafety: "routines" | "camera";
 }
 export const INITIAL_FLOW: FlowState = {
-  screen: "landing", routine: "standing", singleExercise: "squat", block: 0,
+  screen: "landing", routine: "mix", singleExercise: "pushup", block: 0,
   calibrationStep: 0, countdown: CONFIG.preview.countdownSteps, endedEarly: false, afterSafety: "routines",
 };
 export type FlowAction =

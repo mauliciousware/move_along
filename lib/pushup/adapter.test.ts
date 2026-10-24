@@ -27,3 +27,31 @@ describe('push-up adapter',()=>{
   engine.stop();expect(engine.frame).toBeNull();
  });
 });
+describe('sit-up adapter',()=>{
+ const hips={leftHip:{x:.4,y:.7,visibility:.9},rightHip:{x:.6,y:.7,visibility:.9}};
+ const base=(t:number):PoseFrame=>({tPerfMs:t,joints:{nose:{x:.5,y:.2,visibility:.9},leftShoulder:{x:.3,y:.5,visibility:.9},rightShoulder:{x:.7,y:.5,visibility:.9},...hips},usable:true,confidence:.9,issue:'none',setupId:'front-1'});
+ it('tracks the waist midpoint and rejects frames without both hips',()=>{
+  const engine=new PoseEngine('situp');const camera=engine.camera as unknown as {emit:(f:PoseFrame)=>void};
+  camera.emit(base(100));
+  expect(engine.centerJoint).toBe('waist');
+  expect(engine.frame?.waist).toEqual({x:.5,y:.7});
+  expect(engine.frame?.ok).toBe(true);
+  camera.emit({...base(200),joints:{...base(200).joints,leftHip:undefined,rightHip:undefined}});
+  expect(engine.frame?.ok).toBe(false);
+  expect(engine.frame?.waist).toEqual({x:.5,y:.2});
+ });
+ it('normalizes the sit-up signal from the waist',()=>{
+  const engine=new PoseEngine('situp');const camera=engine.camera as unknown as {emit:(f:PoseFrame)=>void};
+  camera.emit(base(100));
+  engine.setCalibration({joint:'waist',centerX:.5,centerY:.7,topY:.45,bottomY:.7,scale:.4});
+  expect(engine.centerJoint).toBe('waist');
+  expect(engine.signal().p).toBeCloseTo(0);
+ });
+ it('keeps the nose as the push-up centre',()=>{
+  const engine=new PoseEngine('pushup');const camera=engine.camera as unknown as {emit:(f:PoseFrame)=>void};
+  camera.emit({tPerfMs:100,joints:{nose:{x:.5,y:.3,visibility:.9},leftShoulder:{x:.3,y:.5,visibility:.9},rightShoulder:{x:.7,y:.5,visibility:.9}},usable:true,confidence:.9,issue:'none',setupId:'front-1'});
+  engine.setCalibration({joint:'nose',centerX:.5,centerY:.5,topY:.3,bottomY:.7,scale:.4});
+  expect(engine.centerJoint).toBe('nose');
+  expect(engine.signal().p).toBeCloseTo(1);
+ });
+});

@@ -1,17 +1,22 @@
 import { expect, it } from 'vitest';
 import { ExerciseMovement } from './movement';
 import type { InputEvent } from '../shared/pushup-types';
-it('counts ten alternating lifts each side, never repeats a held lift, and requires neutral after loss',()=>{
- const events:InputEvent[]=[];const m=new ExerciseMovement('march',e=>events.push(e));let t=0;
- const frame=(left=0,right=0,ok=true)=>m.update(t+=50,{p:1,left,right,ok});
- for(let i=0;i<10;i++){frame();frame(1);for(let held=0;held<5;held++)frame(1);frame();frame(0,1);frame(0,1);}
- expect(m.count).toBe(20);expect(m.leftCount).toBe(10);expect(m.rightCount).toBe(10);
- frame(0,0,false);frame(1);frame(1);expect(m.count).toBe(20);
- frame();frame(1);expect(m.count).toBe(21);expect(events[0].type).toBe('LEFT');
+
+it('counts a full down-up cycle from the normalized signal', () => {
+  const events: InputEvent[] = [];
+  const movement = new ExerciseMovement('situp', event => events.push(event));
+  movement.update(0, { p: 1, left: 0, right: 0, ok: true });
+  movement.update(100, { p: 0.2, left: 0, right: 0, ok: true });
+  for (let t = 200; t <= 600; t += 100) movement.update(t, { p: 0.2, left: 0, right: 0, ok: true });
+  movement.update(700, { p: 0.9, left: 0, right: 0, ok: true });
+  expect(movement.count).toBe(1);
+  expect(events.map(event => event.type)).toEqual(['DOWN', 'UP']);
 });
-it('ignores duplicate and non-finite marching samples',()=>{
- const m=new ExerciseMovement('march',()=>{});
- m.update(0,{p:1,left:0,right:0,ok:true});m.update(0,{p:1,left:1,right:0,ok:true});
- m.update(50,{p:1,left:NaN,right:0,ok:true});m.update(100,{p:1,left:1,right:0,ok:true});
- expect(m.count).toBe(0);
+
+it('requires tracking to recover before counting again', () => {
+  const movement = new ExerciseMovement('pushup', () => {});
+  movement.update(0, { p: 1, left: 0, right: 0, ok: true });
+  movement.update(200, { p: 0.2, left: 0, right: 0, ok: false });
+  movement.update(400, { p: 0.2, left: 0, right: 0, ok: true });
+  expect(movement.count).toBe(0);
 });

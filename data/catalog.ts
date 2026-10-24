@@ -1,23 +1,5 @@
 import type { Exercise, ExerciseId, Routine, RoutineId } from "@/lib/shared/types";
 export const EXERCISES: Record<ExerciseId, Exercise> = {
-  squat: {
-    id: "squat", name: "Squats", verb: "Lower. Rise. Repeat.",
-    summary: "Your everyday movement, with a new rhythm.",
-    joints: "Your hips and knees bend as you lower, then extend as you stand.",
-    everyday: "A familiar movement from sitting down and standing up.",
-    placement: "Prop your phone upright and step back until your head and feet fit in the frame.",
-    instructions: ["Start in a comfortable standing position.", "Lower through a comfortable range.", "Return to standing at your own pace."],
-    controls: "Lower for DOWN, stand for UP. Orange means a brief hold.",
-  },
-  march: {
-    id: "march", name: "Knee raises", verb: "Left. Right. Find your rhythm.",
-    summary: "Alternating steps turn into alternating targets.",
-    joints: "One hip and knee bend as you lift a leg, then return to your starting position.",
-    everyday: "An alternating movement you also use when taking a step.",
-    placement: "Keep your full body in view, including both knees and feet.",
-    instructions: ["Begin in a comfortable standing position.", "Lift one knee within a comfortable range.", "Return your foot before switching sides."],
-    controls: "Lift your left or right knee for its target. Return to your starting position between lifts.",
-  },
   pushup: {
     id: "pushup", name: "Push-ups", verb: "Meet the original.",
     summary: "The floor is your stage. Your body is the controller.",
@@ -27,11 +9,19 @@ export const EXERCISES: Record<ExerciseId, Exercise> = {
     instructions: ["Choose a comfortable starting position.", "Lower within a comfortable range.", "Push back to your starting position. Rest whenever you need."],
     controls: "Lower for DOWN, rise for UP. An orange top target means a brief hold.",
   },
+  situp: {
+    id: "situp", name: "Sit-ups", verb: "Down. Up. Repeat.",
+    summary: "Lie back, sit up, and meet the rhythm.",
+    joints: "Your waist and torso move as you lower and rise.",
+    everyday: "A floor movement you can pace to the music.",
+    placement: "Prop your phone upright beside you so your waist, shoulders and head stay in view from lying to sitting.",
+    instructions: ["Lie back in a comfortable sit-up position.", "Sit up within a comfortable range.", "Lower back down at your own pace."],
+    controls: "Lie down for DOWN, sit up for UP. A top hold means pause upright.",
+  },
 };
-export const EXERCISE_IDS: readonly ExerciseId[] = ["squat", "march", "pushup"];
+export const EXERCISE_IDS: readonly ExerciseId[] = ["pushup", "situp"];
 export const ROUTINES: Record<RoutineId, Routine> = {
-  standing: { id: "standing", name: "Standing reset", description: "A little space. Two movements. A fresh rhythm.", setup: "Standing only", exercises: ["squat", "march"] },
-  mix: { id: "mix", name: "Full-body mix", description: "Start on your feet. Finish with our original push-up game.", setup: "Standing + floor", exercises: ["squat", "march", "pushup"] },
-  single: { id: "single", name: "Pick your move", description: "Get to know one movement, one beat at a time.", setup: "Your choice", exercises: ["squat"] },
+  mix: { id: "mix", name: "Two-movement mix", description: "Push-ups, then sit-ups. Your pace.", setup: "Floor", exercises: ["pushup", "situp"] },
+  single: { id: "single", name: "Pick your move", description: "Get to know one movement, one beat at a time.", setup: "Your choice", exercises: ["pushup"] },
 };
-export const ROUTINE_IDS: readonly RoutineId[] = ["standing", "mix", "single"];
+export const ROUTINE_IDS: readonly RoutineId[] = ["mix", "single"];

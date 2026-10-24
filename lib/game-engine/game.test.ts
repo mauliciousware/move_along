@@ -53,7 +53,7 @@ describe('hold meter',()=>{
 });
 describe('map validator',()=>{
   it('accepts the deterministic fixture',()=>expect(validateMap(map())).toEqual([]));
-  it.each(['LEFT','RIGHT','LH','RH'])('rejects %s',(type)=>{const m=map();m.notes[0].type=type as 'LH';expect(validateMap(m).join()).toContain('unsupported');});
+  it.each(['LEFT','RIGHT','LH','RH'])('rejects %s',(type)=>{const m=map();m.notes[0].type=type as 'HOLD';expect(validateMap(m).join()).toContain('unsupported');});
   it('rejects broken alternation, first UP and sub-floor gaps',()=>{const m=map();m.notes[1].type='DOWN';m.notes[1].time=4500;expect(validateMap(m).join()).toContain('alternate');expect(validateMap(m).join()).toContain('hard floor');m.notes[0].type='UP';expect(validateMap(m).join()).toContain('alternate');});
   it('rejects overlap with a hold, rests and excessive hold duration',()=>{const m=map();m.notes[5].time=16000;expect(validateMap(m).join()).toContain('overlaps HOLD');m.notes[6].duration=9000;expect(validateMap(m).join()).toContain('duration');m.notes[8].time=42000;expect(validateMap(m).join()).toContain('REST');});
   it('rejects 11 consecutive fast reps',()=>{const m=map();m.rests=[];m.notes=Array.from({length:22},(_,i)=>({id:`fast-${i}`,time:4000+i*1000,type:i%2?'UP':'DOWN',duration:0}));expect(validateMap(m).join()).toContain('ten fast reps');});

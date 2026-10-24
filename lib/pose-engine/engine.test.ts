@@ -33,7 +33,7 @@ class MockWorker {
     }
   }
 }
-function engine() { const instance = new PoseEngine("squat"); engines.push(instance); return instance; }
+function engine() { const instance = new PoseEngine("pushup"); engines.push(instance); return instance; }
 function video() {
   return {
     srcObject: null, play: vi.fn(async () => {}), pause: vi.fn(), readyState: 4,

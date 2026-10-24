@@ -18,7 +18,7 @@ export const CONFIG = {
   pose: {
     libraryPath: "/mediapipe/vision_bundle.js", wasmPath: "/mediapipe/wasm", modelPath: "/models/pose_landmarker_lite.task", numPoses: 1,
     jointIndices: { nose: 0, leftShoulder: 11, rightShoulder: 12, leftElbow: 13, rightElbow: 14, leftWrist: 15, rightWrist: 16, leftHip: 23, rightHip: 24, leftKnee: 25, rightKnee: 26, leftAnkle: 27, rightAnkle: 28, leftFoot: 31, rightFoot: 32 },
-    standingJoints: ["nose", "leftShoulder", "rightShoulder", "leftHip", "rightHip", "leftKnee", "rightKnee", "leftAnkle", "rightAnkle", "leftFoot", "rightFoot"],
+    situpJoints: ["nose", "leftShoulder", "rightShoulder", "leftHip", "rightHip", "leftKnee", "rightKnee"],
     pushupJoints: ["nose", "leftShoulder", "rightShoulder", "leftElbow", "rightElbow"],
     connections: [["leftShoulder", "rightShoulder"], ["leftShoulder", "leftElbow"], ["leftElbow", "leftWrist"], ["rightShoulder", "rightElbow"], ["rightElbow", "rightWrist"], ["leftShoulder", "leftHip"], ["rightShoulder", "rightHip"], ["leftHip", "rightHip"], ["leftHip", "leftKnee"], ["leftKnee", "leftAnkle"], ["rightHip", "rightKnee"], ["rightKnee", "rightAnkle"], ["leftAnkle", "leftFoot"], ["rightAnkle", "rightFoot"]],
   },
@@ -36,7 +36,6 @@ export const PUSHUP_CONFIG = {
   },
   practice: { reps: 2, readyMs: 3000 },
   handsFree: { framingMs: 2500, startDelayMs: 5000 },
-  standing: { stableMs: 1000, stableStd: .025, minSamples: 15, minKneeRange: .08, minHipRange: .08, minLift: .12, returnTolerance: .08, repeatTolerance: .12, coherence: .5, liftThreshold: .7, resetThreshold: .25, timeoutMs: 20000, maxSamples: 90 },
   audioSession: { unlockTimeoutMs: 4000, loadTimeoutMs: 20000, unlockToneMs: 100 },
   workout: { minGapMs: 2000, maxWorkMs: 30000, restMs: 15000, holdMs: 3000, pairs: 4, readyMs: 2000 },
   /** Self-paced push-up flow: two position rings, no rests, no timing window. */

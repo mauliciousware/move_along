@@ -30,7 +30,7 @@ export function sessionFeedback(notes: readonly PlayedNote[], stats: Stats, came
 
   const hits = notes.filter(n => n.status === 'perfect' || n.status === 'good' || n.status === 'ok');
   const vertical = hits.filter(n => n.note.type !== 'HOLD');
-  let highlight = stats.pushups > 0 ? `You completed ${stats.pushups} ${exercise==='march'?(stats.pushups===1?'step':'steps'):(stats.pushups===1?'rep':'reps')} this session.` : 'You made time for a session. Go at your own pace.';
+  let highlight = stats.pushups > 0 ? `You completed ${stats.pushups} ${stats.pushups===1?'rep':'reps'} this session.` : 'You made time for a session. Go at your own pace.';
   let next = 'Watch the timing bar. Reach the active target as the bar fills.';
   const holds = hits.filter(n => n.note.type === 'HOLD' && (n.status === 'perfect' || n.status === 'good'));
   if (holds.length) highlight = `You kept the hold meter steady through ${holds.length} ${holds.length === 1 ? 'hold' : 'holds'}.`;

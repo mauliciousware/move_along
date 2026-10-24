@@ -3,11 +3,11 @@
 import Link from 'next/link';
 import { ArrowUpRight } from 'lucide-react';
 import { EXERCISES, EXERCISE_IDS } from '@/data/catalog';
+import type { ExerciseId } from '@/lib/shared/types';
 
-const descriptions = {
-  squat: 'Lower. Stand. Meet the beat.',
-  march: 'Left knee. Right knee. Find your rhythm.',
+const descriptions: Record<ExerciseId, string> = {
   pushup: 'Down. Up. Make the floor your stage.',
+  situp: 'Lie back. Sit up. Meet the beat.',
 };
 
 export function MoveAlongApp() {

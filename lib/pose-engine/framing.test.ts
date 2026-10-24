@@ -9,37 +9,38 @@ export function fullPose(tPerfMs = 0): RawPoseFrame {
 }
 
 describe("exercise-aware camera framing", () => {
-  it.each(["squat", "march", "pushup"] as const)("accepts a fully visible %s pose", exercise => {
+  it.each(["pushup", "situp"] as const)("accepts a fully visible %s pose", exercise => {
     expect(assessFraming(fullPose(), exercise).usable).toBe(true);
   });
-  it("requires feet for standing modes, but not for a floor push-up", () => {
+  it("requires hips and knees for sit-ups, but not feet for a floor push-up", () => {
     const frame = fullPose();
     delete frame.joints.leftFoot;
-    expect(assessFraming(frame, "squat").issue).toBe("feet");
-    expect(assessFraming(frame, "march").usable).toBe(false);
+    expect(assessFraming(frame, "situp").usable).toBe(true);
+    delete frame.joints.leftKnee;
+    expect(assessFraming(frame, "situp").issue).toBe("legs");
     expect(assessFraming(frame, "pushup").usable).toBe(true);
   });
   it("never accepts guessed, low-confidence or non-finite required joints", () => {
     const frame = fullPose();
     frame.joints.leftKnee!.visibility = CONFIG.tracking.minConfidence - 0.01;
-    expect(assessFraming(frame, "squat").issue).toBe("legs");
+    expect(assessFraming(frame, "situp").issue).toBe("legs");
     frame.joints.leftKnee!.visibility = 1;
     frame.joints.leftKnee!.x = NaN;
-    expect(assessFraming(frame, "squat").usable).toBe(false);
+    expect(assessFraming(frame, "situp").usable).toBe(false);
     expect(visible({ x: 0.5, y: 1.1, visibility: 1 })).toBe(false);
   });
   it("distinguishes no person, missing head, and insufficient frame margin", () => {
-    expect(assessFraming({ tPerfMs: 0, joints: {} }, "squat").issue).toBe("person");
+    expect(assessFraming({ tPerfMs: 0, joints: {} }, "situp").issue).toBe("person");
     const frame = fullPose();
     delete frame.joints.nose;
-    expect(assessFraming(frame, "squat").issue).toBe("head");
+    expect(assessFraming(frame, "situp").issue).toBe("head");
     frame.joints.nose = { x: 0.5, y: CONFIG.tracking.edgeMargin / 2, visibility: 1 };
-    expect(assessFraming(frame, "squat").issue).toBe("edges");
+    expect(assessFraming(frame, "situp").issue).toBe("edges");
   });
   it("does not demand a wrist when it is not required by that exercise", () => {
     const frame = fullPose();
     delete frame.joints.leftWrist;
-    expect(assessFraming(frame, "squat").usable).toBe(true);
+    expect(assessFraming(frame, "situp").usable).toBe(true);
   });
   it("returns no usable frame for invalid timestamps", () => {
     expect(assessFraming(fullPose(NaN), "pushup").usable).toBe(false);
@@ -86,5 +87,5 @@ it("extracts only configured numeric landmarks and respects presence confidence"
   expect(Object.keys(frame.joints)).toHaveLength(JOINT_NAMES.length);
   expect(frame.joints.nose).toEqual({ x: 0.4, y: 0.6, visibility: 0.3 });
   expect(frame.tPerfMs).toBe(123);
-  expect(assessFraming(frame, "squat").usable).toBe(false);
+  expect(assessFraming(frame, "situp").usable).toBe(false);
 });

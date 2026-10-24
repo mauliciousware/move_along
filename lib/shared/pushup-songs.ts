@@ -10,12 +10,11 @@ export const PUSHUP_SONGS = [
 export interface PushupSong {id:string;title:string;artist:string;file:string;offsetMs:number;map:BeatMap;description:string;localOnly:boolean}
 export function songsFor(exercise:ExerciseId):PushupSong[]{
  return PUSHUP_SONGS.map(song=>{
-  if(exercise==='pushup'){
-   const map=flowMap({...song.map,exercise,songId:`pushup-${song.id}`});
-   return {...song,map,description:`${map.meta.counts.reps} push-ups · ${map.meta.counts.holds} plank holds · your pace · no rests`};
-  }
-  const map:BeatMap={...song.map,exercise,songId:`${exercise}-${song.id}`,notes:song.map.notes.filter(n=>exercise!=='march'||n.type!=='HOLD').map(n=>({...n,type:exercise==='march'?(n.type==='DOWN'?'LEFT':'RIGHT'):n.type}))};
-  const count=map.notes.filter(n=>exercise==='march'?n.type==='LEFT'||n.type==='RIGHT':n.type==='UP').length;
-  return {...song,map,description:`${Math.floor(map.durationMs/60000)}:${String(Math.floor(map.durationMs/1000)%60).padStart(2,'0')} · ${count} planned ${exercise==='march'?'steps':exercise==='squat'?'squats':'push-ups'} · rest breaks`};
+  const map=flowMap({...song.map,exercise,songId:`${exercise}-${song.id}`});
+  const reps=map.meta.counts.reps, holds=map.meta.counts.holds;
+  const description=exercise==='situp'
+   ?`${reps} sit-ups · ${holds} holds · your pace · no rests`
+   :`${reps} push-ups · ${holds} plank holds · your pace · no rests`;
+  return {...song,map,description};
  });
 }

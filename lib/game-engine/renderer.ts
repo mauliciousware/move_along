@@ -6,7 +6,7 @@ import { clamp, flowTarget, movementGuidance, targetCue } from './targets';
 
 const TAU = Math.PI * 2;
 const cfg = CONFIG.targets;
-const colorFor = (type: string) => (type === 'UP'||type === 'LEFT') ? CONFIG.colors.up : (type === 'DOWN'||type === 'RIGHT') ? CONFIG.colors.down : CONFIG.colors.hold;
+const colorFor = (type: string) => type === 'UP' ? CONFIG.colors.up : type === 'DOWN' ? CONFIG.colors.down : CONFIG.colors.hold;
 
 /** A single canvas owns fixed targets, beat cues and a bounded particle pool. */
 export class GameRenderer {
@@ -25,11 +25,10 @@ export class GameRenderer {
     const age = judgment ? songMs - judgment.time : Infinity;
     const radius = Math.min(w * cfg.radiusWidth, h * cfg.radiusHeight, cfg.maxRadius);
     const cx = w / 2;
-    const march=game.map.exercise==='march';
     const dt = Math.min(CONFIG.game.maxFrameMs, Math.max(0, now - this.lastNow));
     this.lastNow = now;
     const level = tier(game.stats.combo);
-    const positionY = (type: string) => h * (march && (type==='LEFT'||type==='RIGHT') ? .42 : type === 'UP' ? cfg.upY : type === 'DOWN' ? cfg.downY : cfg.centerY);
+    const positionY = (type: string) => h * (type === 'UP' ? cfg.upY : type === 'DOWN' ? cfg.downY : cfg.centerY);
     const playing = run.getSnapshot().phase === 'playing';
     const tracked = run.keyboard || run.tracking === 'TRACKING' && now - run.signalAt <= CONFIG.camera.staleMs;
     const guide = movementGuidance(game, songMs, run.p, tracked, playing);
@@ -49,8 +48,7 @@ export class GameRenderer {
       ctx.save(); ctx.globalAlpha = CONFIG.guidance.halfOpacity; ctx.fillStyle = wash;
       ctx.fillRect(0, top, w, h / 2); ctx.restore();
     }
-    for (const type of (march?['LEFT','RIGHT']:['UP','DOWN']) as InputType[]) {
-      const cx=march?w*(type==='LEFT'?.25:.75):w/2;
+    for (const type of ['UP','DOWN'] as InputType[]) {
       const active = guide.active && cue.current?.note.type === type;
       const completed = recent && judgment.type === type && judgment.grade !== 'miss';
       const y = positionY(type), color = colorFor(type);
@@ -58,7 +56,7 @@ export class GameRenderer {
       ctx.globalAlpha = active || completed ? 1 : CONFIG.guidance.idleOpacity;
       this.ring(ctx, cx, y, radius, color, completed ? 1 : active ? guide.fill : 0, active || !!completed);
       ctx.fillStyle = color; ctx.font = `${radius * cfg.labelScale}px ${this.displayFont}`;
-      this.text(ctx, completed ? `✓ ${type} HIT` : recent && judgment.type === type && judgment.grade === 'miss' ? 'MISSED' : type==='LEFT'?'LEFT KNEE':type==='RIGHT'?'RIGHT KNEE':type === 'UP' ? 'UP' : 'DOWN', cx, y - radius * .15, radius * 1.7);
+      this.text(ctx, completed ? `✓ ${type} HIT` : recent && judgment.type === type && judgment.grade === 'miss' ? 'MISSED' : type === 'UP' ? 'UP' : 'DOWN', cx, y - radius * .15, radius * 1.7);
       this.chevron(ctx, cx, y - radius * .6, radius * CONFIG.guidance.arrowScale, type);
       ctx.font = `${radius * CONFIG.guidance.statusScale}px ${this.displayFont}`;
       ctx.fillStyle = CONFIG.colors.text;
@@ -70,7 +68,7 @@ export class GameRenderer {
       if (active) {
         const barWidth = radius * CONFIG.guidance.timingWidth;
         const cx=w/2;
-        const barY = h * (march?.72:cfg.centerY);
+        const barY = h * cfg.centerY;
         ctx.fillStyle = color; ctx.font = `${radius * cfg.labelScale}px ${this.displayFont}`;
         this.text(ctx, guide.prompt, cx, barY - CONFIG.guidance.subtitleOffset, w * .9);
         ctx.fillStyle = CONFIG.colors.text + '30';
@@ -83,7 +81,7 @@ export class GameRenderer {
     }
 
     const hold = cue.current?.note.type === 'HOLD' && songMs >= cue.current.note.time - CONFIG.hold.entryMs ? cue.current : undefined;
-    const centerY = march?h*.72:positionY('HOLD');
+    const centerY = positionY('HOLD');
     if (hold || cue.rest) {
       const rest = cue.rest;
       const seconds = Math.max(0, Math.ceil(((rest?.endMs ?? ((hold?.note.time ?? 0) + (hold?.note.duration ?? 0))) - songMs) / 1000));
@@ -101,7 +99,7 @@ export class GameRenderer {
       ctx.font = `${cfg.captionSize}px ${this.displayFont}`;
       const current = cue.current?.note;
       const next = cue.next?.note;
-      const name = (type: string) => type === 'UP' ? '↑ UP' : type === 'DOWN' ? '↓ DOWN' : type==='LEFT'?'LEFT KNEE':type==='RIGHT'?'RIGHT KNEE':'HOLD';
+      const name = (type: string) => type === 'UP' ? '↑ UP' : type === 'DOWN' ? '↓ DOWN' : 'HOLD';
       if (current?.type === 'HOLD') {
         ctx.fillStyle = CONFIG.colors.hold;
         this.text(ctx, `GET READY · ${current.position === 'BOTTOM' ? 'LOW HOLD' : 'PLANK HOLD'}`, cx, centerY, w * .9);
@@ -349,8 +347,7 @@ export class GameRenderer {
 
   private chevron(ctx: CanvasRenderingContext2D, x: number, y: number, size: number, type: InputType) {
     ctx.save();
-    if(type==='LEFT'||type==='RIGHT'){ctx.translate(x,y);ctx.rotate(type==='LEFT'?-Math.PI/2:Math.PI/2);x=0;y=0;}
-    const direction = type === 'UP'||type==='LEFT'||type==='RIGHT' ? -1 : 1;
+    const direction = type === 'UP' ? -1 : 1;
     ctx.strokeStyle = colorFor(type); ctx.lineWidth = CONFIG.tileVisual.borderWidth * 2;
     ctx.lineJoin = 'round'; ctx.beginPath(); ctx.moveTo(x - size, y - direction * size / 2); ctx.lineTo(x, y + direction * size / 2); ctx.lineTo(x + size, y - direction * size / 2); ctx.stroke(); ctx.restore();
   }

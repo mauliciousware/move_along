@@ -7,7 +7,7 @@ export const clamp = (value: number) => Math.max(0, Math.min(1, value));
 /** Position is feedback; only a timestamped crossing can award a target. */
 export function movementFill(type: InputType, p: number) {
   if (!Number.isFinite(p)) return 0;
-  return type === 'UP' || type === 'LEFT' || type === 'RIGHT'
+  return type === 'UP'
     ? clamp(p / CONFIG.thresholds.up)
     : clamp((1 - p) / (1 - CONFIG.thresholds.down));
 }
@@ -69,7 +69,7 @@ export function flowTarget(game: GameSession, p: number, tracked: boolean): Flow
 export function movementGuidance(game: GameSession, songMs: number, p: number, tracked: boolean, playing: boolean) {
   const cue = targetCue(game, songMs);
   const type = cue.current?.note.type;
-  const directional = type === 'UP' || type === 'DOWN' || type === 'LEFT' || type === 'RIGHT';
+  const directional = type === 'UP' || type === 'DOWN';
   const active = playing && tracked && cue.approaching && directional && !cue.rest;
   const fill = active ? movementFill(type, p) : 0;
   const early = active && game.earlyArrivalId === cue.current?.note.id;
