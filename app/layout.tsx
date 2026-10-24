@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
-Thank you.import { Geist, Press_Start_2P } from "next/font/google";
+import { Geist, Press_Start_2P } from "next/font/google";
 import { APP_DESCRIPTION, APP_NAME } from "@/lib/shared/config";
 import "./globals.css";
 
