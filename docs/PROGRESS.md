@@ -184,3 +184,23 @@ Pending: physical iPhone Safari camera-to-calibration-to-game movement trials,
 10 real push-ups ±1, rotation/background/recovery/thermal performance on that
 phone, audio/beat alignment by ear, and HTTPS deployment network audit. No GitHub
 push or deployment was performed in this slice.
+
+## Typography alignment — 2026-10-24
+
+Owner reported calibration working and requested consistent 8bitcn typography.
+The push-up experience and its portaled pause dialog now use the existing
+self-hosted Press Start 2P font, including navigation, setup, controls, song HUD,
+results and canvas labels. Removed the canvas's hard-coded sans-serif/italic
+fonts and obsolete font variable. Pixel text is fitted by font size to target
+width, preserving glyph proportions; concise target labels avoid overflow.
+The main app wordmark uses the same pixel typeface. Canvas font styles are read
+once on setup, with no per-frame style reads or React updates.
+
+Checked the intro and camera-free keyboard gameplay at 390px: loaded pixel family
+confirmed on wordmark, heading, controls and canvas; no horizontal overflow;
+UP/DOWN, prompt, countdown and HUD visibly match. Pause actions also inherit the
+pixel typeface. No camera was enabled or captured in this typography QA session.
+Typecheck, lint, 144 tests and production build passed before final CSS cleanup;
+final checks are recorded below.
+
+Final typography checks: typecheck, lint, all 144 tests and production build pass; diff whitespace check clean.

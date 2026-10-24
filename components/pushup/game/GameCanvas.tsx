@@ -20,9 +20,10 @@ export function GameCanvas({ preview = false, engine, videoRef, calibration, run
     if (!canvas) return;
     const display = canvas.getContext("2d");
     if (!display) return;
+    const fontFamily = getComputedStyle(canvas).fontFamily;
     const marker = new HeadMarker();
-    const body = new BodyOverlay();
-    const renderer = new GameRenderer(getComputedStyle(document.body).getPropertyValue("--font-display").trim() || "sans-serif");
+    const body = new BodyOverlay(fontFamily);
+    const renderer = new GameRenderer(fontFamily);
     const motion = matchMedia("(prefers-reduced-motion: reduce)");
     const dev = new URLSearchParams(location.search).get("dev") === "1";
     let animation = 0, width = 0, height = 0, ratio = 1;
@@ -45,7 +46,7 @@ export function GameCanvas({ preview = false, engine, videoRef, calibration, run
         body.draw(display, frame, video, width, height, now, runtime?.bodyOverlay ?? modeRef.current, !runtime, motion.matches, hit && hit.grade !== 'miss' ? runtime!.songMs-hit.time : Infinity);
         if (runtime) renderer.draw(display, width, height, runtime, now, motion.matches, dev);
         marker.draw(display, frame, video, width, height, motion.matches, dev, runtime?.game.notes.find(n => n.status === 'pending' && n.meter && runtime.songMs >= n.note.time - CONFIG.hold.entryMs && runtime.songMs <= n.note.time + n.note.duration)?.meter?.ratio);
-        if (!runtime) drawPositionGauge(display, frame, calibration, width, height);
+        if (!runtime) drawPositionGauge(display, frame, calibration, width, height, fontFamily);
       } else { marker.reset(); body.reset(); if (runtime) renderer.draw(display, width, height, runtime, now, motion.matches, dev); }
       engine?.noteDraw();
       if (engine || runtime) animation = requestAnimationFrame(render);

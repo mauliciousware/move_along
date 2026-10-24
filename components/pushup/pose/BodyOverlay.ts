@@ -7,6 +7,7 @@ const LINKS = [[1, 2], [1, 3], [3, 5], [2, 4], [4, 6]] as const;
 const LABELS = ['FACE', 'SHOULDER', 'SHOULDER', 'ELBOW', 'ELBOW', 'WRIST', 'WRIST'];
 const cfg = CONFIG.bodyOverlay;
 export class BodyOverlay {
+  constructor(private readonly fontFamily = "monospace") {}
   private state = new BodyOverlayState();
   private labelStart: number | null = null;
   reset() { this.state.reset(); }
@@ -59,7 +60,7 @@ export class BodyOverlay {
     ctx.restore();
   }
   private label(ctx: CanvasRenderingContext2D, text: string, x: number, y: number, w: number, h: number, alpha: number) {
-    ctx.font = `600 ${cfg.labelSize}px sans-serif`; ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+    ctx.font = `${cfg.labelSize}px ${this.fontFamily}`; ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
     const width = ctx.measureText(text).width + cfg.labelPadding * 2;
     const left = Math.max(cfg.labelPadding, Math.min(w-width-cfg.labelPadding, x+cfg.labelOffset));
     const top = Math.max(cfg.labelSize, Math.min(h-cfg.labelSize, y-cfg.labelOffset));

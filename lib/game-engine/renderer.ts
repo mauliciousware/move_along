@@ -10,7 +10,7 @@ const colorFor = (type: string) => type === 'UP' ? CONFIG.colors.up : type === '
 
 /** A single canvas owns fixed targets, beat cues and a bounded particle pool. */
 export class GameRenderer {
-  constructor(private readonly displayFont = "sans-serif") {}
+  constructor(private readonly displayFont = "monospace") {}
   private particles = Array.from({ length: Math.max(...CONFIG.particles.tierCaps) }, () => ({ x: 0, y: 0, vx: 0, vy: 0, life: 0, color: '' }));
   private lastJudgment = 0;
   private lastNow = 0;
@@ -52,21 +52,21 @@ export class GameRenderer {
       ctx.save();
       ctx.globalAlpha = active || completed ? 1 : CONFIG.guidance.idleOpacity;
       this.ring(ctx, cx, y, radius, color, completed ? 1 : active ? guide.fill : 0, active || !!completed);
-      ctx.fillStyle = color; ctx.font = `italic 800 ${radius * cfg.labelScale}px ${this.displayFont}`;
-      ctx.fillText(completed ? `✓ ${type} HIT` : recent && judgment.type === type && judgment.grade === 'miss' ? 'MISSED' : type === 'UP' ? 'PUSH UP' : 'LOWER DOWN', cx, y - radius * .15);
+      ctx.fillStyle = color; ctx.font = `${radius * cfg.labelScale}px ${this.displayFont}`;
+      this.text(ctx, completed ? `✓ ${type} HIT` : recent && judgment.type === type && judgment.grade === 'miss' ? 'MISSED' : type === 'UP' ? 'PUSH UP' : 'GO DOWN', cx, y - radius * .15, radius * 1.7);
       this.chevron(ctx, cx, y - radius * .6, radius * CONFIG.guidance.arrowScale, type);
-      ctx.font = `600 ${radius * CONFIG.guidance.statusScale}px sans-serif`;
+      ctx.font = `${radius * CONFIG.guidance.statusScale}px ${this.displayFont}`;
       ctx.fillStyle = CONFIG.colors.text;
-      ctx.fillText(completed ? judgment.grade.toUpperCase() : active ? guide.early ? 'REACHED EARLY' : guide.fill >= 1 ? 'POSITION REACHED' : 'MOVEMENT' : 'WAIT', cx, y + radius * .3);
-      ctx.font = `600 ${cfg.captionSize}px sans-serif`;
+      this.text(ctx, completed ? judgment.grade.toUpperCase() : active ? guide.early ? 'EARLY' : guide.fill >= 1 ? 'REACHED' : 'MOVEMENT' : 'WAIT', cx, y + radius * .3, radius * 1.7);
+      ctx.font = `${cfg.captionSize}px ${this.displayFont}`;
       ctx.fillStyle = active ? color : CONFIG.colors.muted;
-      ctx.fillText(completed ? 'COMPLETE' : recent && judgment.type === type && judgment.grade === 'miss' ? 'FOLLOW THE NEXT CUE' : active ? guide.status : '', cx, y + radius + cfg.outerGap);
+      this.text(ctx, completed ? 'COMPLETE' : recent && judgment.type === type && judgment.grade === 'miss' ? 'FOLLOW THE NEXT CUE' : active ? guide.status : '', cx, y + radius + cfg.outerGap, w * .9);
       ctx.restore();
       if (active) {
         const barWidth = radius * CONFIG.guidance.timingWidth;
         const barY = h * cfg.centerY;
-        ctx.fillStyle = color; ctx.font = `italic 800 ${radius * cfg.labelScale}px ${this.displayFont}`;
-        ctx.fillText(guide.prompt, cx, barY - CONFIG.guidance.subtitleOffset);
+        ctx.fillStyle = color; ctx.font = `${radius * cfg.labelScale}px ${this.displayFont}`;
+        this.text(ctx, guide.prompt, cx, barY - CONFIG.guidance.subtitleOffset, w * .9);
         ctx.fillStyle = CONFIG.colors.text + '30';
         ctx.fillRect(cx-barWidth/2, barY, barWidth, CONFIG.guidance.timingHeight);
         ctx.fillStyle = color; ctx.fillRect(cx-barWidth/2, barY, barWidth*cue.timing, CONFIG.guidance.timingHeight);
@@ -84,24 +84,24 @@ export class GameRenderer {
       const color = rest ? CONFIG.colors.good : CONFIG.colors.hold;
       const fill = rest ? clamp((songMs - rest.startMs) / (rest.endMs - rest.startMs)) : hold?.meter?.ratio ?? 0;
       this.ring(ctx, cx, centerY, radius * cfg.centerScale, color, fill, true);
-      ctx.fillStyle = color; ctx.font = `800 ${radius * cfg.valueScale}px sans-serif`;
-      ctx.fillText(rest ? seconds <= CONFIG.game.restReadyMs / 1000 ? 'GET READY' : 'BREATHE' : hold?.note.position === 'BOTTOM' ? 'LOW HOLD' : 'PLANK', cx, centerY - radius * .18);
-      ctx.fillStyle = CONFIG.colors.text; ctx.font = `700 ${radius * cfg.labelScale}px sans-serif`;
-      ctx.fillText(rest ? `${seconds}s` : `${Math.round(fill * 100)}%`, cx, centerY + radius * .2);
-      ctx.font = `${cfg.captionSize}px sans-serif`;
-      ctx.fillText(rest ? 'REST · NO SCORING' : `HOLD STEADY · ${seconds}s`, cx, centerY + radius * .85);
+      ctx.fillStyle = color; ctx.font = `${radius * cfg.valueScale}px ${this.displayFont}`;
+      this.text(ctx, rest ? seconds <= CONFIG.game.restReadyMs / 1000 ? 'GET READY' : 'BREATHE' : hold?.note.position === 'BOTTOM' ? 'LOW HOLD' : 'PLANK', cx, centerY - radius * .18, radius * cfg.centerScale * 1.7);
+      ctx.fillStyle = CONFIG.colors.text; ctx.font = `${radius * cfg.labelScale}px ${this.displayFont}`;
+      this.text(ctx, rest ? `${seconds}s` : `${Math.round(fill * 100)}%`, cx, centerY + radius * .2, radius * cfg.centerScale * 1.7);
+      ctx.font = `${cfg.captionSize}px ${this.displayFont}`;
+      this.text(ctx, rest ? 'REST · NO SCORING' : `HOLD STEADY · ${seconds}s`, cx, centerY + radius * .85, w * .9);
     } else {
       ctx.fillStyle = CONFIG.colors.text;
-      ctx.font = `600 ${cfg.captionSize}px sans-serif`;
+      ctx.font = `${cfg.captionSize}px ${this.displayFont}`;
       const current = cue.current?.note;
       const next = cue.next?.note;
       const name = (type: string) => type === 'UP' ? '↑ UP' : type === 'DOWN' ? '↓ DOWN' : 'HOLD';
       if (current?.type === 'HOLD') {
         ctx.fillStyle = CONFIG.colors.hold;
-        ctx.fillText(`GET READY · ${current.position === 'BOTTOM' ? 'LOW HOLD' : 'PLANK HOLD'}`, cx, centerY);
+        this.text(ctx, `GET READY · ${current.position === 'BOTTOM' ? 'LOW HOLD' : 'PLANK HOLD'}`, cx, centerY, w * .9);
       } else if (current && !cue.approaching) {
-        ctx.fillText(`GET READY · ${name(current.type)}`, cx, centerY);
-      } else if (next) ctx.fillText(`NEXT: ${name(next.type)}`, cx, centerY + CONFIG.guidance.subtitleOffset);
+        this.text(ctx, `GET READY · ${name(current.type)}`, cx, centerY, w * .9);
+      } else if (next) this.text(ctx, `NEXT: ${name(next.type)}`, cx, centerY + CONFIG.guidance.subtitleOffset, w * .9);
     }
 
     if (judgment && judgment.serial !== this.lastJudgment) {
@@ -132,8 +132,19 @@ export class GameRenderer {
       ctx.beginPath(); ctx.arc(particle.x, particle.y, CONFIG.game.particleRadius, 0, TAU); ctx.fill();
     }
     ctx.globalAlpha = 1;
-    if (dev) { ctx.fillStyle = CONFIG.colors.good; ctx.font = `${cfg.captionSize}px sans-serif`; ctx.fillText(`NEXT ${cue.current?.note.type ?? '—'} · ${Math.round(cue.remainingMs)}ms`, cx, h * cfg.railEnd); }
+    if (dev) { ctx.fillStyle = CONFIG.colors.good; ctx.font = `${cfg.captionSize}px ${this.displayFont}`; this.text(ctx, `NEXT ${cue.current?.note.type ?? '—'} · ${Math.round(cue.remainingMs)}ms`, cx, h * cfg.railEnd, w * .9); }
     ctx.restore();
+  }
+
+  private text(ctx: CanvasRenderingContext2D, text: string, x: number, y: number, maxWidth: number) {
+    const font = ctx.font;
+    const width = ctx.measureText(text).width;
+    if (width > maxWidth) {
+      const size = Number.parseFloat(font);
+      ctx.font = `${size * maxWidth / width}px ${this.displayFont}`;
+    }
+    ctx.fillText(text, x, y);
+    ctx.font = font;
   }
 
   private ring(ctx: CanvasRenderingContext2D, x: number, y: number, radius: number, color: string, fill: number, active: boolean) {
