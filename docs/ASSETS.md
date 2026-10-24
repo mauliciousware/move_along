@@ -14,3 +14,14 @@
 - No music, camera frames, generated body images or parent-project media copied.
 
 The app has no runtime dependency on the 8bitcn documentation website.
+
+## Phase 2 tracking
+
+- `@mediapipe/tasks-vision` is pinned to 1.1.1. Its JS/WASM files are copied from
+  node_modules into public/mediapipe by scripts/setup-mediapipe.mjs.
+- PoseLandmarker lite float16 model, version 1: Google's official model asset.
+  Its URL and verified SHA-256 are recorded in public/mediapipe/assets.json.
+- MediaPipe/model distribution notice: licenses/MediaPipe-Apache-2.0.txt.
+- Framing-guide SVG is original, illustrative artwork. The live canvas draws only
+  numeric pose landmarks over a separate native video element.
+- Source reuse paths and hashes are recorded in SOURCE_REUSE.md.
