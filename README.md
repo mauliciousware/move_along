@@ -2,8 +2,8 @@
 
 Learn a movement, make it yours, and play it to the beat.
 
-A camera-controlled movement game with guided learning, personal calibration and
-short routines. The interface uses the owner-selected [8bitcn/ui](https://www.8bitcn.com)
+A camera-controlled movement game: choose Squats, Knee raises or Push-ups, tap
+Play, follow automatic calibration, then play and see results. The interface uses the owner-selected [8bitcn/ui](https://www.8bitcn.com)
 components, original pixel movement artwork and self-hosted fonts.
 
 
@@ -66,6 +66,7 @@ The playable push-up changes are local and have not been pushed or deployed by t
 
 Third-party notices are in `docs/licenses/`. The application owner has not chosen
 a license for original project code. The owner-requested Shakira track is copied locally as `public/audio/pushup-shakira.mp3`
-and ignored by Git. Redistribution clearance remains unverified, so it is not
-included in deployment. `public/audio/dev-click.wav` is the original fallback.
-A missing soundtrack is disabled in the chooser. See `docs/ASSETS.md`.
+and included with application assets at the owner’s request. Redistribution
+clearance remains unverified; this task does not publish a release. `public/audio/dev-click.wav` is the original fallback.
+Soundtrack selection stays on the Play screen. Failed loads offer Retry sound
+or the original practice beat, with no additional navigation. See `docs/ASSETS.md`.

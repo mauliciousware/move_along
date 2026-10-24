@@ -223,3 +223,54 @@ warning, to be removed when reconnecting routine selection. Tests now simulate
 complete maps for push-ups, squats and marching with holds where supported.
 The owner says Safari works with some bugs and explicitly deferred device testing.
 No physical calibration, observed ten-rep test or listening/sync gate is claimed.
+
+## Direct exercise flow — 2026-10-24
+
+The owner superseded the routine UI and requested fewer pages. Home now contains
+only Squats, Knee raises and Push-ups, with no hero illustration, navigation menu,
+How to play, routine chooser or movement library. Each choice opens one Play
+screen with a compact soundtrack selector, defaulting to Shakira. Play unlocks
+audio and requests the camera in the gesture handler, then enters automatic
+framing/calibration. Calibration goes directly into the countdown/game; standalone
+safety, Learn, camera setup, song chooser and practice screens are no longer in
+the active flow. A brief stop/rest reminder remains inline. Old routine URLs
+redirect home. In-song work/rest limits and STOP/partial results remain intact.
+Results have two actions: All movements and Play again (fresh calibration).
+
+The supplied Shakira MP3 was excluded by .gitignore, so clean repository builds
+could not include it. At the owner's explicit repeated request the supplied file
+is now included in application assets; provenance/clearance status remains in
+ASSETS.md. No track was downloaded or publicly deployed. Asset tests verify both
+selectable soundtracks exist and have audio headers. Music fetch AND decoding
+have a bounded timeout, with inline retry or practice-beat recovery. No new
+dependencies. Only derived calibration is persisted; results remain in memory.
+
+Local production browser observations (camera-free except a pending camera
+permission request, checked through text only): all three exercise screens show
+one Play action and a compact selector; Play enters automatic calibration without
+interstitial pages; STOP during pending permission reaches zero-count partial
+results. The Shakira keyboard demo loads/decodes, schedules the game countdown,
+and pause/resume uses the reentry countdown. Gameplay STOP reaches partial maths
+and movement review. No camera screenshots or recordings were made. The home
+screen was visually inspected with camera off.
+
+Typecheck, lint (no warnings), 163 tests, all 15 map checks and production build
+pass; final layout verification follows. Physical iPhone exercise trials, full-song
+listening/sync, rotation/background/thermal validation remain deferred at the
+owner's request. This is a local implementation, not a deployed Safari sign-off.
+
+## Main/Vercel packaging verification — 2026-10-24
+
+Owner requested the song and shortened flow be ready for their push to main.
+Added `prebuild → check:audio` so the normal `npm run build` fails if either
+selectable soundtrack is missing or is not an audio file. The 3,239,544-byte
+Shakira MP3 is included under public/audio, not excluded by Git. Production HTTP
+verification returned 200 and audio/mpeg; the served file's SHA-256 matched the
+packaged MP3 exactly. Same-origin paths work on the deployed HTTPS origin without
+localhost references in application code. No dependencies were added.
+
+Final checks: typecheck, lint without warnings, all 163 tests, all 15 map checks,
+the prebuild audio check and production build pass. The simplified homepage and
+all three movement routes are included. Prepare one local main commit containing
+the flow and MP3; the owner will push/deploy. No remote deployment or physical
+mobile playback is claimed. Physical iPhone QA remains deferred by the owner.

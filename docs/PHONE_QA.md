@@ -11,10 +11,11 @@ been pushed or deployed by this task. An older deployment may show only previews
 For local testing on the Mac use http://localhost:3000. On the iPhone, localhost
 means the phone itself, and ordinary HTTP LAN addresses cannot request a camera.
 
-On the updated HTTPS site, open `/?dev=1` to see local diagnostics. Then choose
-The moves → Squats → Learn this → Show camera setup, and acknowledge safety if
-prompted. Select Enable camera and allow Safari camera access. No microphone
-permission is requested.
+On the updated HTTPS site, choose Squats, Knee raises or Push-ups. Tap Play on
+the exercise screen (Shakira is selected by default). Allow camera access and
+follow the automatic calibration prompts on that same flow. There is no separate
+Learn, safety acknowledgement, soundtrack, camera setup or practice page.
+`?dev=1` enables text diagnostics; `?debug=1` exposes camera-free keyboard testing.
 
 ## Physical checks
 
@@ -22,7 +23,7 @@ permission is requested.
    being cropped. Body markers should follow visible joints and mirror the front
    camera correctly. No technique or clinical measurements are displayed.
 2. Hold your position. The setup should say “You’re in the frame” after a stable
-   interval. The next-screen button stays disabled when framing is unreliable.
+   interval. Calibration starts automatically only after stable usable framing.
 3. Cover the lens: readiness must turn off immediately, loss messaging should
    settle within about 0.5 seconds, and sustained loss should say Tracking paused
    after 5 seconds. Uncover and remain in view; readiness requires about 1 second
@@ -48,15 +49,15 @@ permission is requested.
 
 ## Complete push-up slice
 
-Open `/pushup?dev=1` in a build containing the push-up implementation. Choose an
-available track (the original practice beat is included in Git; commercial audio
-requires separate clearance before deployment). Use the floor/front setup.
+Open `/pushup?dev=1` in the updated build. The compact soundtrack selector defaults
+to Shakira; the original practice beat is available as a fallback. Tap Play once.
+Use the floor/front setup.
 
 1. Pass framing, then calibrate starting/top/lower positions. Steps must finish
    only from stable observed samples; insufficient range offers a placement retry.
-2. Complete two untimed practice pairs. Ten observed comfortable push-ups should
-   yield 10 ±1 DOWN/UP pairs, without double counts from stationary movement.
-3. Start the song. Verify Safari audio unlock, countdown, fixed targets, distinct
+2. Calibration leads straight into the countdown and game. Ten observed comfortable
+   push-ups should yield 10 ±1 DOWN/UP pairs, without stationary double counts.
+3. The song starts automatically. Verify Safari audio unlock, countdown, fixed targets, distinct
    movement fill and timing bar, hit grades and actual score/count updates.
 4. Verify a TOP hold and 15-second rest. Rest movements must not add reps. Long
    tracking loss during rest must not shorten the minimum recovery interval.
@@ -72,8 +73,9 @@ requires separate clearance before deployment). Use the floor/front setup.
    No camera screenshots or recordings. Confirm ≥24Hz pose / ≥60FPS and stable
    behavior over the full song; review beat alignment by ear.
 
-The earlier standing setup route still leads to preview-only calibration/gameplay.
-No physical push-up trial is signed off by automated or keyboard tests.
+The same direct flow applies to squat and marching exercises. Old routine URLs
+return home. Physical trials remain deferred by the owner; automated and keyboard
+tests do not sign off physical exercise detection or iPhone Safari support.
 
 ## Record actual evidence
 

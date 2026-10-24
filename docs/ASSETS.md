@@ -32,8 +32,10 @@ The user explicitly requested reuse of the existing Pushbeat Shakira track.
 `public/audio/pushup-shakira.mp3` is a byte-for-byte local copy of the parent's
 owner-supplied `public/audio/song-1.mp3` (178-second edit of “Hips Don't Lie”,
 Shakira feat. Wyclef Jean). No music was downloaded. The parent metadata says
-“Pending owner confirmation” for license. The copy is ignored by Git; do not
-include it in deployment without redistribution clearance. The song chooser
+“Pending owner confirmation” for license. The owner explicitly requested the supplied file be included with application
+assets so soundtrack selection works in reproducible builds; it is no longer
+ignored by Git. Redistribution clearance remains unverified; no public release
+was performed in this task. The song chooser
 loads the selected same-origin asset and displays an explicit retry/fallback error if absent.
 
 `public/audio/dev-click.wav` is the existing original generated development

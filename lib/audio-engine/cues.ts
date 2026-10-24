@@ -4,8 +4,8 @@ let context: AudioContext | null = null;
 export function getAudioContext() { if(!context || context.state==='closed')context=new AudioContext(); return context; }
 /** Call directly from a tap, before fetch/decode, to activate Safari's audio output. */
 export async function unlockAudio(): Promise<boolean> {
-  const ctx=getAudioContext();
   try {
+    const ctx=getAudioContext();
     const resumed=ctx.resume();
     const tone=ctx.createOscillator(), gain=ctx.createGain();
     gain.gain.value=0; tone.connect(gain).connect(ctx.destination);

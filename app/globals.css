@@ -372,3 +372,44 @@
 .movement-review .movement-art { max-height: 200px; margin: 20px auto; }
 .movement-review ol { padding-left: 24px; }
 .routine-block-result { padding-block: 20px; border-bottom: 1px solid var(--border); }
+
+/* Three movements, one direct path into play. */
+.exercise-home { max-width: 1100px; min-height: 100svh; margin: auto; padding: 0 32px max(24px, env(safe-area-inset-bottom)); }
+.exercise-home-header { min-height: 100px; display: flex; justify-content: space-between; align-items: center; gap: 24px; border-bottom: 1px solid var(--border); padding-top: env(safe-area-inset-top); }
+.exercise-home-header > span { color: var(--muted-foreground); font-size: 14px; }
+.exercise-home-heading { padding: 40px 0 30px; }
+.exercise-home-heading > p { font-size: 14px; color: var(--muted-foreground); margin-bottom: 16px; }
+.exercise-home-heading h1 { font-family: var(--font-pixel), monospace; font-size: clamp(19px, 3vw, 28px); font-weight: 400; line-height: 1.65; }
+.exercise-choices { display: grid; }
+.exercise-choice { display: grid; grid-template-columns: 64px 1fr 40px; gap: 24px; align-items: center; padding: 30px 20px; border-top: 2px solid var(--border); text-decoration: none; transition: background-color 150ms ease, transform 150ms ease; }
+.exercise-choice:last-child { border-bottom: 2px solid var(--border); }
+.exercise-choice:hover { background: var(--secondary); }
+.exercise-choice:active { transform: translateY(2px); }
+.exercise-choice:focus-visible { outline: 3px solid var(--primary); outline-offset: 5px; }
+.exercise-choice-number { font-family: var(--font-pixel), monospace; color: var(--primary); font-size: 14px; }
+.exercise-choice h2 { font-family: var(--font-pixel), monospace; font-size: clamp(17px, 3vw, 24px); font-weight: 400; line-height: 1.6; }
+.exercise-choice p { font-size: 15px; color: var(--muted-foreground); margin-top: 7px; }
+.exercise-choice > svg { width: 28px; height: 28px; }
+.exercise-home-footer { font-size: 12px; color: var(--muted-foreground); padding: 32px 0 0; }
+.exercise-ready { padding-top: 28px; }
+.exercise-back { display: inline-flex; align-items: center; min-height: 44px; font-size: 14px; color: var(--muted-foreground); text-decoration: underline; text-underline-offset: 4px; }
+.pushup-experience .exercise-ready h1 { font-size: clamp(26px, 6vw, 38px); margin-block: 32px 18px; }
+.compact-track { display: grid; gap: 10px; margin: 32px 0; padding-block: 20px; border-block: 1px solid var(--border); }
+.compact-track label { font-size: 13px; color: var(--muted-foreground); }
+.compact-track select { display: block; width: 100%; min-width: 0; min-height: 56px; border: 1px solid var(--border); background: var(--background); color: var(--foreground); font: inherit; padding: 12px 32px 12px 12px; border-radius: 0; }
+.compact-track span, .pushup-experience .ready-hint { font-size: 14px; color: var(--muted-foreground); }
+.pushup-experience .ready-hint { margin-top: 20px; }
+.pushup-experience .ready-safety { font-size: 12px; color: var(--muted-foreground); }
+.workout-name { font-size: 12px; color: var(--muted-foreground); }
+.audio-recovery { display: grid; gap: 12px; margin-block: 18px; }
+@media (max-width: 600px) {
+ .exercise-home { padding-inline: 22px; }
+ .exercise-home-header { min-height: 84px; }
+ .exercise-home-header > span { display: none; }
+ .exercise-home-heading { padding-block: 32px 28px; }
+ .exercise-choice { grid-template-columns: 26px 1fr 22px; gap: 14px; padding: 27px 4px; }
+ .exercise-choice-number { font-size: 10px; }
+ .exercise-choice p { font-size: 13px; }
+ .exercise-choice > svg { width: 22px; height: 22px; }
+}
+@media (prefers-reduced-motion: reduce) { .exercise-choice { transition: none; } }

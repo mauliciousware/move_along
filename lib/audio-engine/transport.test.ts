@@ -7,6 +7,7 @@ const fixture=vi.hoisted(()=>{
 });
 vi.mock('./cues',()=>({getAudioContext:()=>fixture.ctx}));
 import { AudioTransport } from './transport';
+import { PUSHUP_CONFIG } from '../shared/config';
 describe('audio clock',()=>{
  it('loads and caches each selected track independently with its own offset',async()=>{
   const fetcher=vi.fn(async()=>({ok:true,arrayBuffer:async()=>new ArrayBuffer(0)}));vi.stubGlobal('fetch',fetcher);
@@ -46,6 +47,21 @@ describe('audio clock',()=>{
   expect(fixture.ctx.createBufferSource.mock.calls.length).toBe(before);
   const resume=audio.resume();audio.stop();resolve();await resume;
   expect(fixture.ctx.createBufferSource.mock.calls.length).toBe(before);
+ });
+
+ it('times out a stalled decoder and permits a fresh retry of the same track',async()=>{
+  vi.useFakeTimers();
+  const fetcher=vi.fn(async()=>({ok:true,arrayBuffer:async()=>new ArrayBuffer(0)}));
+  vi.stubGlobal('fetch',fetcher);
+  fixture.ctx.decodeAudioData.mockImplementationOnce(()=>new Promise(()=>{}));
+  try {
+   const audio=new AudioTransport('/audio/stalled-decoder.mp3');
+   const failure=expect(audio.load()).rejects.toThrow('Music took too long');
+   await vi.advanceTimersByTimeAsync(PUSHUP_CONFIG.audioSession.loadTimeoutMs);
+   await failure;
+   await audio.load();
+   expect(fetcher).toHaveBeenCalledTimes(2);
+  } finally {vi.useRealTimers();vi.unstubAllGlobals();}
  });
 
 });

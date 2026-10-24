@@ -13,7 +13,9 @@
     "setup:mediapipe": "node scripts/setup-mediapipe.mjs",
     "postinstall": "npm run setup:mediapipe",
     "mapgen:validate": "vitest run lib/game-engine/maps.test.ts",
-    "mapgen:pushup": "node scripts/generate-pushup-maps.mjs"
+    "mapgen:pushup": "node scripts/generate-pushup-maps.mjs",
+    "check:audio": "vitest run lib/audio-engine/assets.test.ts",
+    "prebuild": "npm run check:audio"
   },
   "dependencies": {
     "@mediapipe/tasks-vision": "1.1.1",

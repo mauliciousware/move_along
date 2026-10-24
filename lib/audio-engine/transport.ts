@@ -16,9 +16,19 @@ export class AudioTransport {
   async load() {
     let pending=buffers.get(this.file);
     if(!pending) {
-      const controller=new AbortController();
-      const timeout=setTimeout(()=>controller.abort(),CONFIG.audioSession.loadTimeoutMs);
-      pending=fetch(this.file,{signal:controller.signal}).then(response=>{if(!response.ok)throw new Error('This track is missing from this build. Retry or choose the practice beat.');return response.arrayBuffer();}).then(bytes=>this.ctx.decodeAudioData(bytes)).finally(()=>clearTimeout(timeout));
+      const controller = new AbortController();
+      let timeout: ReturnType<typeof setTimeout> | undefined;
+      // Bound fetch AND decode, so a stalled decoder cannot trap the flow.
+      const loaded = fetch(this.file, { signal: controller.signal }).then(response => {
+        if (!response.ok) throw new Error('This soundtrack is unavailable. Retry sound or use the practice beat.');
+        return response.arrayBuffer();
+      }).then(bytes => this.ctx.decodeAudioData(bytes));
+      pending = Promise.race([loaded, new Promise<never>((_, reject) => {
+        timeout = setTimeout(() => {
+          reject(new Error('Music took too long to load. Retry sound or use the practice beat.'));
+          controller.abort();
+        }, CONFIG.audioSession.loadTimeoutMs);
+      })]).finally(() => clearTimeout(timeout));
       buffers.set(this.file,pending);
       pending.catch(()=>buffers.delete(this.file));
     }
