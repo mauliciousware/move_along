@@ -1,4 +1,4 @@
-# Phase 2 — iPhone Safari check
+# iPhone Safari checks — camera and playable push-ups
 
 Status: implementation and local browser checks complete; physical iPhone gate
 is pending. Do not replace this gate with an emulated phone viewport.
@@ -46,8 +46,34 @@ permission is requested.
     tooling; production uses connect-src self. Never capture or save camera frames
     as QA evidence. Record only counts, status, performance and device details.
 
-Calibration, rep detection, audio and scoring remain preview screens in this phase.
-Continuing from setup stops the camera; persistent live calibration comes next.
+## Complete push-up slice
+
+Open `/pushup?dev=1` in a build containing the push-up implementation. Choose an
+available track (the original practice beat is included in Git; commercial audio
+requires separate clearance before deployment). Use the floor/front setup.
+
+1. Pass framing, then calibrate starting/top/lower positions. Steps must finish
+   only from stable observed samples; insufficient range offers a placement retry.
+2. Complete two untimed practice pairs. Ten observed comfortable push-ups should
+   yield 10 ±1 DOWN/UP pairs, without double counts from stationary movement.
+3. Start the song. Verify Safari audio unlock, countdown, fixed targets, distinct
+   movement fill and timing bar, hit grades and actual score/count updates.
+4. Verify a TOP hold and 15-second rest. Rest movements must not add reps. Long
+   tracking loss during rest must not shorten the minimum recovery interval.
+5. Pause and wait. Resume with countdown at the identical song position; audio and
+   cue timing must not drift. Recalibrate while paused: song stays silent.
+6. Cover the camera during cues. Inputs stop immediately, expired cues are skipped
+   without accuracy penalties, sustained loss pauses, recovery waits for Ready.
+7. Rotate, background, lock, or interrupt the camera. Reenter through setup and
+   fresh calibration, with the song parked. No invisible/background scoring.
+8. STOP must immediately end audio/camera and show partial actual results. The
+   naturally completed song must show complete results without scoring future cues.
+9. Repeat full-song performance/network audit and record device/browser versions.
+   No camera screenshots or recordings. Confirm ≥24Hz pose / ≥60FPS and stable
+   behavior over the full song; review beat alignment by ear.
+
+The earlier standing setup route still leads to preview-only calibration/gameplay.
+No physical push-up trial is signed off by automated or keyboard tests.
 
 ## Record actual evidence
 

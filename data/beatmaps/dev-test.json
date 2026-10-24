@@ -1,0 +1,291 @@
+{
+  "version": 1,
+  "songId": "dev-click",
+  "difficulty": "intermediate",
+  "bpm": 120,
+  "firstBeatMs": 0,
+  "durationMs": 90000,
+  "sections": [
+    {
+      "label": "intro",
+      "startMs": 0,
+      "endMs": 22000,
+      "intensity": 1
+    },
+    {
+      "label": "drop",
+      "startMs": 22000,
+      "endMs": 40000,
+      "intensity": 4
+    },
+    {
+      "label": "breakdown",
+      "startMs": 40000,
+      "endMs": 50000,
+      "intensity": 0
+    },
+    {
+      "label": "build",
+      "startMs": 50000,
+      "endMs": 72000,
+      "intensity": 2
+    },
+    {
+      "label": "outro",
+      "startMs": 72000,
+      "endMs": 90000,
+      "intensity": 1
+    }
+  ],
+  "rests": [
+    {
+      "startMs": 40000,
+      "endMs": 50000
+    }
+  ],
+  "notes": [
+    {
+      "id": "dev-1",
+      "time": 4000,
+      "type": "DOWN",
+      "duration": 0
+    },
+    {
+      "id": "dev-2",
+      "time": 6000,
+      "type": "UP",
+      "duration": 0
+    },
+    {
+      "id": "dev-3",
+      "time": 8000,
+      "type": "DOWN",
+      "duration": 0
+    },
+    {
+      "id": "dev-4",
+      "time": 10000,
+      "type": "UP",
+      "duration": 0
+    },
+    {
+      "id": "dev-5",
+      "time": 12000,
+      "type": "DOWN",
+      "duration": 0
+    },
+    {
+      "id": "dev-6",
+      "time": 14000,
+      "type": "UP",
+      "duration": 0
+    },
+    {
+      "id": "dev-7",
+      "time": 16000,
+      "type": "HOLD",
+      "duration": 4000,
+      "position": "TOP"
+    },
+    {
+      "id": "dev-8",
+      "time": 22000,
+      "type": "DOWN",
+      "duration": 0
+    },
+    {
+      "id": "dev-9",
+      "time": 23000,
+      "type": "UP",
+      "duration": 0
+    },
+    {
+      "id": "dev-10",
+      "time": 24000,
+      "type": "DOWN",
+      "duration": 0
+    },
+    {
+      "id": "dev-11",
+      "time": 25000,
+      "type": "UP",
+      "duration": 0
+    },
+    {
+      "id": "dev-12",
+      "time": 26000,
+      "type": "DOWN",
+      "duration": 0
+    },
+    {
+      "id": "dev-13",
+      "time": 27000,
+      "type": "UP",
+      "duration": 0
+    },
+    {
+      "id": "dev-14",
+      "time": 28000,
+      "type": "DOWN",
+      "duration": 0
+    },
+    {
+      "id": "dev-15",
+      "time": 29000,
+      "type": "UP",
+      "duration": 0
+    },
+    {
+      "id": "dev-16",
+      "time": 30000,
+      "type": "DOWN",
+      "duration": 0
+    },
+    {
+      "id": "dev-17",
+      "time": 31000,
+      "type": "UP",
+      "duration": 0
+    },
+    {
+      "id": "dev-18",
+      "time": 32000,
+      "type": "DOWN",
+      "duration": 0
+    },
+    {
+      "id": "dev-19",
+      "time": 33000,
+      "type": "UP",
+      "duration": 0
+    },
+    {
+      "id": "dev-20",
+      "time": 35000,
+      "type": "HOLD",
+      "duration": 4000,
+      "position": "TOP"
+    },
+    {
+      "id": "dev-21",
+      "time": 52000,
+      "type": "DOWN",
+      "duration": 0
+    },
+    {
+      "id": "dev-22",
+      "time": 53500,
+      "type": "UP",
+      "duration": 0
+    },
+    {
+      "id": "dev-23",
+      "time": 55000,
+      "type": "DOWN",
+      "duration": 0
+    },
+    {
+      "id": "dev-24",
+      "time": 56500,
+      "type": "UP",
+      "duration": 0
+    },
+    {
+      "id": "dev-25",
+      "time": 58000,
+      "type": "DOWN",
+      "duration": 0
+    },
+    {
+      "id": "dev-26",
+      "time": 59500,
+      "type": "UP",
+      "duration": 0
+    },
+    {
+      "id": "dev-27",
+      "time": 61000,
+      "type": "DOWN",
+      "duration": 0
+    },
+    {
+      "id": "dev-28",
+      "time": 62500,
+      "type": "UP",
+      "duration": 0
+    },
+    {
+      "id": "dev-29",
+      "time": 64000,
+      "type": "DOWN",
+      "duration": 0
+    },
+    {
+      "id": "dev-30",
+      "time": 65500,
+      "type": "UP",
+      "duration": 0
+    },
+    {
+      "id": "dev-31",
+      "time": 68000,
+      "type": "HOLD",
+      "duration": 3000,
+      "position": "TOP"
+    },
+    {
+      "id": "dev-32",
+      "time": 74000,
+      "type": "DOWN",
+      "duration": 0
+    },
+    {
+      "id": "dev-33",
+      "time": 76000,
+      "type": "UP",
+      "duration": 0
+    },
+    {
+      "id": "dev-34",
+      "time": 78000,
+      "type": "DOWN",
+      "duration": 0
+    },
+    {
+      "id": "dev-35",
+      "time": 80000,
+      "type": "UP",
+      "duration": 0
+    },
+    {
+      "id": "dev-36",
+      "time": 82000,
+      "type": "DOWN",
+      "duration": 0
+    },
+    {
+      "id": "dev-37",
+      "time": 84000,
+      "type": "UP",
+      "duration": 0
+    }
+  ],
+  "meta": {
+    "intensityCurve": [
+      0.2,
+      0.3,
+      0.9,
+      0.2,
+      0,
+      0.4,
+      0.5,
+      0.2
+    ],
+    "counts": {
+      "DOWN": 17,
+      "UP": 17,
+      "HOLD": 3
+    },
+    "generatedBy": "PUSHBEAT deterministic dev fixture"
+  }
+}

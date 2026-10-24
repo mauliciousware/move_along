@@ -11,7 +11,9 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "setup:mediapipe": "node scripts/setup-mediapipe.mjs",
-    "postinstall": "npm run setup:mediapipe"
+    "postinstall": "npm run setup:mediapipe",
+    "mapgen:validate": "vitest run lib/game-engine/maps.test.ts",
+    "mapgen:pushup": "node scripts/generate-pushup-maps.mjs"
   },
   "dependencies": {
     "@mediapipe/tasks-vision": "1.1.1",

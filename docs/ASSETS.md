@@ -25,3 +25,19 @@ The app has no runtime dependency on the 8bitcn documentation website.
 - Framing-guide SVG is original, illustrative artwork. The live canvas draws only
   numeric pose landmarks over a separate native video element.
 - Source reuse paths and hashes are recorded in SOURCE_REUSE.md.
+
+## Push-up soundtrack and reference code (2026-10-24)
+
+The user explicitly requested reuse of the existing Pushbeat Shakira track.
+`public/audio/pushup-shakira.mp3` is a byte-for-byte local copy of the parent's
+owner-supplied `public/audio/song-1.mp3` (178-second edit of “Hips Don't Lie”,
+Shakira feat. Wyclef Jean). No music was downloaded. The parent metadata says
+“Pending owner confirmation” for license. The copy is ignored by Git; do not
+include it in deployment without redistribution clearance. The song chooser
+checks same-origin asset availability and disables absent tracks.
+
+`public/audio/dev-click.wav` is the existing original generated development
+click track, copied from Pushbeat. It is the distributable fallback. Both playable
+maps use Move Along's slower spacing and actual rest windows; the commercial
+track's analyzed 100.27013 BPM and 85.006 ms grid origin were reused. Maps need
+human listening review before a synchronization gate can be marked passed.

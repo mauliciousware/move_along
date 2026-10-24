@@ -1,0 +1,152 @@
+{
+  "version": 1,
+  "songId": "pushup-dev",
+  "difficulty": "intermediate",
+  "bpm": 120,
+  "firstBeatMs": 0,
+  "durationMs": 90000,
+  "sections": [
+    {
+      "label": "build",
+      "startMs": 0,
+      "endMs": 90000,
+      "intensity": 2
+    }
+  ],
+  "rests": [
+    {
+      "startMs": 23001,
+      "endMs": 38001
+    },
+    {
+      "startMs": 59501,
+      "endMs": 74501
+    }
+  ],
+  "notes": [
+    {
+      "id": "pushup-dev-1",
+      "time": 4000,
+      "type": "DOWN",
+      "duration": 0
+    },
+    {
+      "id": "pushup-dev-2",
+      "time": 6000,
+      "type": "UP",
+      "duration": 0
+    },
+    {
+      "id": "pushup-dev-3",
+      "time": 8000,
+      "type": "DOWN",
+      "duration": 0
+    },
+    {
+      "id": "pushup-dev-4",
+      "time": 10000,
+      "type": "UP",
+      "duration": 0
+    },
+    {
+      "id": "pushup-dev-5",
+      "time": 12000,
+      "type": "DOWN",
+      "duration": 0
+    },
+    {
+      "id": "pushup-dev-6",
+      "time": 14000,
+      "type": "UP",
+      "duration": 0
+    },
+    {
+      "id": "pushup-dev-7",
+      "time": 16000,
+      "type": "DOWN",
+      "duration": 0
+    },
+    {
+      "id": "pushup-dev-8",
+      "time": 18000,
+      "type": "UP",
+      "duration": 0
+    },
+    {
+      "id": "pushup-dev-9",
+      "time": 20000,
+      "type": "HOLD",
+      "duration": 3000,
+      "position": "TOP"
+    },
+    {
+      "id": "pushup-dev-10",
+      "time": 40500,
+      "type": "DOWN",
+      "duration": 0
+    },
+    {
+      "id": "pushup-dev-11",
+      "time": 42500,
+      "type": "UP",
+      "duration": 0
+    },
+    {
+      "id": "pushup-dev-12",
+      "time": 44500,
+      "type": "DOWN",
+      "duration": 0
+    },
+    {
+      "id": "pushup-dev-13",
+      "time": 46500,
+      "type": "UP",
+      "duration": 0
+    },
+    {
+      "id": "pushup-dev-14",
+      "time": 48500,
+      "type": "DOWN",
+      "duration": 0
+    },
+    {
+      "id": "pushup-dev-15",
+      "time": 50500,
+      "type": "UP",
+      "duration": 0
+    },
+    {
+      "id": "pushup-dev-16",
+      "time": 52500,
+      "type": "DOWN",
+      "duration": 0
+    },
+    {
+      "id": "pushup-dev-17",
+      "time": 54500,
+      "type": "UP",
+      "duration": 0
+    },
+    {
+      "id": "pushup-dev-18",
+      "time": 56500,
+      "type": "HOLD",
+      "duration": 3000,
+      "position": "TOP"
+    }
+  ],
+  "meta": {
+    "intensityCurve": [
+      0.3,
+      0.5,
+      0.7,
+      0.5
+    ],
+    "counts": {
+      "DOWN": 8,
+      "UP": 8,
+      "HOLD": 2
+    },
+    "generatedBy": "Move Along spaced beat-grid adaptation v1"
+  }
+}

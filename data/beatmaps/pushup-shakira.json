@@ -1,0 +1,270 @@
+{
+  "version": 1,
+  "songId": "pushup-shakira",
+  "difficulty": "intermediate",
+  "bpm": 100.27013,
+  "firstBeatMs": 85.006,
+  "durationMs": 178000,
+  "sections": [
+    {
+      "label": "build",
+      "startMs": 0,
+      "endMs": 178000,
+      "intensity": 2
+    }
+  ],
+  "rests": [
+    {
+      "startMs": 26423,
+      "endMs": 41423
+    },
+    {
+      "startMs": 65916,
+      "endMs": 80916
+    },
+    {
+      "startMs": 105410,
+      "endMs": 120410
+    },
+    {
+      "startMs": 144903,
+      "endMs": 159903
+    }
+  ],
+  "notes": [
+    {
+      "id": "pushup-shakira-1",
+      "time": 4274,
+      "type": "DOWN",
+      "duration": 0
+    },
+    {
+      "id": "pushup-shakira-2",
+      "time": 6667,
+      "type": "UP",
+      "duration": 0
+    },
+    {
+      "id": "pushup-shakira-3",
+      "time": 9061,
+      "type": "DOWN",
+      "duration": 0
+    },
+    {
+      "id": "pushup-shakira-4",
+      "time": 11454,
+      "type": "UP",
+      "duration": 0
+    },
+    {
+      "id": "pushup-shakira-5",
+      "time": 13848,
+      "type": "DOWN",
+      "duration": 0
+    },
+    {
+      "id": "pushup-shakira-6",
+      "time": 16241,
+      "type": "UP",
+      "duration": 0
+    },
+    {
+      "id": "pushup-shakira-7",
+      "time": 18635,
+      "type": "DOWN",
+      "duration": 0
+    },
+    {
+      "id": "pushup-shakira-8",
+      "time": 21028,
+      "type": "UP",
+      "duration": 0
+    },
+    {
+      "id": "pushup-shakira-9",
+      "time": 23422,
+      "type": "HOLD",
+      "duration": 3000,
+      "position": "TOP"
+    },
+    {
+      "id": "pushup-shakira-10",
+      "time": 43767,
+      "type": "DOWN",
+      "duration": 0
+    },
+    {
+      "id": "pushup-shakira-11",
+      "time": 46161,
+      "type": "UP",
+      "duration": 0
+    },
+    {
+      "id": "pushup-shakira-12",
+      "time": 48554,
+      "type": "DOWN",
+      "duration": 0
+    },
+    {
+      "id": "pushup-shakira-13",
+      "time": 50948,
+      "type": "UP",
+      "duration": 0
+    },
+    {
+      "id": "pushup-shakira-14",
+      "time": 53341,
+      "type": "DOWN",
+      "duration": 0
+    },
+    {
+      "id": "pushup-shakira-15",
+      "time": 55735,
+      "type": "UP",
+      "duration": 0
+    },
+    {
+      "id": "pushup-shakira-16",
+      "time": 58128,
+      "type": "DOWN",
+      "duration": 0
+    },
+    {
+      "id": "pushup-shakira-17",
+      "time": 60522,
+      "type": "UP",
+      "duration": 0
+    },
+    {
+      "id": "pushup-shakira-18",
+      "time": 62915,
+      "type": "HOLD",
+      "duration": 3000,
+      "position": "TOP"
+    },
+    {
+      "id": "pushup-shakira-19",
+      "time": 83260,
+      "type": "DOWN",
+      "duration": 0
+    },
+    {
+      "id": "pushup-shakira-20",
+      "time": 85654,
+      "type": "UP",
+      "duration": 0
+    },
+    {
+      "id": "pushup-shakira-21",
+      "time": 88047,
+      "type": "DOWN",
+      "duration": 0
+    },
+    {
+      "id": "pushup-shakira-22",
+      "time": 90441,
+      "type": "UP",
+      "duration": 0
+    },
+    {
+      "id": "pushup-shakira-23",
+      "time": 92834,
+      "type": "DOWN",
+      "duration": 0
+    },
+    {
+      "id": "pushup-shakira-24",
+      "time": 95228,
+      "type": "UP",
+      "duration": 0
+    },
+    {
+      "id": "pushup-shakira-25",
+      "time": 97622,
+      "type": "DOWN",
+      "duration": 0
+    },
+    {
+      "id": "pushup-shakira-26",
+      "time": 100015,
+      "type": "UP",
+      "duration": 0
+    },
+    {
+      "id": "pushup-shakira-27",
+      "time": 102409,
+      "type": "HOLD",
+      "duration": 3000,
+      "position": "TOP"
+    },
+    {
+      "id": "pushup-shakira-28",
+      "time": 122754,
+      "type": "DOWN",
+      "duration": 0
+    },
+    {
+      "id": "pushup-shakira-29",
+      "time": 125147,
+      "type": "UP",
+      "duration": 0
+    },
+    {
+      "id": "pushup-shakira-30",
+      "time": 127541,
+      "type": "DOWN",
+      "duration": 0
+    },
+    {
+      "id": "pushup-shakira-31",
+      "time": 129934,
+      "type": "UP",
+      "duration": 0
+    },
+    {
+      "id": "pushup-shakira-32",
+      "time": 132328,
+      "type": "DOWN",
+      "duration": 0
+    },
+    {
+      "id": "pushup-shakira-33",
+      "time": 134721,
+      "type": "UP",
+      "duration": 0
+    },
+    {
+      "id": "pushup-shakira-34",
+      "time": 137115,
+      "type": "DOWN",
+      "duration": 0
+    },
+    {
+      "id": "pushup-shakira-35",
+      "time": 139508,
+      "type": "UP",
+      "duration": 0
+    },
+    {
+      "id": "pushup-shakira-36",
+      "time": 141902,
+      "type": "HOLD",
+      "duration": 3000,
+      "position": "TOP"
+    }
+  ],
+  "meta": {
+    "intensityCurve": [
+      0.3,
+      0.5,
+      0.7,
+      0.5
+    ],
+    "counts": {
+      "DOWN": 16,
+      "UP": 16,
+      "HOLD": 4
+    },
+    "generatedBy": "Move Along spaced beat-grid adaptation v1"
+  }
+}

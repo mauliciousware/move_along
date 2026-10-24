@@ -130,3 +130,57 @@ Outstanding gate items:
 Follow docs/PHONE_QA.md on an HTTPS build containing these changes. Changes remain
 local and have not been pushed/deployed by this task. Phase 3 is not started;
 calibration, movement counting, audio and scoring remain explicit previews.
+
+## Push-up-first playable slice — 2026-10-24
+
+The owner requested a complete push-up game, reusing Pushbeat components,
+mechanics and the existing Shakira song. This explicitly changes the squat-first
+implementation sequence. No outstanding physical-device gate is marked passed.
+
+Implemented `/pushup` and a direct homepage entry: introduction → session safety
+→ track selection → camera permission/framing → hands-free calibration → two
+untimed practice pairs → audio-clock countdown → fixed-target rhythm game →
+transient actual results. The push-up Learn page also enters this route. Other
+exercise screens remain previews; this is a complete single-exercise slice.
+
+Ported the original movement detector, calibration state machine, audio transport,
+judgment, scoring, combo tiers, current-cue-only guidance, early arrival treatment,
+holds, rests, particles, feedback and results. Source hashes are recorded in
+SOURCE_REUSE.md. Setup and modal controls use existing 8bitcn/shadcn components.
+No new dependencies. The shared Phase 2 camera engine is used through a compact
+push-up adapter; it is not replaced by the older worker. No frames are stored.
+
+Differences made deliberately: comfortable calibration language; no calorie
+claims; contain projection; immediate STOP; stable readiness; two-pair practice;
+explicit readiness after sustained tracking loss; stale signals cannot score;
+camera interruption/rotation requires setup and recalibration. Song pause parks
+its AudioBufferSource and freezes song time while the shared AudioContext can
+play calibration cues. User-triggered resume unlocks audio before countdown;
+recreated sources resume at the saved offset. Rest does not count movements.
+
+Local Shakira audio is present, ignored by Git, and not published. The original
+click track is the fallback. Both maps enforce at least 2 seconds between phase
+cues, holds as work, 30-second maximum work stretches and 15-second rests. They
+are regenerated from central config with `npm run mapgen:pushup`; validation runs
+in CI. The original dev-map fixture remains only for ported regression tests.
+
+Verification so far: 144 unit tests passed across 17 files, including adapter
+invalidation, movement noise/rearm, calibration retry, timing boundary grades,
+score/rank/hold math, audio pause offset, lifecycle, and full deterministic
+all-PERFECT simulations of both new maps. Typecheck and lint passed. Production
+build succeeded with `/pushup` statically prerendered. Final verification follows.
+
+Browser observations: fresh-session safety shown; Shakira loaded/decoded and
+countdown reached gameplay; keyboard practice required two actual timestamped
+pairs; gameplay counted a pair; STOP produced actual partial results. After
+clearing stale generated `.next/dev` CSS, 390px portrait arena measured 355px wide
+with no horizontal overflow and STOP 68×56px above the fold. The connected local
+camera reported ~29Hz, ~11.7ms GPU inference, ~120 draw FPS, ~1 React render/sec,
+zero external asset requests. This is local Mac evidence, not physical iPhone QA.
+Camera views were checked with text only. A separate keyboard-only QA tab was
+used for visual inspection; camera was never enabled in that tab.
+
+Pending: physical iPhone Safari camera-to-calibration-to-game movement trials,
+10 real push-ups ±1, rotation/background/recovery/thermal performance on that
+phone, audio/beat alignment by ear, and HTTPS deployment network audit. No GitHub
+push or deployment was performed in this slice.

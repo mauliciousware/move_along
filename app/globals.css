@@ -205,3 +205,107 @@
   .camera-mode .page-heading h1 { font-size: 15px; }
   .live-camera-stage { height: clamp(240px, 38svh, 340px); }
 }
+
+/* Playable push-up slice: portrait stage, with the original fixed-target mechanics. */
+.pushup-experience {
+  --color-up: #22e36b; --color-down: #ff3b4e; --color-hold: #ff8a1f; --color-accent: #7152d6;
+  --color-muted: #68647b; --color-text: #222039;
+  max-width: 620px; min-height: 100svh; margin: auto; padding: 0 20px env(safe-area-inset-bottom);
+  .pushup-header { display:flex; align-items:center; gap:12px; justify-content:space-between; min-height:80px; }
+  .pushup-header .brand { font-size:22px; }
+  .pushup-header .pushup-button { width:auto; min-height:56px; }
+  .screen { padding:24px 0 32px; }
+  .screen h1 { font-size:clamp(30px,7vw,44px); line-height:1.2; margin:16px 0; letter-spacing:-.04em; }
+  .screen h2 { font-size:24px; }
+  p { line-height:1.6; margin-bottom:18px; }
+  .muted, .chapter-label { color:var(--color-muted); }
+  .chapter-label { font-size:12px; letter-spacing:.08em; }
+  .screen > .pushup-button { margin-top:14px; }
+  .screen > small { display:block; margin-top:20px; }
+  .pushup-intro > svg { max-height:220px; width:100%; }
+  .pushup-instructions { display:grid; gap:10px; margin:24px 0; }
+  .pushup-songs { display:grid; gap:24px; }
+  .pushup-songs article { border:2px solid var(--border); padding:24px; box-shadow:5px 5px 0 var(--border); }
+  .pushup-songs .retro { color:var(--primary); font-size:16px; }
+  .pushup-songs small { display:block; margin:12px 0; }
+  .pushup-footer { padding:24px 0; font-size:12px; color:var(--color-muted); }
+  .pushup-notice { border-left:4px solid var(--primary); padding:14px; }
+  .placement-guide { width:100%; max-height:210px; }
+  .camera-stage { position:relative; width:100%; height:min(48svh,380px); overflow:hidden; background:#171426; border:2px solid var(--border); }
+  .camera-feed { width:100%; height:100%; object-fit:contain; transform:scaleX(-1); opacity:.8; }
+  .game-canvas { display:block; width:100%; height:100%; }
+  .camera-stage > .game-canvas { position:absolute; inset:0; }
+  .step-back { position:absolute; inset:0; display:flex; flex-direction:column; justify-content:center; align-items:center; gap:16px; padding:24px; background:#171426ba; color:white; text-align:center; }
+  .pose-diagnostics, .game-diagnostics { font:10px/1.5 monospace; white-space:pre-wrap; pointer-events:none; }
+  .pose-diagnostics:empty, .game-diagnostics:empty { display:none; }
+  .pose-diagnostics { position:absolute; left:8px; bottom:8px; color:white; background:#000b; }
+  .tracking-caption { font-size:12px; padding-top:12px; }
+  .overlay-control { border:0; margin:16px 0; padding:0; }
+  .overlay-control > div { display:flex; gap:8px; }
+  .overlay-control button { min-height:56px; flex:1; border:1px solid var(--border); }
+  .overlay-control button[aria-pressed=true] { background:var(--secondary); }
+  .overlay-control small { display:block; padding-top:8px; }
+  .keyboard-link { min-height:56px; text-decoration:underline; display:block; margin:12px auto; }
+  .step-indicator { display:flex; gap:8px; }
+  .step-indicator span { height:5px; background:var(--border); flex:1; }
+  .step-indicator span.active { background:var(--primary); }
+  .calibration-demo { height:90px; width:100%; }
+  .calibration-progress { height:8px; background:var(--border); margin:16px 0; overflow:hidden; }
+  .calibration-progress > div { height:100%; background:var(--primary); transform-origin:left; transform:scaleX(0); }
+  .arena { position:relative; height:calc(100svh - 128px); min-height:500px; max-height:850px; background:#171426; color:#f4f4fa; border:2px solid #222039; box-shadow:5px 5px 0 #222039; }
+  .play-stage { position:absolute; inset:88px 0 92px; }
+  .play-stage .pose-view, .play-stage .camera-stage { height:100%; border:0; }
+  .play-stage .step-back { font-size:16px; }
+  .song-console { position:absolute; top:0; left:0; right:0; min-height:80px; display:grid; grid-template-columns:minmax(0,1fr) 56px 68px; gap:8px; align-items:center; padding:10px; background:#242036; }
+  .song-emblem, .song-time { display:none; }
+  .song-console-title { display:grid; gap:3px; min-width:0; }
+  .song-console-title strong { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-size:16px; }
+  .console-eyebrow { font-size:9px; letter-spacing:.08em; color:#c4bfd5; }
+  .console-artist { font-size:10px; line-height:1.3; color:#c4bfd5; }
+  .pause-button, .stop-button { min-height:56px; border:1px solid #81749c; font-weight:700; }
+  .stop-button { color:#fff; background:#a9253b; }
+  .arena-stats { position:absolute; top:96px; left:14px; right:14px; display:flex; justify-content:space-between; pointer-events:none; }
+  .combo-block, .score-block { display:grid; gap:2px; }
+  .score-block { text-align:right; }
+  .combo-number, .arena-score { font-size:clamp(26px,7vw,38px); line-height:1; font-variant-numeric:tabular-nums; }
+  .combo-caption, .multiplier { font-size:9px; }
+  .combo-ladder { display:none; }
+  .workout-dock { position:absolute; bottom:0; left:0; right:0; padding:16px 12px; display:grid; grid-template-columns:1fr 1.3fr 1fr; gap:14px; background:#242036; }
+  .rep-readout, .accuracy-readout { display:grid; gap:4px; }
+  .accuracy-readout { text-align:right; }
+  .workout-dock strong { font-size:24px; line-height:1; }
+  .workout-dock strong small { font-size:12px; color:#c4bfd5; }
+  .progress-milestones { display:flex; justify-content:space-between; color:#6a607e; font-size:12px; }
+  .progress-milestones [data-reached=true] { color:#c9edb0; }
+  .music-progress { height:5px; background:#5e536d; }
+  .music-progress > div { height:100%; background:#c9edb0; transform-origin:left; transform:scaleX(0); }
+  .game-message { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:24px; background:#171426e8; text-align:center; gap:16px; }
+  .game-message .muted { color:#c4bfd5; }
+  .game-message h1 { font-size:64px; }
+  .game-instruction { font-size:11px; margin:14px 0; text-align:center; }
+  .game-instruction span { display:none; }
+  .result-score { display:flex; justify-content:space-between; padding:24px 0; }
+  .result-score > div { display:grid; gap:10px; }
+  .result-score strong { font-size:44px; line-height:1; }
+  .result-score span { color:var(--color-muted); font-size:12px; }
+  .session-feedback { display:grid; gap:8px; margin:16px 0; }
+  .session-feedback article { border-top:1px solid var(--border); padding-top:16px; }
+  .stats-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:1px; background:var(--border); border:1px solid var(--border); margin:24px 0; }
+  .result-stat { background:var(--background); padding:16px; display:grid; gap:8px; }
+  .result-stat span { font-size:11px; color:var(--color-muted); }
+  .result-stat strong { font-size:24px; }
+  &.in-game { max-width:560px; padding:0 10px env(safe-area-inset-bottom); }
+  &.in-game .pushup-header { min-height:64px; }
+}
+.pushup-button { width:100%; min-height:64px; white-space:normal; }
+.pushup-dialog { max-height:90svh; overflow:auto; }
+.pushup-dialog .slider label { display:flex; justify-content:space-between; }
+.pushup-dialog .slider input { width:100%; min-height:44px; }
+.pushup-dialog .overlay-control > div { display:flex; gap:12px; }
+.pushup-dialog .overlay-control button { min-height:56px; padding:12px; border:1px solid var(--border); }
+@media(max-width:360px) {
+ .pushup-experience { padding-inline:14px; }
+ .pushup-experience .pushup-header .brand { font-size:18px; }
+ .pushup-experience .song-console { grid-template-columns:minmax(0,1fr) 56px 62px; gap:6px; }
+ .pushup-experience .console-artist { font-size:9px; }
+}

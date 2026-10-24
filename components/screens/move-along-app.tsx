@@ -9,6 +9,7 @@ import { Progress } from "@/components/ui/8bit/progress";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
+import { useRouter } from "next/navigation";
 import CameraSurface from "@/components/camera/camera-surface";
 import { MovementArt, PixelSpark } from "@/components/illustrations/movement-art";
 import { EXERCISES, EXERCISE_IDS, ROUTINES, ROUTINE_IDS } from "@/data/catalog";
@@ -26,6 +27,7 @@ const PAGE_TITLES: Record<Screen, string> = {
 };
 
 export function MoveAlongApp() {
+  const router = useRouter();
   const [state, dispatch] = useReducer(flowReducer, INITIAL_FLOW);
   const [pauseOpen, setPauseOpen] = useState(false);
   const headingRef = useRef<HTMLHeadingElement>(null);
@@ -53,6 +55,7 @@ export function MoveAlongApp() {
     } catch { dispatch({ type: "requireSafety", then: "routines" }); }
   }
   function startSetup() {
+    if (exercise.id === "pushup") { router.push("/pushup" + window.location.search); return; }
     try {
       if (sessionStorage.getItem(CONFIG.sessionKeys.safety) === "yes") next();
       else dispatch({ type: "requireSafety", then: "camera" });
@@ -85,7 +88,7 @@ export function MoveAlongApp() {
             <Badge variant="secondary" font="normal"><PixelSpark className="badge-spark" />A little break from the scroll</Badge>
             <h1 id="hero-title" ref={headingRef} tabIndex={-1}>A little<br />movement.<br />A lot more<br />play.</h1>
             <p>Turn your everyday moves into a game.<br className="desktop-break" /> Learn, find your rhythm, and move along.</p>
-            <div className="hero-actions"><Button onClick={begin} font="normal" size="lg"><Play data-icon="inline-start" />Let’s move</Button><Button variant="ghost" font="normal" onClick={() => go("how")}>Show me how<ChevronRight data-icon="inline-end" /></Button></div>
+            <div className="hero-actions"><Button onClick={() => router.push("/pushup" + window.location.search)} font="normal" size="lg"><Play data-icon="inline-start" />Play push-up rhythm</Button><Button variant="ghost" font="normal" onClick={() => go("how")}>Show me how<ChevronRight data-icon="inline-end" /></Button></div>
             <div className="privacy-note"><LockKeyhole aria-hidden="true" />Just you, your camera, and a little room.</div>
           </div>
           <div className="hero-scene" role="img" aria-label="Original pixel characters squatting, marching and doing a push-up on a lilac stage">
@@ -141,7 +144,7 @@ export function MoveAlongApp() {
       </>}
     </main>
 
-    <footer className="site-footer"><span><PixelSpark />A little movement, at your pace.</span><span>Local camera · rhythm play coming next</span></footer>
+    <footer className="site-footer"><span><PixelSpark />A little movement, at your pace.</span><span>Push-up rhythm is playable · more moves coming</span></footer>
 
     <Dialog open={pauseOpen} onOpenChange={setPauseOpen}><DialogContent className="pause-dialog" showCloseButton={false}><DialogHeader><div className="dialog-top"><DialogTitle>Take your time.</DialogTitle><Button variant="ghost" font="normal" size="sm" onClick={() => setPauseOpen(false)} aria-label="Close pause menu"><X /></Button></div><DialogDescription>{state.screen === "camera" ? "The camera is paused. Return to setup, then tap Resume camera when you’re ready." : "This is the pause menu preview. Resume the walkthrough or choose another step."}</DialogDescription></DialogHeader><div className="pause-actions"><Button font="normal" onClick={() => setPauseOpen(false)}><Play data-icon="inline-start" />{state.screen === "camera" ? "Back to camera" : "Resume preview"}</Button><Button variant="outline" font="normal" onClick={() => { setPauseOpen(false); dispatch({ type: "recalibrate" }); }}>Recalibrate</Button><Button variant="outline" font="normal" onClick={() => { setPauseOpen(false); dispatch({ type: "skip" }); }}>Skip movement</Button><Button variant="destructive" font="normal" onClick={stop}>End session</Button></div></DialogContent></Dialog>
   </div>;

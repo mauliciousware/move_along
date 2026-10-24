@@ -8,6 +8,7 @@ components, original pixel movement artwork and self-hosted fonts.
 
 
 
+
 ## Run
 
 Use Node 24 (`.nvmrc`) and npm:
@@ -31,6 +32,7 @@ then `npm start`. No environment variables are needed by application code.
 npm run typecheck
 npm run lint
 npm run test
+npm run mapgen:validate
 npm run build
 ```
 
@@ -49,24 +51,7 @@ has not been run remotely for these unpushed changes.
 - `lib/shared/`: central config, types and navigation reducer.
 - `data/catalog.ts`: movement content and routine definitions.
 
-## Next milestone
 
-Complete the physical iPhone Safari gate on an updated HTTPS deployment, then
-Phase 3 connects squat calibration and untimed practice to the live camera engine.
-See `docs/PROGRESS.md` for measured local evidence and untested device paths.
-
-## Privacy and scope
-
-Only safety acknowledgement is currently stored in sessionStorage. Camera frames
-are processed transiently in a local worker and disposed; no recording, uploads,
-analytics, stored images or saved scores exist in the app. STOP and leaving camera
-setup release the stream. Backgrounding or rotating pauses it until explicit
-resume. Microphone access is disabled. The app provides tracking/game feedback,
-not posture diagnoses, medical assessments or future-body predictions.
-
-Production runtime connections are restricted to the same origin. A development
-server also permits its local live-reload websocket. Self-hosted fonts, the model,
-WASM and inference bundle are served as local static assets.
 
 ## Repository and deployment
 
@@ -75,9 +60,12 @@ https://github.com/mauliciousware/move_along. Run all commands inside this folde
 The parent Pushbeat project is a reference, not the active app.
 
 Import this repository into a compatible Next.js host for HTTPS phone testing.
-These Phase 2 changes have not been pushed or deployed by this task.
+The playable push-up changes are local and have not been pushed or deployed by this task.
 
 ## Licensing
 
 Third-party notices are in `docs/licenses/`. The application owner has not chosen
-a license for original project code. No commercial audio was copied into this app.
+a license for original project code. The owner-requested Shakira track is copied locally as `public/audio/pushup-shakira.mp3`
+and ignored by Git. Redistribution clearance remains unverified, so it is not
+included in deployment. `public/audio/dev-click.wav` is the original fallback.
+A missing soundtrack is disabled in the chooser. See `docs/ASSETS.md`.
