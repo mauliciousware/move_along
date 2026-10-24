@@ -7,7 +7,8 @@ import { accuracy } from './scoring';
 
 describe('playable Move Along push-up maps',()=>{
  for(const song of ['pushup','squat','march'].flatMap(exercise=>songsFor(exercise as 'pushup'|'squat'|'march'))){
-  it(`${song.title} passes grammar and work/rest limits`,()=>{expect(validateMap(song.map)).toEqual([]);expect(validateWorkLimits(song.map)).toEqual([]);});
+  it(`${song.title} passes grammar and safe-work limits`,()=>{expect(validateMap(song.map)).toEqual([]);if(song.map.mode!=='flow')expect(validateWorkLimits(song.map)).toEqual([]);});
+  if(song.map.mode==='flow')continue;
   it(`${song.title} completes end to end with perfect input and holds`,()=>{
    const game=new GameSession(song.map);let cursor=0;
    for(let t=0;t<=song.map.durationMs;t+=10){

@@ -37,5 +37,8 @@ describe('body overlay confidence and buffers',()=>{
   it('projects overlays using the mirrored cover crop',()=>{
     expect(projectPoint(.5,.5,640,480,390,844)).toEqual({x:195,y:422});
     expect(projectPoint(.6,.5,640,480,390,844).x).toBeLessThan(195);
+    // A landscape frame is cropped horizontally to fill the tall phone stage.
+    expect(projectPoint(0,.5,640,480,390,844).x).toBeGreaterThan(390);
+    expect(projectPoint(1,.5,640,480,390,844).x).toBeLessThan(0);
   });
 });

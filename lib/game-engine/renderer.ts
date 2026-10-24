@@ -2,7 +2,7 @@ import { PUSHUP_CONFIG as CONFIG } from '../shared/config';
 import type { GameRuntime } from './runtime';
 import type { InputType } from '../shared/pushup-types';
 import { tier } from './scoring';
-import { clamp, movementGuidance, targetCue } from './targets';
+import { clamp, flowTarget, movementGuidance, targetCue } from './targets';
 
 const TAU = Math.PI * 2;
 const cfg = CONFIG.targets;
@@ -16,6 +16,7 @@ export class GameRenderer {
   private lastNow = 0;
 
   draw(ctx: CanvasRenderingContext2D, w: number, h: number, run: GameRuntime, now: number, reduced: boolean, dev: boolean) {
+    if (run.game.flow) { this.drawFlow(ctx, w, h, run, now, reduced, dev); return; }
     const { game, songMs } = run;
     const cue = targetCue(game, songMs);
     const judgment = game.judgment;
@@ -136,6 +137,54 @@ export class GameRenderer {
     }
     ctx.globalAlpha = 1;
     if (dev) { ctx.fillStyle = CONFIG.colors.good; ctx.font = `${cfg.captionSize}px ${this.displayFont}`; this.text(ctx, `NEXT ${cue.current?.note.type ?? '—'} · ${Math.round(cue.remainingMs)}ms`, cx, h * cfg.railEnd, w * .9); }
+    ctx.restore();
+  }
+
+  /** One large ring, one instruction. The song never moves this target. */
+  private drawFlow(ctx: CanvasRenderingContext2D, w: number, h: number, run: GameRuntime, now: number, reduced: boolean, dev: boolean) {
+    const { game } = run;
+    const playing = run.getSnapshot().phase === 'playing';
+    const tracked = run.keyboard || run.tracking === 'TRACKING' && now - run.signalAt <= CONFIG.camera.staleMs;
+    const target = flowTarget(game, run.p, tracked);
+    const radius = Math.min(w * 0.30, h * 0.22, 140);
+    const cx = w / 2, cy = h * 0.47;
+    const color = target.kind === 'UP' ? CONFIG.colors.up : target.kind === 'DOWN' ? CONFIG.colors.down : CONFIG.colors.hold;
+    const judgment = game.judgment;
+    const age = judgment ? run.songMs - judgment.time : Infinity;
+
+    ctx.save();
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    if (playing && target.kind !== 'DONE') {
+      const wash = ctx.createLinearGradient(0, 0, 0, h);
+      wash.addColorStop(0, (target.kind === 'UP' ? color : CONFIG.colors.down) + '26');
+      wash.addColorStop(0.5, '#00000000');
+      wash.addColorStop(1, (target.kind === 'DOWN' ? color : CONFIG.colors.up) + '18');
+      ctx.fillStyle = wash; ctx.fillRect(0, 0, w, h);
+    }
+    this.ring(ctx, cx, cy, radius, color, playing ? target.fill : 0, playing);
+    ctx.fillStyle = color;
+    if (target.kind === 'HOLD') {
+      ctx.font = `${radius * 0.2}px ${this.displayFont}`;
+      this.text(ctx, 'PLANK', cx, cy - radius * 0.3, radius * 1.4);
+      ctx.font = `${radius * 0.52}px ${this.displayFont}`;
+      this.text(ctx, `${target.seconds}`, cx, cy + radius * 0.02, radius * 1.2);
+    } else {
+      ctx.font = `${radius * 0.3}px ${this.displayFont}`;
+      this.text(ctx, target.label, cx, cy - radius * 0.05, radius * 1.7);
+    }
+    ctx.fillStyle = CONFIG.colors.text;
+    ctx.font = `${Math.max(10, radius * 0.11)}px ${this.displayFont}`;
+    this.text(ctx, playing ? target.sub : 'GET READY', cx, cy + radius * 0.42, radius * 1.6);
+    if (target.kind === 'DOWN' || target.kind === 'UP') this.chevron(ctx, cx, cy + radius * 0.7, radius * 0.13, target.kind);
+    if (age >= 0 && age < CONFIG.animation.hitMs && !reduced) {
+      const burst = age / CONFIG.animation.hitMs;
+      ctx.save(); ctx.globalAlpha = 1 - burst; ctx.strokeStyle = color; ctx.lineWidth = cfg.ringWidth * (1 - burst);
+      ctx.beginPath(); ctx.arc(cx, cy, radius * (1 + burst * cfg.burstScale), 0, TAU); ctx.stroke(); ctx.restore();
+    }
+    if (dev) {
+      ctx.fillStyle = CONFIG.colors.good; ctx.font = `${cfg.captionSize}px ${this.displayFont}`;
+      this.text(ctx, `${target.kind} · ${Math.round(target.fill * 100)}% · ${Math.round(run.flowMs)}ms`, cx, h * cfg.railEnd, w * 0.9);
+    }
     ctx.restore();
   }
 

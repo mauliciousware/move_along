@@ -8,6 +8,7 @@ export const CONFIG = {
   routine: { workSeconds: 30, restSeconds: 15 },
   camera: {
     width: 480, height: 640, maxHz: 30, maxDpr: 2,
+    portrait: { width: 720, height: 960, aspectRatio: 0.75 },
     staleMs: 250, initTimeoutMs: 30000, frameTimeoutMs: 5000,
     warnInferenceMs: 33, metricsWindowMs: 1000, metricSamples: 30,
     devQuery: "dev",
@@ -38,6 +39,8 @@ export const PUSHUP_CONFIG = {
   standing: { stableMs: 1000, stableStd: .025, minSamples: 15, minKneeRange: .08, minHipRange: .08, minLift: .12, returnTolerance: .08, repeatTolerance: .12, coherence: .5, liftThreshold: .7, resetThreshold: .25, timeoutMs: 20000, maxSamples: 90 },
   audioSession: { unlockTimeoutMs: 4000, loadTimeoutMs: 20000, unlockToneMs: 100 },
   workout: { minGapMs: 2000, maxWorkMs: 30000, restMs: 15000, holdMs: 3000, pairs: 4, readyMs: 2000 },
+  /** Self-paced push-up flow: one target at a time, no rests, no timing window. */
+  flow: { repsPerSet: 8, holdsMs: [10000, 10000, 8000], maxHoldMs: 15000, holdZone: 0.40 },
   windows: { perfect: 150, good: 300, ok: 500 },
   points: { perfect: 100, good: 75, ok: 40, miss: 0 },
   holdPointsFactor: 2,

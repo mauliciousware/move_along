@@ -29,10 +29,11 @@ export function assessFraming(frame: RawPoseFrame, exercise: ExerciseId): { usab
   return result("none");
 }
 
-/** A reusable centered contain transform, shared by video overlays and tests. */
+/** A reusable centered contain or cover transform, shared by video overlays and tests. */
+export type CameraFit = 'contain' | 'cover';
 export interface ContainProjection { offsetX: number; offsetY: number; displayWidth: number; displayHeight: number; mirrored: boolean }
-export function updateProjection(target: ContainProjection, videoW: number, videoH: number, width: number, height: number, mirrored: boolean) {
-  const scale = videoW > 0 && videoH > 0 ? Math.min(width / videoW, height / videoH) : 0;
+export function updateProjection(target: ContainProjection, videoW: number, videoH: number, width: number, height: number, mirrored: boolean, fit: CameraFit = 'contain') {
+  const scale = videoW > 0 && videoH > 0 ? (fit === 'cover' ? Math.max : Math.min)(width / videoW, height / videoH) : 0;
   target.displayWidth = videoW * scale;
   target.displayHeight = videoH * scale;
   target.offsetX = scale ? (width - target.displayWidth) / 2 : 0;
@@ -43,10 +44,10 @@ export function projectInto(target: { x: number; y: number }, x: number, y: numb
   target.x = transform.offsetX + (transform.mirrored ? 1 - x : x) * transform.displayWidth;
   target.y = transform.offsetY + y * transform.displayHeight;
 }
-export function projectPoint(x: number, y: number, videoW: number, videoH: number, width: number, height: number, mirrored: boolean) {
+export function projectPoint(x: number, y: number, videoW: number, videoH: number, width: number, height: number, mirrored: boolean, fit: CameraFit = 'contain') {
   const transform: ContainProjection = { offsetX: 0, offsetY: 0, displayWidth: 0, displayHeight: 0, mirrored };
   const result = { x: 0, y: 0 };
-  updateProjection(transform, videoW, videoH, width, height, mirrored);
+  updateProjection(transform, videoW, videoH, width, height, mirrored, fit);
   projectInto(result, x, y, transform);
   return result;
 }

@@ -1,8 +1,10 @@
 import { validateWorkLimits } from './work-limits';
+import { validateFlowMap } from './flow';
 import { PUSHUP_CONFIG as CONFIG } from '../shared/config';
 import type { BeatMap } from '../shared/pushup-types';
 /** Reject unsafe or malformed maps before the runtime can accept them. */
 export function validateMap(map: BeatMap): string[] {
+  if (map.mode === 'flow') return validateFlowMap(map);
   const errors: string[] = [];
   const fail = (id: string, why: string) => errors.push(`${id}: ${why}`);
   const finite = (n: number) => Number.isFinite(n);

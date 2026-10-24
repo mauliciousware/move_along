@@ -11,7 +11,7 @@ export class AudioTransport {
   private context: AudioContext | null = null;
   private tones = new Set<OscillatorNode>();
   private parked: { buffer: AudioBuffer; offset: number; songMs: number } | null = null;
-  constructor(readonly file: string = CONFIG.audio.file, public offsetMs = 0) {}
+  constructor(readonly file: string = CONFIG.audio.file, public offsetMs = 0, readonly loop = false) {}
   get ctx() { return this.context ??= getAudioContext(); }
   async load() {
     let pending=buffers.get(this.file);
@@ -45,7 +45,7 @@ export class AudioTransport {
     for(let i=0;i<4;i++)this.tone(this.startCtxTime-(4-i)*CONFIG.animation.countdownMs/1000,CONFIG.cues.frequencies[Math.min(i,2)],CONFIG.cues.gain,CONFIG.cues.durationMs);
   }
   private connect(buffer: AudioBuffer) {
-    this.source=this.ctx.createBufferSource();this.source.buffer=buffer;
+    this.source=this.ctx.createBufferSource();this.source.buffer=buffer;this.source.loop=this.loop;
     this.filter=this.ctx.createBiquadFilter();this.filter.type='lowpass';this.filter.frequency.value=CONFIG.audio.normalCutoff;
     this.gain=this.ctx.createGain();this.gain.gain.value=1;
     this.source.connect(this.filter).connect(this.gain).connect(this.ctx.destination);
@@ -66,7 +66,9 @@ export class AudioTransport {
   async unlock() { if(this.ctx.state==='running')return; if(!await unlockAudio())throw new Error('Safari needs a tap to enable sound. Tap Retry audio, with Safari in the foreground.'); }
   pause() {
     if (this.parked || !this.source?.buffer) return Promise.resolve();
-    const saved = {buffer:this.source.buffer, offset:this.ctx.currentTime-this.startCtxTime, songMs:this.getSongTimeMs()};
+    const elapsed=this.ctx.currentTime-this.startCtxTime;
+    const offset=this.loop ? elapsed % this.source.buffer.duration : elapsed;
+    const saved = {buffer:this.source.buffer, offset, songMs:this.getSongTimeMs()};
     this.stop(); this.parked=saved;
     return Promise.resolve();
   }

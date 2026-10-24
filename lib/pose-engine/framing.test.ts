@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { CONFIG } from "@/lib/shared/config";
 import type { RawPoseFrame } from "@/lib/shared/types";
-import { assessFraming, projectPoint, visible } from "./framing";
+import { assessFraming, projectPoint, updateProjection, visible } from "./framing";
 import { JOINT_NAMES, readLandmarks } from "./landmarks";
 
 export function fullPose(tPerfMs = 0): RawPoseFrame {
@@ -57,6 +57,26 @@ describe("uncropped mirrored camera coordinates", () => {
   });
   it("handles video metadata not being ready", () => {
     expect(projectPoint(0.5, 0.5, 0, 0, 300, 400, true)).toEqual({ x: 0, y: 0 });
+  });
+});
+
+describe("portrait cover crop for the phone game", () => {
+  it("fills a portrait stage with a landscape camera instead of letterboxing", () => {
+    const transform = { offsetX: 0, offsetY: 0, displayWidth: 0, displayHeight: 0, mirrored: false };
+    updateProjection(transform, 640, 480, 300, 400, false, "cover");
+    expect(transform.displayWidth).toBeCloseTo(533.333, 2);
+    expect(transform.displayHeight).toBe(400);
+    expect(transform.offsetX).toBeCloseTo(-116.667, 2);
+    expect(transform.offsetY).toBe(0);
+    expect(projectPoint(0.5, 0.5, 640, 480, 300, 400, false, "cover")).toEqual({ x: 150, y: 200 });
+  });
+  it("keeps a portrait camera at full height in a portrait stage", () => {
+    const transform = { offsetX: 0, offsetY: 0, displayWidth: 0, displayHeight: 0, mirrored: true };
+    updateProjection(transform, 480, 640, 300, 400, true, "cover");
+    expect(transform.displayWidth).toBe(300);
+    expect(transform.displayHeight).toBe(400);
+    expect(transform.offsetX).toBe(0);
+    expect(transform.offsetY).toBe(0);
   });
 });
 

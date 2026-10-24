@@ -1,5 +1,6 @@
 import { PUSHUP_CONFIG as CONFIG } from "../shared/config";
 import { BODY_JOINTS, type Calibration, type PoseFrame } from "../shared/pushup-types";
+import { projectPoint as projectShared } from '@/lib/pose-engine/framing';
 
 export type Point = { x: number; y: number; visibility?: number };
 export function readPose(points: readonly Point[], tPerfMs: number): PoseFrame {
@@ -26,9 +27,8 @@ export function normalizePose(frame: PoseFrame, cal: Calibration) {
   };
 }
 
-/** Same uncropped projection as the shared camera preview. */
+/** Same mirrored cover crop as the portrait camera preview. */
 export { projectPoint as projectCameraPoint } from '@/lib/pose-engine/framing';
 export function projectPoint(x: number, y: number, videoW: number, videoH: number, w: number, h: number) {
-  const scale = Math.min(w / videoW, h / videoH);
-  return { x: w - (x * videoW * scale + (w-videoW*scale)/2), y: y * videoH * scale + (h-videoH*scale)/2 };
+  return projectShared(x, y, videoW, videoH, w, h, true, 'cover');
 }

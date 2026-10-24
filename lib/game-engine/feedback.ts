@@ -3,8 +3,31 @@ import type { PlayedNote } from './session';
 import type { ExerciseId } from '../shared/types';
 import type { Stats } from './scoring';
 export interface SessionFeedback { highlight: string; next: string; tracking?: string }
-export function sessionFeedback(notes: readonly PlayedNote[], stats: Stats, camera = false, bodySamples = 0, bodyVisibleSamples = 0, exercise: ExerciseId = 'pushup'): SessionFeedback {
+export function sessionFeedback(notes: readonly PlayedNote[], stats: Stats, camera = false, bodySamples = 0, bodyVisibleSamples = 0, exercise: ExerciseId = 'pushup', flow = false): SessionFeedback {
   const cfg = CONFIG.feedback;
+  let tracking: string | undefined;
+  let elbowsHidden = false;
+  if (camera && exercise === 'pushup') {
+    if (bodySamples < cfg.minBodySamples) tracking = 'Not enough body-tracking data for a camera-setup observation.';
+    else if (bodyVisibleSamples / bodySamples < cfg.minBodyCoverage) {
+      elbowsHidden = true;
+      tracking = 'Camera visibility only; this does not assess exercise technique.';
+    }
+  }
+
+  if (flow) {
+    const holds = notes.filter(n => !!n.meter && n.status !== 'pending').length;
+    const holdSeconds = Math.round(stats.plankTimeMs / 1000);
+    const highlight = stats.pushups > 0
+      ? `You completed ${stats.pushups} push-ups and ${holds} plank ${holds === 1 ? 'hold' : 'holds'} for ${holdSeconds} seconds.`
+      : 'You made time for a session. Go at your own pace.';
+    let next = stats.endedEarly
+      ? 'You stopped early. Rest, then come back when you are ready.'
+      : 'Next time, keep closing the ring at the same steady pace.';
+    if (elbowsHidden) next = 'Your elbows were not consistently visible to the tracker. Adjust the camera framing if you want the full arm overlay.';
+    return { highlight, next, tracking };
+  }
+
   const hits = notes.filter(n => n.status === 'perfect' || n.status === 'good' || n.status === 'ok');
   const vertical = hits.filter(n => n.note.type !== 'HOLD');
   let highlight = stats.pushups > 0 ? `You completed ${stats.pushups} ${exercise==='march'?(stats.pushups===1?'step':'steps'):(stats.pushups===1?'rep':'reps')} this session.` : 'You made time for a session. Go at your own pace.';
@@ -27,13 +50,6 @@ export function sessionFeedback(notes: readonly PlayedNote[], stats: Stats, came
       if (late / rows.length >= cfg.biasRatio) { next = `Most of your scored ${name} hits were late. Use the next-target preview to prepare for the beat.`; break; }
     }
   }
-  let tracking: string | undefined;
-  if (camera && exercise==='pushup') {
-    if (bodySamples < cfg.minBodySamples) tracking = 'Not enough body-tracking data for a camera-setup observation.';
-    else if (bodyVisibleSamples / bodySamples < cfg.minBodyCoverage) {
-      next = 'Your elbows were not consistently visible to the tracker. Adjust the camera framing if you want the full arm overlay.';
-      tracking = 'Camera visibility only; this does not assess exercise technique.';
-    }
-  }
+  if (elbowsHidden) next = 'Your elbows were not consistently visible to the tracker. Adjust the camera framing if you want the full arm overlay.';
   return { highlight, next, tracking };
 }

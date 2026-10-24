@@ -31,7 +31,7 @@ export function Gameplay({ onEnd, onCalibrate, engine, runtime, exercise="pushup
     if(engine)runtime.setBodyOverlay(engine.bodyOverlay);
     if(runtime.getSnapshot().phase==='paused')runtime.reenter();else void runtime.start();
     const baseline=runtime.game.stats.pushups;
-    const movement=new ExerciseMovement(exercise,event=>{runtime.input(event);runtime.setReps(baseline+movement.count);});
+    const movement=new ExerciseMovement(exercise,event=>{runtime.input(event);if(!runtime.game.flow)runtime.setReps(baseline+movement.count);});
     const unpause=runtime.subscribe(()=>{if(runtime.getSnapshot().phase!=='playing')movement.interrupt();});
     let previousP=1, previousTime=0;
     const unsubscribe=engine?.onFrame(frame=>{
@@ -67,10 +67,10 @@ export function Gameplay({ onEnd, onCalibrate, engine, runtime, exercise="pushup
     let raf=0,lastDiagnostics=0,lastClock=0;
     const dev=new URLSearchParams(location.search).get('dev')==='1';
     function paint(now:number) {
-      if(progress.current)progress.current.style.transform=`scaleX(${Math.max(0,Math.min(1,runtime.songMs/runtime.game.map.durationMs))})`;
+      if(progress.current)progress.current.style.transform=`scaleX(${runtime.game.flow?runtime.game.progress:Math.max(0,Math.min(1,runtime.songMs/runtime.game.map.durationMs))})`;
       if(elapsed.current && now-lastClock>=CONFIG.targets.hudIntervalMs){lastClock=now;elapsed.current.textContent=formatTime(runtime.songMs);
         if(milestones.current)Array.from(milestones.current.children).forEach((element,index)=>{(element as HTMLElement).dataset.reached=String(runtime.songMs/runtime.game.map.durationMs>=(index+1)/CONFIG.targets.milestoneCount);});}
-      if(dev && diagnostics.current && now-lastDiagnostics>=CONFIG.camera.metricsWindowMs){lastDiagnostics=now;diagnostics.current.textContent=`${runtime.fps.toFixed(0)} FPS · ${Math.max(0,runtime.songMs/1000).toFixed(1)}s / ${runtime.game.map.durationMs/1000}s\np ${runtime.p.toFixed(2)} · ${movement.state} · delay ${runtime.game.latency}ms\nLast Δ ${runtime.game.judgment?.delta.toFixed(0)??'—'}ms · offset ${runtime.audio.offsetMs}ms\n${runtime.game.map.sections.find(s=>runtime.songMs>=s.startMs && runtime.songMs<s.endMs)?.label??'countdown'} · skipped ${runtime.game.stats.skipped}`;}
+      if(dev && diagnostics.current && now-lastDiagnostics>=CONFIG.camera.metricsWindowMs){lastDiagnostics=now;diagnostics.current.textContent=runtime.game.flow?`${runtime.fps.toFixed(0)} FPS · ${Math.max(0,runtime.flowMs/1000).toFixed(1)}s flow\np ${runtime.p.toFixed(2)} · ${movement.state} · ${runtime.game.current?.note.type??'DONE'}\nSet ${runtime.game.flowSummary.set}/${runtime.game.flowSummary.sets} · rep ${runtime.game.flowSummary.repsInSet}/${runtime.game.flowSummary.repsPerSet}\nHold ${Math.round(runtime.game.stats.plankTimeMs/1000)}s · target ${Math.round((runtime.game.current?.meter?.ratio??0)*100)}%`:`${runtime.fps.toFixed(0)} FPS · ${Math.max(0,runtime.songMs/1000).toFixed(1)}s / ${runtime.game.map.durationMs/1000}s\np ${runtime.p.toFixed(2)} · ${movement.state} · delay ${runtime.game.latency}ms\nLast Δ ${runtime.game.judgment?.delta.toFixed(0)??'—'}ms · offset ${runtime.audio.offsetMs}ms\n${runtime.game.map.sections.find(s=>runtime.songMs>=s.startMs && runtime.songMs<s.endMs)?.label??'countdown'} · skipped ${runtime.game.stats.skipped}`;}
       raf=requestAnimationFrame(paint);
     }
     raf=requestAnimationFrame(paint);
@@ -78,11 +78,13 @@ export function Gameplay({ onEnd, onCalibrate, engine, runtime, exercise="pushup
   },[engine,runtime,exercise]);
   useEffect(()=>{if(state.phase==='ended')endRef.current({...runtime.game.stats});},[state.phase,runtime]);
   const stats=runtime.game.stats;
+  const flow=runtime.game.flow;
+  const summary=runtime.game.flowSummary;
   const finish=()=>{runtime.end(true);};
   const pause=(kind:'pause'|'stop')=>{runtime.pause();setSheet(kind);};
   const resume=()=>{setSheet(null);runtime.reenter();};
   const showPause=sheet==='pause' || state.phase==='paused' && !sheet;
-  const plannedReps=runtime.game.map.notes.filter(note=>exercise==='march'?note.type==='LEFT'||note.type==='RIGHT':note.type==='UP').length;
+  const plannedReps=flow?summary.totalReps:runtime.game.map.notes.filter(note=>exercise==='march'?note.type==='LEFT'||note.type==='RIGHT':note.type==='UP').length;
   const tierProgress=Math.min(1,stats.combo/CONFIG.game.tierCombos[CONFIG.game.tierCombos.length-1]);
   return <section className="game-column pump-game" aria-label="MOVE ALONG workout">
     <div className="arena">
@@ -101,7 +103,7 @@ export function Gameplay({ onEnd, onCalibrate, engine, runtime, exercise="pushup
         <button className="stop-button" onClick={finish}>■ STOP</button>
       </header>
       <div className="arena-stats">
-        <div className="combo-block"><span className="console-eyebrow">COMBO</span><strong key={stats.combo} className="combo-number">{String(stats.combo).padStart(2,'0')}</strong><span className="combo-caption">{stats.combo>=CONFIG.game.tierCombos[3]?'ON FIRE':stats.combo?'KEEP THE RHYTHM':'FIND YOUR RHYTHM'}</span></div>
+        <div className="combo-block"><span className="console-eyebrow">{flow?'SET':'COMBO'}</span><strong key={flow?summary.set:stats.combo} className="combo-number">{flow?`${summary.set}/${summary.sets}`:String(stats.combo).padStart(2,'0')}</strong><span className="combo-caption">{flow?`${summary.repsInSet}/${summary.repsPerSet} REPS THIS SET`:stats.combo>=CONFIG.game.tierCombos[3]?'ON FIRE':stats.combo?'KEEP THE RHYTHM':'FIND YOUR RHYTHM'}</span></div>
         <div className="score-block"><span className="console-eyebrow">SCORE</span><strong className="arena-score">{stats.score.toLocaleString()}</strong><span className="multiplier"><span aria-hidden="true">ϟ</span> ×{multiplier(stats.combo)} <small>STREAK</small></span></div>
       </div>
       <aside className="combo-ladder" aria-label={`Combo tier progress: ${stats.combo}`}>
@@ -110,13 +112,13 @@ export function Gameplay({ onEnd, onCalibrate, engine, runtime, exercise="pushup
       </aside>
       <footer className="workout-dock">
         <div className="rep-readout"><span className="console-eyebrow">{exercise==='march'?'STEPS':'REPS'}</span><strong>{stats.pushups}<small> / {plannedReps}</small></strong></div>
-        <div className="dock-progress"><span className="console-eyebrow">SONG PROGRESS</span><div className="progress-milestones" ref={milestones} aria-hidden="true">{Array.from({length:CONFIG.targets.milestoneCount},(_,index)=><span key={index}>✦</span>)}</div><div className="music-progress" aria-label="Song progress"><div ref={progress}/></div></div>
-        <div className="accuracy-readout"><span className="console-eyebrow">ACCURACY</span><strong>{accuracyLabel(stats)}</strong><span className="accuracy-rule"/></div>
+        <div className="dock-progress"><span className="console-eyebrow">{flow?'SESSION PROGRESS':'SONG PROGRESS'}</span>{!flow&&<div className="progress-milestones" ref={milestones} aria-hidden="true">{Array.from({length:CONFIG.targets.milestoneCount},(_,index)=><span key={index}>✦</span>)}</div>}<div className="music-progress" aria-label={flow?'Session progress':'Song progress'}><div ref={progress}/></div></div>
+        <div className="accuracy-readout"><span className="console-eyebrow">{flow?'HOLD TIME':'ACCURACY'}</span><strong>{flow?`${Math.floor(stats.plankTimeMs/1000)}s`:accuracyLabel(stats)}</strong>{!flow&&<span className="accuracy-rule"/>}</div>
       </footer>
     </div>
-    <p className="game-instruction">{!engine?(exercise==='march'?'KEYBOARD · ← left knee · → right knee':'KEYBOARD · ↓ lower · ↑ rise · Space to hold'):(exercise==='march'?'Lift. Return. Alternate.':'Lower. Rise. Meet the beat.')}<span>Processed on this device</span></p>
+    <p className="game-instruction">{flow?'Close the ring with your movement. The song is background music.':!engine?(exercise==='march'?'KEYBOARD · ← left knee · → right knee':'KEYBOARD · ↓ lower · ↑ rise · Space to hold'):(exercise==='march'?'Lift. Return. Alternate.':'Lower. Rise. Meet the beat.')}<span>Processed on this device</span></p>
     <pre className="game-diagnostics" ref={diagnostics}/>
     {sheet==='stop' && <Modal title="End workout?" onClose={resume}><p>You can rest anytime.</p><Button variant="danger" onClick={finish}>END & SEE SCORE</Button><Button variant="secondary" onClick={resume}>KEEP GOING</Button></Modal>}
-    {showPause && <Modal title="TAKE A BREATHER." onClose={resume}><Button onClick={resume}>RESUME</Button><>{engine && <OverlayControl value={overlayMode} onChange={mode=>{runtime.setBodyOverlay(mode);engine?.setBodyOverlay(mode);setOverlayMode(mode);}}/>}</><Slider label="INPUT DELAY (ms)" value={delay} max={CONFIG.maxInputLatencyMs} onChange={value=>{setDelay(value);runtime.setLatency(value);}}/><Button variant="secondary" onClick={()=>{runtime.setSfx(!sfx);setSfx(!sfx);}}>HIT SOUND {sfx?'ON':'OFF'}</Button><Button variant="secondary" onClick={async()=>{if(await runtime.prepareCalibration())onCalibrate();}}>RECALIBRATE</Button><Button variant="danger" onClick={finish}>END WORKOUT</Button></Modal>}
+    {showPause && <Modal title={flow?'PAUSED.':'TAKE A BREATHER.'} onClose={resume}><Button onClick={resume}>RESUME</Button><>{engine && <OverlayControl value={overlayMode} onChange={mode=>{runtime.setBodyOverlay(mode);engine?.setBodyOverlay(mode);setOverlayMode(mode);}}/>}</>{!flow&&<Slider label="INPUT DELAY (ms)" value={delay} max={CONFIG.maxInputLatencyMs} onChange={value=>{setDelay(value);runtime.setLatency(value);}}/>}<Button variant="secondary" onClick={()=>{runtime.setSfx(!sfx);setSfx(!sfx);}}>HIT SOUND {sfx?'ON':'OFF'}</Button><Button variant="secondary" onClick={async()=>{if(await runtime.prepareCalibration())onCalibrate();}}>RECALIBRATE</Button><Button variant="danger" onClick={finish}>END WORKOUT</Button></Modal>}
   </section>;
 }

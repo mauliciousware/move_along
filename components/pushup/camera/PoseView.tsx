@@ -23,7 +23,7 @@ export default function PoseView({ engine, lanes = false, runtime }: { engine: P
       if (!debug.current) return;
       const frame = engine.frame, m = engine.metrics;
       const external = performance.getEntriesByType('resource').filter(entry => /^https?:/.test(entry.name) && new URL(entry.name).origin !== location.origin).length + m.externalRequests;
-      debug.current.textContent = `FPS ${m.fps.toFixed(0)} · POSE ${m.poseHz.toFixed(1)} Hz\n${engine.getSnapshot().delegate ?? '—'} ${m.inferenceMs.toFixed(1)} ms · React ${m.rendersPerSecond.toFixed(1)}/s\nConfidence ${frame?.confidence.toFixed(2) ?? '—'} · ${engine.getSnapshot().tracking}\n${engine.calibration && frame ? `Height ${normalizePose(frame, engine.calibration).p.toFixed(2)} · calibrated` : 'Calibration pending · height unavailable'}\nExternal asset requests: ${external}`;
+      debug.current.textContent = `FPS ${m.fps.toFixed(0)} · POSE ${m.poseHz.toFixed(1)} Hz · ${video.current?.videoWidth ?? 0}×${video.current?.videoHeight ?? 0}\n${engine.getSnapshot().delegate ?? '—'} ${m.inferenceMs.toFixed(1)} ms · React ${m.rendersPerSecond.toFixed(1)}/s\nConfidence ${frame?.confidence.toFixed(2) ?? '—'} · ${engine.getSnapshot().tracking}\n${engine.calibration && frame ? `Height ${normalizePose(frame, engine.calibration).p.toFixed(2)} · calibrated` : 'Calibration pending · height unavailable'}\nExternal asset requests: ${external}`;
     }, CONFIG.camera.metricsWindowMs);
     return () => clearInterval(timer);
   }, [engine]);

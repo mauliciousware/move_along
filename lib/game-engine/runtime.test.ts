@@ -5,6 +5,7 @@ vi.mock('../audio-engine/transport',()=>({AudioTransport:class {
  isRunning=true;unlock=vi.fn(async()=>{});time=-2800;offsetMs=0;load=vi.fn(async()=>({}));start=vi.fn(async()=>{});pause=vi.fn(async()=>{});resume=vi.fn(async()=>{});stop=vi.fn();miss=vi.fn();hit=vi.fn();getSongTimeMs(){return this.time;}perfToSongMs(t:number){return t;}
 }}));
 import { GameRuntime } from './runtime';
+import { songsFor } from '../shared/pushup-songs';
 function advance(runtime:GameRuntime,song:number,perf=song){Object.assign(runtime.audio,{time:song});runtime.tick(perf);}
 describe('runtime controls',()=>{
  it('runs countdown, gates input, pauses without advancing, then resumes at the same song time',async()=>{
@@ -19,5 +20,23 @@ describe('runtime controls',()=>{
  });
  it('ends early without judging future notes and ignores pending loading completion after stop',async()=>{
   const r=new GameRuntime(map as BeatMap);const pending=r.start();r.end(true);await pending;expect(r.getSnapshot().phase).toBe('ended');expect(r.game.stats.endedEarly).toBe(true);expect(r.game.stats.miss).toBe(0);
+ });
+ it('runs the push-up flow on its own clock and ends only when the last target lands',async()=>{
+  // The mocked transport keeps reporting 0 ms, so only the flow clock can drive play.
+  const r=new GameRuntime(songsFor('pushup')[0].map);r.setKeyboard(true);r.setSpace(true);await r.start();
+  advance(r,0,2800);expect(r.getSnapshot().phase).toBe('playing');
+  r.tick(2800+60000);expect(r.getSnapshot().phase).toBe('playing');expect(r.game.stats.miss).toBe(0);
+  let perf=64000,guard=0;
+  while(r.getSnapshot().phase!=='ended'&&guard++<5000){
+    perf+=40;
+    const target=r.game.current;
+    if(target&&!target.meter)r.input({type:target.note.type as 'DOWN'|'UP',tPerfMs:perf});
+    advance(r,0,perf);
+  }
+  expect(r.getSnapshot().phase).toBe('ended');
+  expect(r.game.complete).toBe(true);
+  expect(r.game.stats.pushups).toBe(24);
+  expect(r.game.stats.plankTimeMs).toBe(28000);
+  expect(r.game.stats.endedEarly).toBe(false);
  });
 });

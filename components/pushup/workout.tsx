@@ -116,11 +116,12 @@ export default function Workout({ exercise = 'pushup' }: { exercise?: ExerciseId
   return <div className={`pushup-experience ${screen === 'game' ? 'in-game' : ''}`}>
     <a className="skip-link" href="#main-content">Skip to content</a>
     <header className="pushup-header"><Link className="brand" href="/">move along.</Link>{screen !== 'ready' && <span className="workout-name">{keyboard ? 'Keyboard demo' : movement.name}</span>}{screen === 'calibration' && <Button variant="danger" onClick={() => finish(runtime.end(true))}>STOP</Button>}</header>
+    {['calibration', 'game'].includes(screen) && <div className="rotate-guard" role="status"><strong>TURN PHONE UPRIGHT</strong><span>Move Along plays in portrait. The camera pauses until you turn back.</span><Button variant="danger" onClick={() => finish(runtime.end(true))}>■ STOP</Button></div>}
     <main id="main-content">
       {screen === 'ready' && <section className="screen narrow exercise-ready">
         <Link href="/" className="exercise-back">← All movements</Link>
         <h1>{movement.name}.</h1>
-        <p>{exercise === 'march' ? 'Lift the named knee. Return both feet between steps.' : 'Lower for DOWN. Rise for UP. Follow the beat.'}</p>
+        <p>{exercise === 'march' ? 'Lift the named knee. Return both feet between steps.' : exercise === 'pushup' ? 'One ring at a time. Close it with your movement, then follow the next direction. The song is background music.' : 'Lower for DOWN. Rise for UP. Follow the beat.'}</p>
         <div className="compact-track"><label htmlFor="soundtrack">Soundtrack</label><select id="soundtrack" value={song.id} onChange={event => setSong(songs.find(track => track.id === event.target.value)!)}>{songs.map(track => <option key={track.id} value={track.id}>{track.title} · {track.artist}</option>)}</select><span>{song.description}</span></div>
         <Button onClick={() => play()}>PLAY</Button>
         <p className="ready-hint">Allow the camera, get into position, and follow automatic calibration. The game starts when you’re ready.</p>
@@ -134,7 +135,7 @@ export default function Workout({ exercise = 'pushup' }: { exercise?: ExerciseId
         {keyboard && !audioError && <p role="status">Getting your music ready…</p>}
       </>}
       {screen === 'game' && <Gameplay exercise={exercise} runtime={runtime} engine={keyboard ? undefined : engine} onEnd={finish} onCalibrate={recalibrate} />}
-      {screen === 'results' && <Results exercise={exercise} analysis={analyzeSession(runtime.game.notes, stats, runtime.observedFrames, runtime.validFrames, keyboard)} title={song.title} stats={stats} feedback={sessionFeedback(runtime.game.notes, stats, !keyboard, runtime.bodySamples, runtime.bodyVisibleSamples, exercise)} onDone={() => router.push('/')} onReplay={() => play()} />}
+      {screen === 'results' && <Results exercise={exercise} flow={runtime.game.flow} analysis={analyzeSession(runtime.game.notes, stats, runtime.observedFrames, runtime.validFrames, keyboard, runtime.game.flow)} title={song.title} stats={stats} feedback={sessionFeedback(runtime.game.notes, stats, !keyboard, runtime.bodySamples, runtime.bodyVisibleSamples, exercise, runtime.game.flow)} onDone={() => router.push('/')} onReplay={() => play()} />}
     </main>
     {screen !== 'game' && <footer className="pushup-footer">Camera stays on your device. Results aren’t saved.</footer>}
   </div>;

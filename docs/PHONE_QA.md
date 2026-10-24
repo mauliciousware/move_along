@@ -47,40 +47,58 @@ Learn, safety acknowledgement, soundtrack, camera setup or practice page.
     tooling; production uses connect-src self. Never capture or save camera frames
     as QA evidence. Record only counts, status, performance and device details.
 
-## Complete push-up slice
+## Complete push-up slice (self-paced flow)
 
 Open `/pushup?dev=1` in the updated build. The compact soundtrack selector defaults
 to Shakira; the original practice beat is available as a fallback. Tap Play once.
-Use the floor/front setup.
+Use the floor/front setup. The song is background music only and loops; it does not
+set the pace.
 
-1. Pass framing, then calibrate starting/top/lower positions. Steps must finish
+1. Hold the phone upright in portrait. In `?dev=1`, check that the diagnostics show
+   a portrait video size (taller than wide) and that the camera preview fills the
+   tall frame without a wide letterbox strip. If the phone is turned sideways, the
+   `TURN PHONE UPRIGHT` guard should cover the screen and STOP must still work.
+2. Pass framing, then calibrate starting/top/lower positions. Steps must finish
    only from stable observed samples; insufficient range offers a placement retry.
-2. Calibration leads straight into the countdown and game. Ten observed comfortable
-   push-ups should yield 10 ±1 DOWN/UP pairs, without stationary double counts.
-3. The song starts automatically. Verify Safari audio unlock, countdown, fixed targets, distinct
-   movement fill and timing bar, hit grades and actual score/count updates.
-4. Verify a TOP hold and 15-second rest. Rest movements must not add reps. Long
-   tracking loss during rest must not shorten the minimum recovery interval.
-5. Pause and wait. Resume with countdown at the identical song position; audio and
-   cue timing must not drift. Recalibrate while paused: song stays silent.
-6. Cover the camera during cues. Inputs stop immediately, expired cues are skipped
-   without accuracy penalties, sustained loss pauses, recovery waits for Ready.
-7. Rotate, background, lock, or interrupt the camera. Reenter through setup and
-   fresh calibration, with the song parked. No invisible/background scoring.
-8. STOP must immediately end audio/camera and show partial actual results. The
-   naturally completed song must show complete results without scoring future cues.
-9. Repeat full-song performance/network audit and record device/browser versions.
-   No camera screenshots or recordings. Confirm ≥24Hz pose / ≥60FPS and stable
-   behavior over the full song; review beat alignment by ear.
+3. Calibration leads straight into the countdown and game. There is no rest or
+   BREATHE screen at any point.
+4. The first target says `GO DOWN`. Take your time: the ring must never expire, and
+   no timing bar, early/late marker or MISS may appear. Close the ring, then the
+   next instruction (`GO UP`) must appear immediately.
+5. Complete 8 controlled reps. The third set entry is a `PLANK` hold counting down
+   from 10 seconds, followed by 8 more reps, another 10-second hold, 8 reps and a
+   final 8-second hold. Reps and hold seconds must match the on-screen counts.
+6. During a hold, hold steady at the top. Covering the camera or losing tracking
+   must pause the count rather than drain or fail it; uncover and it should
+   continue from the same value. A wobble may pause credit but must not restart or
+   fail the hold.
+7. Move at half speed or pause mid-rep. Nothing should skip, expire or penalise you.
+   The song may continue or loop; it must not change when the next direction appears.
+8. Pause and wait. Resume with the countdown and confirm the current target is the
+   same one you left. Recalibration while paused keeps audio silent.
+9. STOP must immediately end audio/camera and show partial actual results with
+   reps, holds, hold time and session time. Rank and rhythm accuracy must be hidden
+   for this flow. A completed session must end on the final hold, not on a song
+   boundary.
+10. Repeat the performance/network audit: no camera frames captured or uploaded,
+    no analytics, no persisted scores. Confirm ≥24 pose Hz / ≥60 render FPS and
+    stable behaviour across the whole session, and review the camera's portrait
+    orientation after rotation and resume.
 
-The same direct flow applies to squat and marching exercises. Old routine URLs
-return home. Physical trials remain deferred by the owner; automated and keyboard
-tests do not sign off physical exercise detection or iPhone Safari support.
+The same direct flow applies to squat and marching exercises, which keep the
+existing rhythm behaviour and timing HUD. Old routine URLs return home. Physical
+trials remain deferred by the owner; automated, mocked and keyboard tests do not
+sign off physical exercise detection, iPhone Safari support or the portrait camera
+fix on real hardware.
 
 ## Record actual evidence
 
 - iPhone model / iOS / Safari version:
 - Tested HTTPS URL / commit:
+- Portrait preview fills the tall stage; negotiated video width×height:
+- TURN PHONE UPRIGHT guard / STOP during landscape:
+- Push-up flow: reps (24) / holds (10s, 10s, 8s) / hold time (28s):
+- Slow or paused reps: no expiry, no MISS, immediate next direction:
 - Squat/march full-body framing and mirrored marker alignment:
 - Push-up upper-body framing:
 - Loss / stable recovery / rotation / background / STOP:

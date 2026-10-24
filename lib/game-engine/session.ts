@@ -1,10 +1,15 @@
 import { PUSHUP_CONFIG as CONFIG } from '../shared/config';
-import type { BeatMap, Grade, InputType, Note } from '../shared/pushup-types';
+import type { BeatMap, Grade, InputType, Note, NoteType, RestWindow } from '../shared/pushup-types';
 import { award, gradeDelta, newStats } from './scoring';
 import { HoldMeter } from './hold';
 import { validateMap } from './validator';
 export interface PlayedNote { delta?: number; note: Note; status: 'pending'|'skipped'|Grade; meter: HoldMeter | null; judgedAt: number; referenceSum: number; referenceMs: number; }
 export interface Judgment { serial: number; id: string; grade: Grade; delta: number; time: number; type: Note['type']; }
+export interface FlowSummary {
+  set: number; sets: number; reps: number; repsInSet: number; repsPerSet: number;
+  totalReps: number; holdsDone: number; holdsTotal: number; progress: number;
+  complete: boolean; target: NoteType | null;
+}
 export class GameSession {
   readonly stats = newStats();
   readonly notes: PlayedNote[];
@@ -17,20 +22,61 @@ export class GameSession {
     const errors=validateMap(map); if(errors.length) throw new Error(errors.join('\n'));
     this.notes=map.notes.map(note=>({note,status:'pending',meter:note.type==='HOLD'?new HoldMeter(note.duration):null,judgedAt:0,referenceSum:0,referenceMs:0}));
   }
-  getRest(ms: number) { return this.map.rests.find(r=>ms>=r.startMs && ms<r.endMs); }
-  private complete(n: PlayedNote, grade: Grade, ms: number, delta=0) {
+  /** Flow sessions wait for the player; rhythm sessions run on the song clock. */
+  get flow() { return this.map.mode === 'flow'; }
+  get current() { return this.notes.find(note => note.status === 'pending'); }
+  get complete() { return this.flow && this.notes.every(note => note.status !== 'pending'); }
+  get progress() { return this.notes.length ? this.notes.filter(note => note.status !== 'pending').length / this.notes.length : 0; }
+  get flowSummary(): FlowSummary {
+    const holdsTotal = this.notes.filter(note => !!note.meter).length;
+    const holdsDone = this.notes.filter(note => !!note.meter && note.status !== 'pending').length;
+    const repsPerSet = CONFIG.flow.repsPerSet;
+    const complete = this.complete;
+    const set = holdsTotal ? Math.min(holdsTotal, holdsDone + (complete ? 0 : 1)) : 0;
+    return {
+      set: Math.max(1, set), sets: holdsTotal, reps: this.stats.pushups,
+      repsInSet: Math.max(0, Math.min(repsPerSet, this.stats.pushups - holdsDone * repsPerSet)),
+      repsPerSet, totalReps: holdsTotal * repsPerSet, holdsDone, holdsTotal,
+      progress: this.progress, complete, target: this.current?.note.type ?? null,
+    };
+  }
+  getRest(ms: number): RestWindow | undefined { return this.flow ? undefined : this.map.rests.find(r=>ms>=r.startMs && ms<r.endMs); }
+  private finishNote(n: PlayedNote, grade: Grade, ms: number, delta=0) {
     n.status=grade;n.judgedAt=ms;n.delta=grade==='miss'?undefined:delta;award(this.stats,grade,!!n.meter);
     this.judgment={serial:++this.revision,id:n.note.id,grade,delta,time:ms,type:n.note.type};
   }
   input(type: InputType, judgedMs: number, tracking: boolean) {
+    if (this.flow) {
+      if (!tracking) return;
+      const n = this.current;
+      if (!n || n.meter || n.note.type !== type) return;
+      this.finishNote(n, 'perfect', judgedMs);
+      if (type === 'UP') this.stats.pushups++;
+      return;
+    }
     if(!tracking || this.getRest(judgedMs))return;
     const n=this.notes.find(n=>n.status==='pending');
     if(n && n.note.type===type && judgedMs < n.note.time-CONFIG.windows.ok && judgedMs >= n.note.time-CONFIG.lookaheadMs) this.earlyArrivalId=n.note.id;
-    if(n && n.note.type===type && Math.abs(judgedMs-n.note.time)<=CONFIG.windows.ok) this.complete(n,gradeDelta(judgedMs-n.note.time)!,judgedMs+this.latency,judgedMs-n.note.time);
+    if(n && n.note.type===type && Math.abs(judgedMs-n.note.time)<=CONFIG.windows.ok) this.finishNote(n,gradeDelta(judgedMs-n.note.time)!,judgedMs+this.latency,judgedMs-n.note.time);
   }
   tick(ms: number, tracking: boolean, p: number, signalStable: boolean) {
     const last=this.lastMs ?? ms; this.lastMs=ms;
-    this.stats.workoutTimeMs=Math.max(0,Math.min(ms,this.map.durationMs));
+    this.stats.workoutTimeMs=Math.max(0,this.flow?ms:Math.min(ms,this.map.durationMs));
+    if (this.flow) {
+      const n=this.current;
+      if (n?.meter) {
+        const dt=Math.max(0,Math.min(ms-last,CONFIG.game.maxFrameMs));
+        const inZone=Number.isFinite(p) && p>=CONFIG.flow.holdZone;
+        if (tracking && signalStable && inZone && dt>0) {
+          const credit=Math.min(n.meter.duration-n.meter.valueMs,dt);
+          n.meter.valueMs+=credit;
+          this.stats.plankTimeMs+=credit;
+        }
+        // A hold only advances while it is observed; it never drains or fails.
+        if (n.meter.valueMs>=n.meter.duration) this.finishNote(n,'perfect',ms);
+      }
+      return;
+    }
     for(const n of this.notes) {
       if(n.status!=='pending')continue;
       if(n.meter) {
@@ -48,10 +94,10 @@ export class GameSession {
         }
         if(ms>=end) {
           if(!tracking || n.meter.interrupted) {n.status='skipped';this.stats.skipped++;this.revision++;}
-          else this.complete(n,n.meter.grade(),ms);
+          else this.finishNote(n,n.meter.grade(),ms);
         }
       } else if(ms-this.latency>n.note.time+CONFIG.windows.ok) {
-        if(tracking)this.complete(n,'miss',ms);
+        if(tracking)this.finishNote(n,'miss',ms);
         else {n.status='skipped';this.stats.skipped++;this.revision++;}
       }
     }

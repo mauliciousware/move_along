@@ -274,3 +274,63 @@ the prebuild audio check and production build pass. The simplified homepage and
 all three movement routes are included. Prepare one local main commit containing
 the flow and MP3; the owner will push/deploy. No remote deployment or physical
 mobile playback is claimed. Physical iPhone QA remains deferred by the owner.
+
+## Self-paced push-up flow and portrait camera — 2026-10-24
+
+Owner feedback: the push-up loop was too fast and the iPhone portrait camera
+preview appeared as a wide letterboxed strip. Requested changes were phone-first,
+portrait-only play; no rests or BREATHE screens; 10/10/8-second plank holds; a
+slower up/down rhythm independent of the song; and an immediate next direction
+when the ring closes. Scope is push-ups only; squats and knee raises keep the
+existing rhythm behaviour.
+
+Push-up gameplay is now a "wait for me" flow:
+
+- One target at a time: `GO DOWN`, then `GO UP`, and a top `PLANK` after each set.
+- Structure is 8 reps → 10s hold → 8 reps → 10s hold → 8 reps → 8s hold. There
+  are 24 reps, three holds, 28 seconds of hold time and no rests or `BREATHE`
+  screens anywhere in the session.
+- A target never expires. Wrong directions and untracked input are ignored; the
+  ring fills with actual movement and the next direction appears immediately on
+  completion. There is no timing window, early/late state, MISS or `GET READY`
+  gap, so the session cannot punish a slower pace.
+- Holds credit only while tracking is present and steady. A wobble pauses the
+  hold instead of draining or failing it.
+- The song plays in the background on a loop and no longer schedules targets.
+  Flow gameplay runs on a separate `flowMs` clock in `GameRuntime`; the session
+  ends when the final target lands, never on song time.
+- Gameplay HUD for push-ups shows set x/3, reps in the set, score/streak, session
+  progress, rep x/24 and hold time. Timing, accuracy and input-delay controls are
+  hidden. Results show reps, holds, hold time and session time, with rank and
+  timing accuracy hidden. STOP remains visible and ends with partial results.
+
+Flow code lives in `lib/game-engine/flow.ts` (script generation and validation)
+with a flow branch in `GameSession`, `flowTarget()` in `targets.ts`, and a
+single-ring renderer in `renderer.ts`. Rhythm maps and their validation are
+unchanged. `PUSHUP_CONFIG.flow` centralises reps, holds, the hold zone and the
+minimum hold signal threshold.
+
+Portrait camera:
+
+- `getUserMedia` now requests a portrait stream (720×960, aspect 3:4) with two
+  constraint fallbacks for older iOS versions. The 480×640 inference canvas is
+  unchanged.
+- The in-game `.camera-feed` uses `object-fit: cover`, the body/head overlays use
+  the matching centred cover projection (`CameraFit` in `framing.ts`), and the
+  tall portrait stage no longer shows a wide letterbox strip.
+- A landscape `TURN PHONE UPRIGHT` guard appears during calibration and gameplay
+  and keeps a STOP action. `?dev=1` diagnostics now include the live video
+  width×height to confirm the negotiated orientation.
+- The shared camera preview outside push-up gameplay still uses contain
+  projection; only the push-up game opts into cover.
+
+No new dependencies. No camera frames are captured, stored or uploaded, and no
+analytics or persisted scores were added.
+
+Verification: `npm run typecheck` and `npm run lint` pass; `npm run test` passes
+171 tests in 23 files, including flow script validation, slow/untracked input,
+indefinite waits, hold pausing, full 24-rep/28-second completion, a runtime clock
+test that would fail if song time ended the session, and cover-crop projection;
+`npm run build` succeeds. These are local mouse/keyboard and unit results. The
+portrait camera result is not yet observed on physical iPhone hardware; use
+`docs/PHONE_QA.md` on an HTTPS build before treating the camera fix as verified.

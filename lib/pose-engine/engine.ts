@@ -82,13 +82,21 @@ export class PoseEngine {
       if (!globalThis.isSecureContext || !navigator.mediaDevices?.getUserMedia) throw new Error("Camera access needs HTTPS. Open the secure version of this site on your iPhone, then retry.");
       if (typeof Worker === "undefined" || typeof OffscreenCanvas === "undefined" || typeof createImageBitmap === "undefined") throw new Error("This browser cannot run local movement tracking. Try an updated Safari or Chrome browser.");
       let stream: MediaStream;
+      const portrait = CONFIG.camera.portrait;
       try {
         stream = await navigator.mediaDevices.getUserMedia({ audio: false, video: {
-          facingMode: { ideal: facing }, width: { ideal: CONFIG.camera.width }, height: { ideal: CONFIG.camera.height }, frameRate: { ideal: CONFIG.camera.maxHz, max: CONFIG.camera.maxHz },
+          facingMode: { ideal: facing }, width: { ideal: portrait.width }, height: { ideal: portrait.height },
+          aspectRatio: { ideal: portrait.aspectRatio }, frameRate: { ideal: CONFIG.camera.maxHz, max: CONFIG.camera.maxHz },
         } });
       } catch (error) {
+        // Older iOS versions reject size hints but still accept an aspect ratio.
         if (!(error instanceof Error) || error.name !== "OverconstrainedError") throw error;
-        stream = await navigator.mediaDevices.getUserMedia({ audio: false, video: { facingMode: { ideal: facing } } });
+        try {
+          stream = await navigator.mediaDevices.getUserMedia({ audio: false, video: { facingMode: { ideal: facing }, aspectRatio: { ideal: portrait.aspectRatio } } });
+        } catch (retry) {
+          if (!(retry instanceof Error) || retry.name !== "OverconstrainedError") throw retry;
+          stream = await navigator.mediaDevices.getUserMedia({ audio: false, video: { facingMode: { ideal: facing } } });
+        }
       }
       if (generation !== this.generation) { stream.getTracks().forEach(track => track.stop()); return; }
       this.stream = stream;

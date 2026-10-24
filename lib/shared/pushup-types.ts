@@ -32,6 +32,8 @@ export interface Section {
 export interface RestWindow { startMs: number; endMs: number }
 export interface BeatMap {
   exercise?: import("./types").ExerciseId;
+  /** Rhythm maps keep beat timing; flow maps wait for the player. */
+  mode?: "rhythm" | "flow";
   version: 1; songId: string; difficulty: "intermediate";
   bpm: number; firstBeatMs: number; durationMs: number;
   sections: Section[]; rests: RestWindow[]; notes: Note[];

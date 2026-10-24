@@ -23,9 +23,9 @@ export class GameRuntime {
   private state={phase:'idle' as Phase,count:'3',error:'',revision:0};
   tracking: TrackingStatus='TRACKING';
   p=1; velocity=0; signalAt=-Infinity; keyboard=false; space=false;
-  songMs=0; intensity=0; fps=0; offset=0; sfx=true;
+  songMs=0; flowMs=0; intensity=0; fps=0; offset=0; sfx=true;
   private frames=0;private frameStart=0;
-  constructor(map: BeatMap, song?: {file:string;offsetMs:number;title:string;artist?:string}) {this.game=new GameSession(map);this.audio=new AudioTransport(song?.file,song?.offsetMs);this.title=song?.title??'DEV RHYTHM';this.artist=song?.artist??'MOVE ALONG';}
+  constructor(map: BeatMap, song?: {file:string;offsetMs:number;title:string;artist?:string}) {this.game=new GameSession(map);this.audio=new AudioTransport(song?.file,song?.offsetMs,map.mode==='flow');this.title=song?.title??'DEV RHYTHM';this.artist=song?.artist??'MOVE ALONG';}
   subscribe=(fn:()=>void)=>{this.listeners.add(fn);return()=>{this.listeners.delete(fn);};};
   getSnapshot=()=>this.state;
   private publish(update: Partial<typeof this.state>={}) {this.state={...this.state,...update,revision:this.state.revision+1};for(const f of this.listeners)f();}
@@ -100,9 +100,12 @@ export class GameRuntime {
       const count=['3','2','1','MOVE!'][index];if(count!==this.state.count)this.publish({count});return;
     }
     if(this.state.phase==='countdown')this.publish({phase:'playing'});
+    // Flow gameplay owns its clock: the song loops in the background and never
+    // decides when a target appears or when the session ends.
+    if(this.game.flow){this.flowMs+=dt;this.songMs=this.flowMs;}
     if(!this.keyboard && this.tracking==='LOST_LONG' && !this.game.getRest(this.songMs)){this.pause(true);return;}
     const tracking=this.keyboard || this.tracking==='TRACKING' && now-this.signalAt<=CONFIG.camera.staleMs;
-    for(const event of this.queue)this.game.input(event.type,this.audio.perfToSongMs(event.tPerfMs)-this.game.latency,tracking);
+    for(const event of this.queue)this.game.input(event.type,this.game.flow?this.flowMs:this.audio.perfToSongMs(event.tPerfMs)-this.game.latency,tracking);
     this.queue.length=0;
     const fresh=this.keyboard || now-this.signalAt<=CONFIG.camera.staleMs;
     const stable=fresh && tracking && (!this.keyboard || this.space);
@@ -110,7 +113,8 @@ export class GameRuntime {
     const judgment=this.game.judgment;
     if(judgment && judgment.serial!==this.lastJudgment){this.lastJudgment=judgment.serial;if(judgment.grade==='miss')this.audio.miss();else{this.intensity=Math.min(1,this.intensity+CONFIG.audio.intensityBump);if(this.sfx)this.audio.hit();}}
     if(this.game.revision!==this.lastRevision){this.lastRevision=this.game.revision;this.publish();}
-    if(this.songMs>=this.game.map.durationMs)this.end(false);
+    if(this.game.complete){this.end(false);return;}
+    if(!this.game.flow && this.songMs>=this.game.map.durationMs)this.end(false);
   }
   end(early: boolean): Stats {++this.generation;this.audio.stop();this.queue.length=0;this.game.stats.endedEarly=early;this.publish({phase:'ended'});return {...this.game.stats};}
   dispose() {++this.generation;this.audio.stop();this.queue.length=0;}

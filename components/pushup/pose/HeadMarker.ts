@@ -16,7 +16,7 @@ export class HeadMarker {
       this.count = Math.min(this.count + 1, CONFIG.canvas.trailLength);
       this.lastTime = frame.tPerfMs;
     }
-    const scale = Math.min(w / video.videoWidth, h / video.videoHeight);
+    const scale = Math.max(w / video.videoWidth, h / video.videoHeight);
     const imageW = video.videoWidth * scale, imageH = video.videoHeight * scale;
     const offsetX = (imageW - w) / 2, offsetY = (imageH - h) / 2;
     const x = w - (frame.nose.x * imageW - offsetX), y = frame.nose.y * imageH - offsetY;

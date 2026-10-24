@@ -25,6 +25,28 @@ export function targetCue(game: GameSession, songMs: number) {
   };
 }
 
+/** One self-paced instruction: no clock, no preview, no early/late state. */
+export interface FlowTargetView { kind: 'DOWN' | 'UP' | 'HOLD' | 'DONE'; label: string; fill: number; seconds: number; sub: string }
+export function flowTarget(game: GameSession, p: number, tracked: boolean): FlowTargetView {
+  const current = game.current;
+  if (!current) return { kind: 'DONE', label: 'DONE', fill: 1, seconds: 0, sub: 'SESSION COMPLETE' };
+  if (current.meter) {
+    const seconds = Math.max(0, Math.ceil((current.meter.duration - current.meter.valueMs) / 1000));
+    return {
+      kind: 'HOLD', label: 'PLANK', fill: current.meter.ratio, seconds,
+      sub: tracked ? 'HOLD STEADY AT THE TOP' : 'HOLD STILL — TRACKING',
+    };
+  }
+  if (current.note.type === 'DOWN' || current.note.type === 'UP') {
+    return {
+      kind: current.note.type, label: current.note.type === 'DOWN' ? 'GO DOWN' : 'GO UP',
+      fill: tracked ? movementFill(current.note.type, p) : 0, seconds: 0,
+      sub: tracked ? 'MOVE TO CLOSE THE RING' : 'FIND YOUR POSITION',
+    };
+  }
+  return { kind: 'DONE', label: 'READY', fill: 0, seconds: 0, sub: '' };
+}
+
 /** Readable instructions are independent of fill: a full ring never implies a hit. */
 export function movementGuidance(game: GameSession, songMs: number, p: number, tracked: boolean, playing: boolean) {
   const cue = targetCue(game, songMs);
