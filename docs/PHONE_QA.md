@@ -11,11 +11,12 @@ been pushed or deployed by this task. An older deployment may show only previews
 For local testing on the Mac use http://localhost:3000. On the iPhone, localhost
 means the phone itself, and ordinary HTTP LAN addresses cannot request a camera.
 
-On the updated HTTPS site, choose Squats, Knee raises or Push-ups. Tap Play on
-the exercise screen (Shakira is selected by default). Allow camera access and
-follow the automatic calibration prompts on that same flow. There is no separate
-Learn, safety acknowledgement, soundtrack, camera setup or practice page.
-`?dev=1` enables text diagnostics; `?debug=1` exposes camera-free keyboard testing.
+On the updated HTTPS site, choose Push-ups or Sit-ups. Tap Play on the exercise
+screen (Shakira is selected by default). Allow camera access and follow the
+automatic calibration prompts on that same flow. There is no separate Learn,
+safety acknowledgement, soundtrack, camera setup or practice page. `/squat` and
+`/march` must redirect home. `?dev=1` enables text diagnostics; `?debug=1` exposes
+camera-free keyboard testing.
 
 ## Physical checks
 
@@ -88,11 +89,36 @@ set the pace.
     stable behaviour across the whole session, and review the camera's portrait
     orientation after rotation and resume.
 
-The same direct flow applies to squat and marching exercises, which keep the
-existing rhythm behaviour and timing HUD. Old routine URLs return home. Physical
-trials remain deferred by the owner; automated, mocked and keyboard tests do not
-sign off physical exercise detection, iPhone Safari support or the portrait camera
-fix on real hardware.
+## Sit-up slice (waist centre, DOWN → UP)
+
+Open `/situp?dev=1` in the updated build. Prop the phone upright beside the
+movement area so the waist, shoulders and head stay visible from lying to sitting.
+The waist centre is the midpoint of the hips; do not accept a shoulder substitute.
+
+1. Confirm the sit-up framing reports the hips and knees. Cover the hips: framing
+   must report a legs issue and the signal must not be usable. Uncover and recover.
+2. Calibrate two positions only: `DOWN` (lying) then `UP` (sitting). Holding the
+   lying baseline must never advance to `UP` or `READY`. Each step needs stable
+   observed samples and a 2.5-second settle.
+3. Rise only a little (well under 10% of shoulder width). The session must stay on
+   `UP`, never report ready, and after two timeouts offer TRY AGAIN with guidance to
+   show the waist. Make a real comfortable rise to complete.
+4. Record the waist-centre vertical travel in frame units and the shoulder width.
+   Travel below 0.25 × shoulder width must stop the trial and be reported; do not
+   switch to the shoulder centre.
+5. Start the game. The first target is `DOWN`; the first lie-down must register
+   rather than being swallowed by the calibration end position. Then `UP`.
+6. Complete 8 reps. The top hold is labelled `HOLD` (not `PLANK`), counts down from
+   10 seconds, and pauses rather than draining when tracking drops.
+7. STOP must end audio/camera and show `SIT-UPS` and `HOLD TIME` in results. No
+   rank or rhythm accuracy is shown for the flow.
+8. Repeat the network/performance audit. No camera frames, scores or analytics may
+   leave the device.
+
+Push-up calibration must still run `MIDDLE → UP → DOWN` without auto-advancing.
+Old squat/march URLs must return home. Physical trials remain deferred by the
+owner; automated, mocked and keyboard tests do not sign off physical exercise
+detection, iPhone Safari support or the waist-centre signal on real hardware.
 
 ## Record actual evidence
 
@@ -102,7 +128,14 @@ fix on real hardware.
 - TURN PHONE UPRIGHT guard / STOP during landscape:
 - Push-up flow: reps (24) / holds (10s, 10s, 8s) / hold time (28s):
 - Slow or paused reps: no expiry, no MISS, immediate next direction:
-- Squat/march full-body framing and mirrored marker alignment:
+- Sit-up framing: waist/shoulders/head visible lying and sitting:
+- Sit-up waist travel (frame units) ÷ shoulder width; must be ≥ 0.25:
+- Sit-up calibration DOWN → UP; holding DOWN never advances:
+- Insufficient waist rise stays on UP and offers TRY AGAIN:
+- First sit-up DOWN target registers after calibration; hold label HOLD:
+- Sit-up results show SIT-UPS / HOLD TIME:
+- Push-up calibration still MIDDLE → UP → DOWN:
+- `/squat` and `/march` redirect home:
 - Push-up upper-body framing:
 - Loss / stable recovery / rotation / background / STOP:
 - Pose Hz / inference ms / render FPS / React updates after 60 seconds:

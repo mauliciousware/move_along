@@ -394,3 +394,62 @@ files) and `npm run build` pass. New tests cover the 2.5s settle, holding the
 middle without jumping to `DOWN`, the required lift/drop, the three-step medians,
 and the timeout/retry path. These are unit/build results only; the revised
 calibration has not been observed on a physical iPhone.
+
+## Sit-up lineup and waist calibration — 2026-10-24
+
+Owner revision: the final lineup is exactly **Push-ups** and **Sit-ups**. Squats and
+knee raises are removed from the catalog, routes, calibration, game branches, art
+and documentation. No functionality, score or calibration state was retained under
+the old exercise names.
+
+- **Home and routes:** `/` lists two movements; `/pushup` and `/situp` open the
+  direct Play → automatic framing/calibration → game → results flow. `/squat` and
+  `/march` return home with permanent redirects. `/routine/standing` was removed.
+- **Sit-up signal:** the tracked centre is the **waist centre**, the midpoint of
+  `leftHip` and `rightHip`. `PoseFrame` now exposes both `nose` and `waist`, and
+  `PoseEngine` selects `nose` for push-ups and `waist` for sit-ups. A frame without
+  both confident hips is not usable for sit-ups; there is no silent fallback to the
+  shoulders. The waist falls back to the nose position only so the frame remains
+  well-formed, and that frame is marked not ok.
+- **Sit-up framing:** requires the nose, shoulders, hips and knees. Missing hips or
+  knees report the existing `legs` issue. Push-ups still require the nose,
+  shoulders and both elbows.
+- **Calibration scripts:** `CALIBRATION_STEPS` is keyed by exercise. Push-ups keep
+  `MIDDLE → UP → DOWN`; sit-ups use `DOWN` (lying) → `UP` (sitting), with no middle
+  step. Both use the same stable observed samples, real-movement requirement for
+  `UP`/`DOWN`, 2.5s minimum settle, no auto-advance from holding the baseline, and
+  retry after two 10-second timeouts. Sit-up results store `joint:'waist'`,
+  `centerY = bottomY` at the lying baseline, and `topY` at the sitting position.
+  Old head-only stored calibrations are rejected because `joint` is required.
+- **Game:** both exercises use the existing self-paced two-ring flow (DOWN and UP,
+  top holds, no rests). `Stats.pushups` was renamed to `Stats.reps`; results show
+  `PUSH-UPS` or `SIT-UPS`, and the top hold is labelled `PLANK` for push-ups and
+  `HOLD` for sit-ups. Scores remain in memory and STOP stays visible.
+- **Removed code:** squat/march routes, `lib/exercises/standing.ts`, standing
+  calibration session/tests, `StandingCalibration`, unused `Practice`,
+  `CameraPermission` screens, march/`LEFT`/`RIGHT` branches in the scheduler,
+  renderer, validator, work limits, feedback and screens, plus the unused
+  `LH`/`RH` note types. Original sit-up artwork replaces the squat/knee-raise art.
+
+Automated verification:
+
+- `npm run typecheck`: pass.
+- `npm run lint`: pass, no warnings.
+- `npm run test`: **183 tests in 25 files**, pass. New coverage includes the
+  waist adapter/framing, sit-up `DOWN → UP` calibration, baseline hold never
+  advancing, insufficient waist rise staying on `UP`, retry clearing the baseline,
+  two-exercise flow counts, and `PUSH-UPS`/`SIT-UPS` plus `PLANK`/`HOLD` labels.
+- `npm run build`: pass, including the prebuild audio check. Static routes are
+  `/`, `/pushup`, `/situp` and `/routine/mix`; `/squat` and `/march` are redirects.
+- No new dependencies. No camera captures, uploads, stored frames, analytics,
+  medical claims or persisted scores were added. Only the safety acknowledgement
+  and derived calibration use sessionStorage.
+
+Physical-device gate: **pending**. Unit tests, mocks and desktop checks do not
+establish that the waist signal is usable on an iPhone. The owner should place the
+phone upright beside the movement area so the waist, shoulders and head stay in
+view from lying to sitting, then record the waist-centre vertical travel in frame
+units and divide it by the measured shoulder width. If travel is below
+`minVerticalRange` (0.25 × shoulder width), stop and report the measured values
+rather than switching to the shoulder centre. Run the sit-up checklist in
+`docs/PHONE_QA.md` on an HTTPS build and record the rows there.

@@ -2,7 +2,7 @@
 
 Learn a movement, make it yours, and play it to the beat.
 
-A camera-controlled movement game: choose Squats, Knee raises or Push-ups, tap
+A camera-controlled movement game: choose Push-ups or Sit-ups, tap
 Play, follow automatic calibration, then play and see results. The interface uses the owner-selected [8bitcn/ui](https://www.8bitcn.com)
 components, original pixel movement artwork and self-hosted fonts.
 
@@ -60,7 +60,7 @@ https://github.com/mauliciousware/move_along. Run all commands inside this folde
 The parent Pushbeat project is a reference, not the active app.
 
 Import this repository into a compatible Next.js host for HTTPS phone testing.
-The playable push-up changes are local and have not been pushed or deployed by this task.
+The current changes are local and have not been pushed or deployed by this task.
 
 ## Licensing
 
