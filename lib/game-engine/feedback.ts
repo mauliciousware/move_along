@@ -18,8 +18,10 @@ export function sessionFeedback(notes: readonly PlayedNote[], stats: Stats, came
   if (flow) {
     const holds = notes.filter(n => !!n.meter && n.status !== 'pending').length;
     const holdSeconds = Math.round(stats.plankTimeMs / 1000);
-    const highlight = stats.pushups > 0
-      ? `You completed ${stats.pushups} push-ups and ${holds} plank ${holds === 1 ? 'hold' : 'holds'} for ${holdSeconds} seconds.`
+    const movement = exercise === 'situp' ? 'sit-up' : 'push-up';
+    const holdName = exercise === 'situp' ? 'hold' : 'plank hold';
+    const highlight = stats.reps > 0
+      ? `You completed ${stats.reps} ${movement}${stats.reps === 1 ? '' : 's'} and ${holds} ${holdName}${holds === 1 ? '' : 's'} for ${holdSeconds} seconds.`
       : 'You made time for a session. Go at your own pace.';
     let next = stats.endedEarly
       ? 'You stopped early. Rest, then come back when you are ready.'
@@ -30,7 +32,7 @@ export function sessionFeedback(notes: readonly PlayedNote[], stats: Stats, came
 
   const hits = notes.filter(n => n.status === 'perfect' || n.status === 'good' || n.status === 'ok');
   const vertical = hits.filter(n => n.note.type !== 'HOLD');
-  let highlight = stats.pushups > 0 ? `You completed ${stats.pushups} ${stats.pushups===1?'rep':'reps'} this session.` : 'You made time for a session. Go at your own pace.';
+  let highlight = stats.reps > 0 ? `You completed ${stats.reps} ${stats.reps===1?'rep':'reps'} this session.` : 'You made time for a session. Go at your own pace.';
   let next = 'Watch the timing bar. Reach the active target as the bar fills.';
   const holds = hits.filter(n => n.note.type === 'HOLD' && (n.status === 'perfect' || n.status === 'good'));
   if (holds.length) highlight = `You kept the hold meter steady through ${holds.length} ${holds.length === 1 ? 'hold' : 'holds'}.`;

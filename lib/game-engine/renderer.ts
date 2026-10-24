@@ -3,6 +3,7 @@ import type { GameRuntime } from './runtime';
 import type { InputType } from '../shared/pushup-types';
 import { tier } from './scoring';
 import { clamp, flowTarget, movementGuidance, targetCue } from './targets';
+import { holdLabel } from './labels';
 
 const TAU = Math.PI * 2;
 const cfg = CONFIG.targets;
@@ -89,7 +90,8 @@ export class GameRenderer {
       const fill = rest ? clamp((songMs - rest.startMs) / (rest.endMs - rest.startMs)) : hold?.meter?.ratio ?? 0;
       this.ring(ctx, cx, centerY, radius * cfg.centerScale, color, fill, true);
       ctx.fillStyle = color; ctx.font = `${radius * cfg.valueScale}px ${this.displayFont}`;
-      this.text(ctx, rest ? seconds <= CONFIG.game.restReadyMs / 1000 ? 'GET READY' : 'BREATHE' : hold?.note.position === 'BOTTOM' ? 'LOW HOLD' : 'PLANK', cx, centerY - radius * .18, radius * cfg.centerScale * 1.7);
+      const topHold = hold ? holdLabel(game.map.exercise ?? 'pushup') : '';
+      this.text(ctx, rest ? seconds <= CONFIG.game.restReadyMs / 1000 ? 'GET READY' : 'BREATHE' : hold?.note.position === 'BOTTOM' ? 'LOW HOLD' : topHold, cx, centerY - radius * .18, radius * cfg.centerScale * 1.7);
       ctx.fillStyle = CONFIG.colors.text; ctx.font = `${radius * cfg.labelScale}px ${this.displayFont}`;
       this.text(ctx, rest ? `${seconds}s` : `${Math.round(fill * 100)}%`, cx, centerY + radius * .2, radius * cfg.centerScale * 1.7);
       ctx.font = `${cfg.captionSize}px ${this.displayFont}`;
@@ -102,7 +104,7 @@ export class GameRenderer {
       const name = (type: string) => type === 'UP' ? '↑ UP' : type === 'DOWN' ? '↓ DOWN' : 'HOLD';
       if (current?.type === 'HOLD') {
         ctx.fillStyle = CONFIG.colors.hold;
-        this.text(ctx, `GET READY · ${current.position === 'BOTTOM' ? 'LOW HOLD' : 'PLANK HOLD'}`, cx, centerY, w * .9);
+        this.text(ctx, `GET READY · ${current.position === 'BOTTOM' ? 'LOW HOLD' : holdLabel(game.map.exercise ?? 'pushup') === 'PLANK' ? 'PLANK HOLD' : 'HOLD AT THE TOP'}`, cx, centerY, w * .9);
       } else if (current && !cue.approaching) {
         this.text(ctx, `GET READY · ${name(current.type)}`, cx, centerY, w * .9);
       } else if (next) this.text(ctx, `NEXT: ${name(next.type)}`, cx, centerY + CONFIG.guidance.subtitleOffset, w * .9);
@@ -154,6 +156,7 @@ export class GameRenderer {
     const upColor = CONFIG.colors.up, downColor = CONFIG.colors.down, holdColor = CONFIG.colors.hold;
     const judgment = game.judgment;
     const age = judgment ? run.songMs - judgment.time : Infinity;
+    const topHold = holdLabel(game.map.exercise ?? 'pushup');
     const dt = Math.min(CONFIG.game.maxFrameMs, Math.max(0, now - this.flowLastNow));
     this.flowLastNow = now;
     const completed: 'UP' | 'DOWN' | 'HOLD' | null = judgment && judgment.grade !== 'miss' && age >= 0 && age < layout.finishMs
@@ -229,14 +232,14 @@ export class GameRenderer {
       ctx.fillStyle = color;
       if (isHold) {
         ctx.font = `${Math.max(11, radius * 0.2)}px ${this.displayFont}`;
-        this.text(ctx, 'PLANK', cx, cy - radius * 0.30, radius * 1.5);
+        this.text(ctx, topHold, cx, cy - radius * 0.30, radius * 1.5);
         ctx.font = `${Math.max(20, radius * 0.52)}px ${this.displayFont}`;
         this.text(ctx, `${target.hold.seconds}`, cx, cy + radius * 0.02, radius * 1.1);
         ctx.fillStyle = CONFIG.colors.text;
         ctx.font = `${Math.max(8, radius * layout.captionScale)}px ${this.displayFont}`;
         this.text(ctx, tracked ? 'HOLD STEADY' : 'HOLD STILL', cx, cy + radius * 0.40, radius * 1.7);
       } else {
-        const label = isCompleted ? `✓ ${completed === 'HOLD' ? 'PLANK' : kind}` : kind;
+        const label = isCompleted ? `✓ ${completed === 'HOLD' ? topHold : kind}` : kind;
         const labelColor = active || isCompleted ? color : CONFIG.colors.muted;
         ctx.fillStyle = labelColor;
         ctx.font = `${Math.max(12, radius * 0.32)}px ${this.displayFont}`;

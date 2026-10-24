@@ -6,6 +6,7 @@ import { flowTarget } from './targets';
 import { validateMap } from './validator';
 
 const flow = () => new GameSession(songsFor('pushup')[0].map);
+const situpFlow = () => new GameSession(songsFor('situp')[0].map);
 
 describe('flow push-up script', () => {
   it('builds three sets of eight reps with 10/10/8 second holds and no rests', () => {
@@ -35,6 +36,29 @@ describe('flow push-up script', () => {
     const longHold = structuredClone(base);
     longHold.notes.find(note => note.type === 'HOLD')!.duration = 30000;
     expect(validateMap(longHold).join(' ')).toContain('HOLD');
+  });
+});
+
+describe('flow sit-up script', () => {
+  it('asks for DOWN then UP and counts a completed sit-up rep', () => {
+    const game = situpFlow();
+    expect(game.current?.note.type).toBe('DOWN');
+    game.input('DOWN', 1000, true);
+    expect(game.current?.note.type).toBe('UP');
+    game.input('UP', 2000, true);
+    expect(game.stats.reps).toBe(1);
+    expect(game.flowSummary.reps).toBe(1);
+    expect(game.current?.note.type).toBe('DOWN');
+  });
+
+  it('labels the top hold as HOLD for sit-ups and PLANK for push-ups', () => {
+    const situp = situpFlow();
+    const pushup = flow();
+    for (const game of [situp, pushup]) {
+      for (let index = 0; index < 16; index++) game.input(index % 2 ? 'UP' : 'DOWN', index, true);
+    }
+    expect(flowTarget(situp, 1, true)).toMatchObject({ kind: 'HOLD', hold: { label: 'HOLD' } });
+    expect(flowTarget(pushup, 1, true)).toMatchObject({ kind: 'HOLD', hold: { label: 'PLANK' } });
   });
 });
 
@@ -80,12 +104,12 @@ describe('flow push-up session', () => {
     expect(game.current?.note.type).toBe('DOWN');
     game.input('UP', 1000, true);
     game.input('DOWN', 1000, false);
-    expect(game.stats.pushups).toBe(0);
+    expect(game.stats.reps).toBe(0);
     expect(game.current?.note.type).toBe('DOWN');
     game.input('DOWN', 1000, true);
     expect(game.current?.note.type).toBe('UP');
     game.input('UP', 2000, true);
-    expect(game.stats.pushups).toBe(1);
+    expect(game.stats.reps).toBe(1);
     expect(game.current?.note.type).toBe('DOWN');
     expect(game.stats.miss).toBe(0);
   });
@@ -146,7 +170,7 @@ describe('flow push-up session', () => {
       game.tick(time, true, 1, true);
     }
     expect(game.complete).toBe(true);
-    expect(game.stats.pushups).toBe(24);
+    expect(game.stats.reps).toBe(24);
     expect(game.stats.plankTimeMs).toBe(28000);
     expect(game.stats.miss).toBe(0);
     expect(game.stats.perfect).toBe(51);

@@ -4,6 +4,7 @@ import { PUSHUP_CONFIG as CONFIG } from '@/lib/shared/config';
 import type { SessionFeedback } from '@/lib/game-engine/feedback';
 import { Button } from '@/components/pushup/ui/Button';
 import { accuracyLabel, rank, type Stats } from '@/lib/game-engine/scoring';
+import { repLabel } from '@/lib/game-engine/labels';
 import type { SessionAnalysis } from '@/lib/game-engine/analysis';
 import type { ExerciseId } from '@/lib/shared/types';
 import { EXERCISES } from '@/data/catalog';
@@ -33,13 +34,13 @@ export function Results({ title, stats, onReplay, onDone, feedback, exercise, an
   const resultRank = rank(stats);
   const values: [string, string | number][] = flow
     ? [
-      ['PUSH-UPS', stats.pushups],
-      ['PLANK HOLDS', `${analysis.holds} / ${analysis.totalHolds}`],
+      [repLabel(exercise), stats.reps],
+      [exercise === 'situp' ? 'HOLDS' : 'PLANK HOLDS', `${analysis.holds} / ${analysis.totalHolds}`],
       ['HOLD TIME', `${Math.round(stats.plankTimeMs / 1000)}s`],
       ['SESSION TIME', time(stats.workoutTimeMs)],
     ]
     : [
-      ['PUSH-UPS', stats.pushups],
+      [repLabel(exercise), stats.reps],
       ['ACCURACY', accuracyLabel(stats)], ['PERFECT', stats.perfect], ['GOOD', stats.good],
       ['OK', stats.ok], ['MISSES', stats.miss], ['MAX COMBO', stats.maxCombo],
       ['SONG TIME', time(stats.workoutTimeMs)], ['HOLD TIME', time(stats.plankTimeMs)],
@@ -66,7 +67,7 @@ export function Results({ title, stats, onReplay, onDone, feedback, exercise, an
       <h2>Behind the numbers</h2>
       {flow ? <>
         <p>Each rep counts when the ring closes. The next direction appears immediately — there is no timing window, no early cue and no miss.</p>
-        <p>Plank holds count only while the camera tracks you steadily at the top. A wobble pauses the hold; it never drains or fails it.</p>
+        <p>Holds count only while the camera tracks you steadily at the top. A wobble pauses the hold; it never drains or fails it.</p>
         <p>The soundtrack plays in the background and never schedules a target.</p>
         <p>{coverage}</p>
       </> : <>

@@ -7,6 +7,7 @@ import type { BodyOverlayMode } from '@/lib/shared/pushup-types';
 import { HeadMarker } from "@/components/pushup/pose/HeadMarker";
 import { drawPositionGauge } from "@/components/pushup/pose/PositionGauge";
 import { GameRenderer } from '@/lib/game-engine/renderer';
+import { holdLabel } from '@/lib/game-engine/labels';
 import type { GameRuntime } from '@/lib/game-engine/runtime';
 import { PUSHUP_CONFIG as CONFIG } from "@/lib/shared/config";
 
@@ -55,5 +56,5 @@ export function GameCanvas({ preview = false, engine, videoRef, calibration, run
     observer.observe(canvas); draw(); render(performance.now());
     return () => { observer.disconnect(); cancelAnimationFrame(animation); };
   }, [engine, videoRef, calibration, runtime]);
-  return <canvas ref={ref} className={`game-canvas ${preview ? "preview-canvas" : ""}`} aria-label={runtime ? (runtime.game.flow ? "Two movement rings: UP on top and DOWN below. The active direction fills as you move; the top ring becomes the plank hold." : "Fixed UP and DOWN targets with movement fill and beat timing") : engine ? "Live head marker and position gauge" : "Movement overlay"} role="img" />;
+  return <canvas ref={ref} className={`game-canvas ${preview ? "preview-canvas" : ""}`} aria-label={runtime ? (runtime.game.flow ? `Two movement rings: UP on top and DOWN below. The active direction fills as you move; the top ring becomes the ${holdLabel(runtime.game.map.exercise ?? 'pushup').toLowerCase()} hold.` : "Fixed UP and DOWN targets with movement fill and beat timing") : engine ? "Live head marker and position gauge" : "Movement overlay"} role="img" />;
 }

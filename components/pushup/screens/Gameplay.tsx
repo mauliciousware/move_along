@@ -30,7 +30,7 @@ export function Gameplay({ onEnd, onCalibrate, engine, runtime, exercise="pushup
     runtime.setKeyboard(!engine);
     if(engine)runtime.setBodyOverlay(engine.bodyOverlay);
     if(runtime.getSnapshot().phase==='paused')runtime.reenter();else void runtime.start();
-    const baseline=runtime.game.stats.pushups;
+    const baseline=runtime.game.stats.reps;
     const movement=new ExerciseMovement(exercise,event=>{runtime.input(event);if(!runtime.game.flow)runtime.setReps(baseline+movement.count);});
     const unpause=runtime.subscribe(()=>{if(runtime.getSnapshot().phase!=='playing')movement.interrupt();});
     let previousP=1, previousTime=0;
@@ -110,12 +110,12 @@ export function Gameplay({ onEnd, onCalibrate, engine, runtime, exercise="pushup
         <div className="ladder-meter"><div style={{transform:`scaleY(${tierProgress})`}}/></div>
       </aside>
       <footer className="workout-dock">
-        <div className="rep-readout"><span className="console-eyebrow">REPS</span><strong>{stats.pushups}<small> / {plannedReps}</small></strong></div>
+        <div className="rep-readout"><span className="console-eyebrow">REPS</span><strong>{stats.reps}<small> / {plannedReps}</small></strong></div>
         <div className="dock-progress"><span className="console-eyebrow">{flow?'SESSION PROGRESS':'SONG PROGRESS'}</span>{!flow&&<div className="progress-milestones" ref={milestones} aria-hidden="true">{Array.from({length:CONFIG.targets.milestoneCount},(_,index)=><span key={index}>✦</span>)}</div>}<div className="music-progress" aria-label={flow?'Session progress':'Song progress'}><div ref={progress}/></div></div>
         <div className="accuracy-readout"><span className="console-eyebrow">{flow?'HOLD TIME':'ACCURACY'}</span><strong>{flow?`${Math.floor(stats.plankTimeMs/1000)}s`:accuracyLabel(stats)}</strong>{!flow&&<span className="accuracy-rule"/>}</div>
       </footer>
     </div>
-    <p className="game-instruction">{flow?'Two rings: lower to fill DOWN, rise to fill UP. The song is background music.':!engine?'KEYBOARD · ↓ lower · ↑ rise · Space to hold':'Lower. Rise. Meet the beat.'}<span>Processed on this device</span></p>
+    <p className="game-instruction">{flow?(exercise==='situp'?'Two rings: lie down to fill DOWN, sit up to fill UP. The song is background music.':'Two rings: lower to fill DOWN, rise to fill UP. The song is background music.'):!engine?'KEYBOARD · ↓ lower · ↑ rise · Space to hold':(exercise==='situp'?'Lie down. Sit up. Meet the beat.':'Lower. Rise. Meet the beat.')}<span>Processed on this device</span></p>
     <pre className="game-diagnostics" ref={diagnostics}/>
     {sheet==='stop' && <Modal title="End workout?" onClose={resume}><p>You can rest anytime.</p><Button variant="danger" onClick={finish}>END & SEE SCORE</Button><Button variant="secondary" onClick={resume}>KEEP GOING</Button></Modal>}
     {showPause && <Modal title={flow?'PAUSED.':'TAKE A BREATHER.'} onClose={resume}><Button onClick={resume}>RESUME</Button><>{engine && <OverlayControl value={overlayMode} onChange={mode=>{runtime.setBodyOverlay(mode);engine?.setBodyOverlay(mode);setOverlayMode(mode);}}/>}</>{!flow&&<Slider label="INPUT DELAY (ms)" value={delay} max={CONFIG.maxInputLatencyMs} onChange={value=>{setDelay(value);runtime.setLatency(value);}}/>}<Button variant="secondary" onClick={()=>{runtime.setSfx(!sfx);setSfx(!sfx);}}>HIT SOUND {sfx?'ON':'OFF'}</Button><Button variant="secondary" onClick={async()=>{if(await runtime.prepareCalibration())onCalibrate();}}>RECALIBRATE</Button><Button variant="danger" onClick={finish}>END WORKOUT</Button></Modal>}

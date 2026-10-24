@@ -34,8 +34,8 @@ export class GameSession {
     const complete = this.complete;
     const set = holdsTotal ? Math.min(holdsTotal, holdsDone + (complete ? 0 : 1)) : 0;
     return {
-      set: Math.max(1, set), sets: holdsTotal, reps: this.stats.pushups,
-      repsInSet: Math.max(0, Math.min(repsPerSet, this.stats.pushups - holdsDone * repsPerSet)),
+      set: Math.max(1, set), sets: holdsTotal, reps: this.stats.reps,
+      repsInSet: Math.max(0, Math.min(repsPerSet, this.stats.reps - holdsDone * repsPerSet)),
       repsPerSet, totalReps: holdsTotal * repsPerSet, holdsDone, holdsTotal,
       progress: this.progress, complete, target: this.current?.note.type ?? null,
     };
@@ -51,7 +51,7 @@ export class GameSession {
       const n = this.current;
       if (!n || n.meter || n.note.type !== type) return;
       this.finishNote(n, 'perfect', judgedMs);
-      if (type === 'UP') this.stats.pushups++;
+      if (type === 'UP') this.stats.reps++;
       return;
     }
     if(!tracking || this.getRest(judgedMs))return;

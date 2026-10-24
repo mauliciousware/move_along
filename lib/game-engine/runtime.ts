@@ -46,7 +46,7 @@ export class GameRuntime {
   setSfx(value: boolean) {this.sfx=value;}
   nudgeOffset(direction: number) {this.audio.offsetMs+=direction*CONFIG.game.offsetStepMs;console.info('MOVE ALONG offsetMs',this.audio.offsetMs);}
   input(event: InputEvent) {if(this.state.phase==='playing' && this.queue.length<CONFIG.game.maxQueue)this.queue.push(event);}
-  setReps(count: number) {if(this.game.stats.pushups!==count){this.game.stats.pushups=count;this.publish();}}
+  setReps(count: number) {if(this.game.stats.reps!==count){this.game.stats.reps=count;this.publish();}}
   setTracking(status: TrackingStatus) {
     this.tracking=status;
     if(status==='LOST_LONG' && !this.game.getRest(this.songMs) && ['playing','countdown'].includes(this.state.phase))this.pause(true);

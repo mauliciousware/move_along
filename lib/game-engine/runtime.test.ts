@@ -35,7 +35,7 @@ describe('runtime controls',()=>{
   }
   expect(r.getSnapshot().phase).toBe('ended');
   expect(r.game.complete).toBe(true);
-  expect(r.game.stats.pushups).toBe(24);
+  expect(r.game.stats.reps).toBe(24);
   expect(r.game.stats.plankTimeMs).toBe(28000);
   expect(r.game.stats.endedEarly).toBe(false);
  });
