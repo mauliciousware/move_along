@@ -55,6 +55,7 @@ export class CalibrationSession {
   state: CalibrationState;
   result: Calibration | null = null;
   progress = 0;
+  guidance = 'Hold steady while we measure.';
   private readonly steps: readonly CalibrationStep[];
   private samples: {t:number;x:number;y:number;sw:number}[] = [];
   private enteredAt: number;
@@ -73,6 +74,7 @@ export class CalibrationSession {
     this.state = {...this.state, ...update, revision: this.state.revision + 1}; this.onChange(this.state);
   }
   private enter(step: number, now: number, message: string = this.steps[step].instruction) {
+    this.guidance = 'Get into position, then hold steady.';
     this.samples.length = 0; this.progress = 0; this.enteredAt = this.timeoutAt = now; this.timeoutCount = 0; this.retryAt = null;
     this.change({ step, phase: 'measuring', message });
   }
@@ -86,7 +88,7 @@ export class CalibrationSession {
       if (this.timeoutCount >= cfg.maxTimeouts) { this.neutral = null; this.top = 0; }
       this.change({ phase: this.timeoutCount >= cfg.maxTimeouts ? 'retry' : 'measuring', message: this.timeoutCount >= cfg.maxTimeouts ? RETRY_MESSAGE[this.exercise] : this.steps[this.state.step].instruction });
     }
-    if (!frame?.ok || now - frame.tPerfMs > CONFIG.camera.staleMs) { this.samples.length = 0; this.progress = 0; this.retryAt = null; return; }
+    if (!frame?.ok || now - frame.tPerfMs > CONFIG.camera.staleMs) { this.guidance = 'Keep the required body points in view.'; this.samples.length = 0; this.progress = 0; this.retryAt = null; return; }
     if (frame.tPerfMs <= this.lastFrame) return;
     if (frame.tPerfMs - this.lastFrame > CONFIG.camera.staleMs) { this.samples.length = 0; this.retryAt = null; }
     this.lastFrame = frame.tPerfMs;
@@ -100,7 +102,7 @@ export class CalibrationSession {
     const stdY = Math.sqrt(this.samples.reduce((s,p) => s+(p.y-meanY)**2, 0)/n);
     const quiet = stdX < cfg.stableStd && stdY < cfg.stableStd;
     const span = frame.tPerfMs - this.samples[0].t;
-    if (!quiet) { this.progress = 0; this.retryAt = null; return; }
+    if (!quiet) { this.guidance = 'Hold this position a little steadier.'; this.progress = 0; this.retryAt = null; return; }
     if (this.state.phase === 'retry') {
       const atBaseline = !this.neutral || Math.abs(meanY - this.neutral.y) <= cfg.retryTolerance * this.neutral.sw;
       if (!atBaseline) { this.retryAt = null; return; }
@@ -114,7 +116,8 @@ export class CalibrationSession {
     // The baseline is the middle for push-ups and the lying position for sit-ups.
     if (kind === 'up' && this.neutral) appropriate = meanY <= this.neutral.y - cfg.minUpLift * this.neutral.sw;
     if (kind === 'down' && this.neutral) appropriate = meanY >= this.neutral.y + cfg.minDownDrop * this.neutral.sw;
-    this.progress = appropriate ? Math.min(1, span / cfg.stableMs) : 0;
+    this.progress = appropriate ? Math.min(1, span / cfg.stableMs, n / cfg.minSamples, (now - this.enteredAt) / cfg.stepSettleMs) : 0;
+    this.guidance = !appropriate ? (kind === 'up' ? 'Move up from your starting position, then hold.' : 'Move down past your starting position, then hold.') : this.progress < 1 ? 'Position found. Hold steady…' : 'Position captured.';
     if (!appropriate || span < cfg.stableMs || n < cfg.minSamples || now - this.enteredAt < cfg.stepSettleMs) return;
     const y = median(this.samples.map(p => p.y));
     if (kind === 'baseline') {

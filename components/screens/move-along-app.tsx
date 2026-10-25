@@ -1,7 +1,8 @@
 'use client';
 
 import Link from 'next/link';
-import { ArrowUpRight } from 'lucide-react';
+import { ArrowUpRight, AudioLines, LockKeyhole } from 'lucide-react';
+import { MovementArt, PixelSpark } from '@/components/illustrations/movement-art';
 import { EXERCISES, EXERCISE_IDS } from '@/data/catalog';
 import type { ExerciseId } from '@/lib/shared/types';
 
@@ -13,15 +14,28 @@ const descriptions: Record<ExerciseId, string> = {
 export function MoveAlongApp() {
   return <div className="exercise-home">
     <a className="skip-link" href="#main-content">Skip to content</a>
-    <header className="exercise-home-header"><Link href="/" className="brand">move along.</Link><span>A little movement. A lot more play.</span></header>
+    <header className="exercise-home-header"><Link href="/" className="brand">move along.</Link><span className="home-header-note"><AudioLines aria-hidden="true" /> Your pace. Your play.</span></header>
     <main id="main-content">
-      <div className="exercise-home-heading"><h1>Pick a movement.</h1></div>
+      <section className="home-hero" aria-labelledby="home-title">
+        <div className="home-hero-copy">
+          <p className="home-eyebrow"><span aria-hidden="true" /> MOVE. PLAY. REPEAT.</p>
+          <h1 id="home-title">A little movement.<br /><em>A lot more play.</em></h1>
+          <p className="home-hero-description">Pick your movement. Put on a song.<br />Make a little time for yourself.</p>
+        </div>
+        <div className="home-hero-art" aria-hidden="true">
+          <span className="hero-orbit" />
+          <PixelSpark className="hero-pixel-spark" />
+          <MovementArt exercise="pushup" decorative />
+          <span className="hero-art-caption">YOUR BODY. YOUR CONTROLLER.</span>
+        </div>
+      </section>
+      <div className="exercise-home-heading"><h2>Choose your movement</h2><span>01 — 02</span></div>
       <div className="exercise-choices">{EXERCISE_IDS.map((id, index) => <Link href={`/${id}`} className={`exercise-choice choice-${id}`} key={id}>
         <span className="exercise-choice-number">0{index + 1}</span>
         <div><h2>{EXERCISES[id].name}</h2><p>{descriptions[id]}</p></div>
         <ArrowUpRight aria-hidden="true" />
       </Link>)}</div>
     </main>
-    <footer className="exercise-home-footer">Camera stays on your device. Results stay in this session.</footer>
+    <footer className="exercise-home-footer"><LockKeyhole aria-hidden="true" /><span>Camera stays on your device.<br />Results stay in this session.</span></footer>
   </div>;
 }

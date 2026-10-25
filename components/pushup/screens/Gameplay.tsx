@@ -86,6 +86,7 @@ export function Gameplay({ onEnd, onCalibrate, engine, runtime, exercise="pushup
   const plannedReps=flow?summary.totalReps:runtime.game.map.notes.filter(note=>note.type==='UP').length;
   const tierProgress=Math.min(1,stats.combo/CONFIG.game.tierCombos[CONFIG.game.tierCombos.length-1]);
   return <section className="game-column pump-game" aria-label="MOVE ALONG workout">
+    <span className="sr-only" role="status">{stats.reps >= CONFIG.celebration.everyReps ? `${Math.floor(stats.reps / CONFIG.celebration.everyReps) * CONFIG.celebration.everyReps} reps completed. Nice work!` : ''}</span>
     <div className="arena">
       <div style={{"--tier-reset-ms": `${CONFIG.animation.tierResetMs}ms`} as React.CSSProperties} className={`play-stage tier-${Math.min(4,CONFIG.game.tierCombos.filter(n=>stats.combo>=n).length)}`}>
         {engine?<CameraSurface engine={engine} lanes runtime={runtime}/>:<GameCanvas runtime={runtime}/>}

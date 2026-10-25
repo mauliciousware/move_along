@@ -426,8 +426,8 @@
 .pause-button { display: grid; place-items: center; }
 .pause-button svg { width: 14px; height: 16px; fill: currentColor; }
 
-/* Immersive phone play: the camera is the screen; controls float in the safe areas. */
-@media (max-width: 700px) {
+/* The camera fills the viewport at every screen size, including calibration. */
+@media (min-width: 0px) {
   html.gameplay-immersive,
   html.gameplay-immersive body { background: #07070d; overflow: hidden; overscroll-behavior: none; }
   .pushup-experience.in-game {
@@ -486,87 +486,175 @@
   }
 }
 
-/* Mobile surface polish: keep the existing page, row and control dimensions. */
+/* Shared presentation for the direct, mobile-first exercise flow. */
+.exercise-home, .pushup-experience, .pushup-dialog {
+  --ease-ui-out: cubic-bezier(0.23, 1, 0.32, 1);
+}
+.home-header-note { display: flex; align-items: center; gap: 8px; }
+.home-header-note svg { width: 16px; height: 16px; }
+.home-hero {
+  position: relative; display: grid; grid-template-columns: 1.25fr 1fr;
+  align-items: center; min-height: 300px; margin-top: 24px;
+  background: var(--accent); border: 1px solid var(--border); overflow: hidden;
+}
+.home-hero-copy { position: relative; z-index: 1; padding: 32px; }
+.home-eyebrow { display: flex; align-items: center; gap: 8px; font-size: 10px; font-weight: 650; letter-spacing: .12em; color: var(--accent-foreground); }
+.home-eyebrow > span { width: 6px; height: 6px; background: var(--primary); }
+.home-hero h1 { font-family: var(--font-pixel), monospace; font-size: clamp(16px, 2.1vw, 24px); line-height: 1.9; margin: 20px 0 14px; font-weight: 400; }
+.home-hero h1 em { font-style: normal; color: var(--primary); }
+.home-hero-description { font-size: 15px; line-height: 1.7; color: var(--muted-foreground); }
+.home-hero-art { position: relative; height: 280px; display: grid; place-items: center; align-self: end; }
+.home-hero-art .movement-art { position: relative; width: 270px; max-width: 100%; height: 230px; }
+.hero-orbit { position: absolute; width: 210px; height: 210px; border: 1px solid var(--primary); opacity: .18; border-radius: 50%; }
+.hero-orbit::after { content: ''; position: absolute; inset: 18px; border: 1px dashed var(--primary); border-radius: inherit; }
+.hero-pixel-spark { position: absolute; top: 28px; right: 26px; width: 22px; height: 22px; color: var(--primary); }
+.hero-art-caption { position: absolute; bottom: 18px; font-size: 8px; letter-spacing: .13em; color: var(--accent-foreground); }
+.exercise-home-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 28px 0 14px; }
+.exercise-home-heading h2 { font-size: 14px; font-weight: 600; }
+.exercise-home-heading > span { font-size: 10px; color: var(--muted-foreground); font-variant-numeric: tabular-nums; }
+.exercise-home-footer { display: flex; align-items: flex-start; gap: 10px; }
+.exercise-home-footer > svg { width: 15px; height: 15px; flex: none; margin-top: 3px; }
 .track-picker { position: relative; min-width: 0; }
 .track-picker > svg { display: none; }
 @media (max-width: 700px) {
-  .exercise-home, .pushup-experience { --ease-ui-out: cubic-bezier(0.23, 1, 0.32, 1); }
-  .exercise-home-header { border-bottom-color: var(--foreground); }
-  .exercise-home-header .brand { color: var(--primary); }
-  .exercise-home-heading h1 { text-wrap: balance; }
-  .exercise-choices { background: var(--card); }
+  .exercise-home-header { border-bottom-color: var(--border); }
+  .exercise-home-header .brand, .pushup-experience .pushup-header .brand { color: var(--primary); }
+  .exercise-home-header > .home-header-note { display: flex; font-size: 10px; }
+  .home-header-note svg { width: 14px; height: 14px; }
+  .home-hero { grid-template-columns: 1fr; min-height: 0; margin-top: 18px; }
+  .home-hero-copy { padding: 22px 20px 0; }
+  .home-hero h1 { font-size: clamp(13px, 3.9vw, 18px); line-height: 1.85; margin-block: 16px 12px; }
+  .home-hero-description { font-size: 13px; line-height: 1.65; }
+  .home-eyebrow { font-size: 9px; }
+  .home-hero-art { height: 132px; width: 100%; }
+  .home-hero-art .movement-art { width: 185px; height: 154px; position: absolute; bottom: 8px; right: 14px; }
+  .hero-orbit { width: 142px; height: 142px; right: 32px; top: -2px; }
+  .hero-pixel-spark { width: 18px; height: 18px; top: 35px; left: 26px; right: auto; }
+  .hero-art-caption { left: 20px; bottom: 15px; font-size: 7px; letter-spacing: .08em; }
+  .exercise-home-heading { padding: 22px 0 12px; }
+  .exercise-choices { background: var(--card); border-inline: 1px solid var(--border); }
   .exercise-choice {
-    position: relative;
-    isolation: isolate;
-    border-top-color: var(--border);
-    transition: transform 160ms var(--ease-ui-out);
+    position: relative; isolation: isolate; padding-inline: 12px;
+    grid-template-columns: 24px minmax(0, 1fr) 22px; gap: 12px;
+    border-top: 1px solid var(--border); transition: transform 160ms var(--ease-ui-out);
   }
-  .exercise-choice::before {
-    content: "";
-    position: absolute;
-    inset: 0;
-    z-index: -1;
-    background: var(--accent);
-    opacity: .45;
-    transition: opacity 160ms var(--ease-ui-out);
-  }
-  .exercise-choice.choice-situp::before { background: var(--secondary); opacity: .25; }
+  .exercise-choice:last-child { border-bottom-width: 1px; }
+  .exercise-choice::before { content: ''; position: absolute; inset: 0; z-index: -1; background: var(--accent); opacity: .2; transition: opacity 160ms var(--ease-ui-out); }
+  .exercise-choice.choice-situp::before { background: var(--secondary); opacity: .22; }
   .exercise-choice:hover { background: transparent; }
-  .exercise-choice-number { font-variant-numeric: tabular-nums; text-align: center; }
+  .exercise-choice-number { font-variant-numeric: tabular-nums; text-align: center; font-size: 9px; }
   .exercise-choice > div { min-width: 0; }
-  .exercise-choice h2 { color: var(--foreground); }
-  .exercise-choice p { color: var(--muted-foreground); text-wrap: pretty; }
-  .exercise-choice > svg {
-    color: var(--primary);
-    background: var(--card);
-    box-shadow: 0 0 0 6px var(--card);
-    transition: transform 160ms var(--ease-ui-out);
-  }
+  .exercise-choice h2 { font-size: clamp(14px, 4vw, 18px); }
+  .exercise-choice p { font-size: 12px; line-height: 1.6; }
+  .exercise-choice > svg { color: var(--primary); width: 18px; height: 18px; transition: transform 160ms var(--ease-ui-out); }
   .exercise-choice:active { transform: scale(.99); }
-  .exercise-choice:active::before { opacity: .8; }
-  .exercise-choice:active > svg { transform: translate(1px, -1px); }
-  .exercise-home-footer { text-wrap: pretty; }
-  .pushup-experience .exercise-back { text-decoration-color: var(--border); }
-  .compact-track label { font-weight: 600; color: var(--foreground); }
-  .compact-track select {
-    appearance: none;
-    -webkit-appearance: none;
-    padding-inline: 44px 36px;
-    border-color: var(--border);
-    background: var(--card);
-    box-shadow: 0 3px 0 var(--border);
-    font-size: 16px;
-    text-overflow: ellipsis;
-    cursor: pointer;
-  }
+  .exercise-choice:active::before { opacity: .7; }
+  .exercise-home-footer { padding-top: 22px; font-size: 11px; }
+  .pushup-experience:not(.in-game) .pushup-header { border-bottom: 1px solid var(--border); }
+  .pushup-experience .exercise-back { text-decoration-color: var(--border); font-size: 13px; }
+  .pushup-experience .exercise-ready h1 { color: var(--primary); }
+  .compact-track { position: relative; background: var(--accent); border-color: var(--border); }
+  .compact-track::before { content: ''; position: absolute; inset: 0 -12px; background: var(--accent); z-index: -1; }
+  .compact-track label { font-size: 11px; font-weight: 650; text-transform: uppercase; letter-spacing: .09em; color: var(--accent-foreground); }
+  .compact-track select { appearance: none; -webkit-appearance: none; padding-inline: 44px 36px; border-color: var(--border); background: var(--card); box-shadow: 0 3px 0 var(--border); font-size: 16px; text-overflow: ellipsis; cursor: pointer; }
   .compact-track select:focus-visible { outline-offset: 3px; }
-  .track-picker > svg {
-    display: block;
-    position: absolute;
-    top: 50%;
-    width: 18px;
-    height: 18px;
-    margin-top: -9px;
-    pointer-events: none;
-    color: var(--primary);
-  }
+  .track-picker > svg { display: block; position: absolute; top: 50%; width: 18px; height: 18px; margin-top: -9px; pointer-events: none; color: var(--primary); }
   .track-picker-note { left: 14px; }
   .track-picker-chevron { right: 12px; transition: transform 160ms var(--ease-ui-out); }
   .track-picker:focus-within .track-picker-chevron { transform: translateY(2px); }
-  .pushup-experience .exercise-ready .pushup-button {
-    transition: transform 160ms var(--ease-ui-out);
-  }
+  .pushup-experience .exercise-ready .pushup-button { transition: transform 160ms var(--ease-ui-out); }
   .pushup-experience .exercise-ready .pushup-button:active:not(:disabled) { transform: translateY(2px); }
+  .pushup-experience .ready-hint { color: var(--foreground); }
+  .pushup-experience .pushup-footer { border-top: 1px solid var(--border); }
+  .pushup-experience .calibration h1 { color: var(--primary); }
+  .pushup-experience .calibration .camera-stage { border-color: var(--foreground); box-shadow: 4px 4px 0 var(--border); }
+  .pushup-experience .calibration .step-indicator { gap: 5px; }
+  .pushup-experience .calibration .step-indicator span { background: var(--accent); }
+  .pushup-experience .calibration .step-indicator span.active { background: var(--primary); }
+  .pushup-experience .calibration-demo { background: var(--accent); color: var(--primary); }
+  .pushup-experience .calibration-demo .demo-body { stroke: var(--primary); }
+  .pushup-experience .calibration-progress { background: var(--accent); }
+  .pushup-experience .results h1 { font-size: clamp(17px, 4.7vw, 23px); }
+  .pushup-experience .results h1 em { color: var(--primary); }
+  .pushup-experience .result-score { background: var(--accent); box-shadow: 12px 0 0 var(--accent), -12px 0 0 var(--accent); }
+  .pushup-experience .result-score strong { color: var(--primary); }
+  .pushup-experience .session-feedback .chapter-label { color: var(--primary); }
+  .pushup-experience .result-stat { background: var(--card); }
+  .pushup-experience .result-stat strong { font-variant-numeric: tabular-nums; color: var(--accent-foreground); }
+  .pushup-experience .movement-review .movement-art { background: var(--accent); }
+  .pushup-dialog { border-color: var(--border); box-shadow: 6px 6px 0 var(--foreground); }
+  .pushup-dialog [data-slot=dialog-title] { color: var(--primary); }
+  .pushup-experience.in-game .pause-button { background: #242036c9; border-color: #ffffff40; }
+  .pushup-experience.in-game .stop-button { border-color: #ffffff40; }
+}
+@media (max-width: 360px) {
+  .exercise-home-header > .home-header-note { font-size: 9px; }
+  .home-header-note svg { display: none; }
+  .home-hero-copy { padding-inline: 16px; }
+  .hero-art-caption { left: 16px; font-size: 6px; }
 }
 @media (max-width: 700px) and (hover: hover) and (pointer: fine) {
-  .exercise-choice:hover::before { opacity: .8; }
+  .exercise-choice:hover::before { opacity: .7; }
   .exercise-choice:hover > svg { transform: translate(2px, -2px); }
 }
 @media (max-width: 700px) and (prefers-reduced-motion: reduce) {
   .exercise-choice, .exercise-choice > svg, .track-picker-chevron,
   .pushup-experience .exercise-ready .pushup-button { transition: none; }
-  .exercise-choice:active, .exercise-choice:hover > svg, .exercise-choice:active > svg,
+  .exercise-choice:active, .exercise-choice:hover > svg,
   .track-picker:focus-within .track-picker-chevron,
   .pushup-experience .exercise-ready .pushup-button:active:not(:disabled) { transform: none; }
   .exercise-choice::before { transition: opacity 160ms ease; }
 }
+
+/* Calibration and play share one edge-to-edge camera surface. */
+.pushup-experience.in-calibration {
+  position: fixed; inset: 0; width: 100%; max-width: none; height: 100dvh;
+  padding: 0; margin: 0; overflow: hidden; background: #07070d; color: #f4f4fa;
+}
+.pushup-experience.in-calibration .pushup-header {
+  position: absolute; inset: 0 0 auto; z-index: 5; flex-wrap: nowrap;
+  min-height: 0; padding: max(12px, env(safe-area-inset-top)) 18px 24px;
+  border: 0; background: linear-gradient(#07070de6, #07070d00);
+}
+.pushup-experience.in-calibration .pushup-header .brand { color: #e3d9ff; font-size: 11px; }
+.in-calibration .workout-name { color: #cbc5dc; font-size: 11px; }
+.calibration-stop { min-height: 56px; min-width: 64px; padding: 8px; background: #a9253b; color: white; border: 1px solid #ffffff40; font-size: 12px; font-weight: 700; }
+.in-calibration #main-content, .pushup-experience .calibration-stage { position: absolute; inset: 0; padding: 0; margin: 0; max-width: none; }
+.in-calibration .calibration-stage > .pose-view,
+.in-calibration .calibration-stage > .pose-view > .camera-stage { position: absolute; inset: 0; height: 100%; width: 100%; border: 0; box-shadow: none; }
+.in-calibration .camera-feed { opacity: 1; }
+.in-calibration .pose-view > .overlay-control,
+.in-calibration .pose-view > .tracking-caption,
+.in-calibration .pose-view .step-back { display: none; }
+.pushup-experience .calibration-panel {
+  position: absolute; z-index: 3; bottom: 0; left: 0; right: 0;
+  max-height: 55dvh; overflow-y: auto;
+  padding: 38px max(24px, calc((100vw - 500px) / 2)) max(20px, env(safe-area-inset-bottom));
+  background: linear-gradient(#07070d00, #07070de8 32px, #07070df5);
+  color: #f4f4fa; text-align: center;
+}
+.pushup-experience .calibration-panel h1 { color: #e2d5ff; font-size: clamp(20px, 5vw, 28px); margin: 10px 0; line-height: 1.5; }
+.pushup-experience .calibration-panel p { font-size: 14px; line-height: 1.5; margin-bottom: 10px; }
+.pushup-experience .calibration-panel .chapter-label { font-size: 9px; color: #c9edb0; }
+.pushup-experience .calibration-panel .muted { color: #c4bfd5; }
+.pushup-experience .calibration-panel .calibration-status { color: #c9edb0; font-size: 13px; min-height: 20px; }
+.pushup-experience .calibration-panel .step-indicator span { background: #ffffff30; }
+.pushup-experience .calibration-panel .step-indicator span.active { background: #c9edb0; }
+.pushup-experience .calibration-panel .calibration-progress { background: #ffffff25; margin: 14px 0; }
+.pushup-experience .calibration-panel .calibration-progress > div { background: #c9edb0; }
+.pushup-experience .calibration-panel .pushup-button { min-height: 44px; margin: 8px 6px; width: calc(100% - 12px); background: #242036; color: #f4f4fa; font-size: 13px; }
+.in-calibration .pushup-notice, .in-calibration .audio-recovery { position: relative; z-index: 6; margin: 90px 20px 0; background: #242036; color: white; padding: 12px; }
+.in-calibration .audio-recovery { margin-top: 8px; }
+.camera-session .step-back { background: #07070d50; text-shadow: 0 2px 8px #07070d; }
+.camera-session .step-back strong { font-size: 18px; }
+.camera-session .step-back span { font-size: 14px; }
+.camera-session .game-message { background: #07070d85; }
+@media (max-height: 650px) {
+  .pushup-experience .calibration-panel { max-height: 60dvh; padding-top: 30px; }
+  .pushup-experience .calibration-panel h1 { font-size: 18px; margin: 6px 0; }
+  .pushup-experience .calibration-panel p { font-size: 12px; margin-bottom: 7px; }
+}
+
+.calibration-actions { display: flex; align-items: center; gap: 12px; }
+.pushup-experience .calibration-panel .calibration-actions .pushup-button { flex: 1; width: auto; }
+.calibration-restart { min-height: 44px; padding: 8px; color: #e2d5ff; text-decoration: underline; text-underline-offset: 4px; font-size: 12px; }

@@ -512,3 +512,28 @@ Verification:
 - Production Chromium checks: home, push-up and sit-up ready screens at 320, 390, 430 and 768px; no horizontal overflow and unchanged page/control geometry. Song selection and keyboard focus passed. Mobile screenshots inspected; reduced-motion transforms suppressed.
 - Passed typecheck, lint, 183 tests and production build (including audio asset check).
 - Physical iPhone Safari remains untested in this UI pass.
+
+
+## Mobile visual refresh — 2026-10-24
+
+- Replaced the home page's title-only introduction with a compact illustrated hero using the existing original MovementArt, pixel heading, concise intro, and privacy footer.
+- Unified mobile exercise rows, soundtrack panel, setup headings, calibration surfaces, results, pause dialog and game control surfaces. Kept existing routes, gameplay, camera/audio behavior and score calculations.
+- Preserved the page width constraints and immersive gameplay dimensions. Hero and both choices fit the tested 844px-high phone viewports.
+- Reused self-hosted fonts, icons and artwork; no dependencies added. Preserved reduced-motion support and gated hover motion.
+- Production Chromium QA at 320, 390, 430 and 768px: no horizontal overflow on home or either exercise ready screen; song selection passed. Inspected home, setup, game and results screenshots. Keyboard demo → STOP → results passed.
+- Typecheck, lint, all 183 tests, audio asset check and production build passed.
+- Camera calibration and physical iPhone Safari remain unverified by this UI pass.
+
+
+## Full-camera calibration and rep feedback — 2026-10-24
+
+- Calibration now uses the same edge-to-edge camera presentation as gameplay at every viewport width. Instructions/progress float at the bottom, STOP remains at the top, and body-overlay settings no longer consume calibration layout space. Existing home refresh preserved.
+- Kept one CameraSurface mounted across framing, measurement and completion. This avoids the previous video detach/reattach on entering measurement.
+- Reduced the extra framing delay from 2500ms to 700ms after the engine's existing tracking recovery. Stable sampling, confidence, real movement, range validation and the 2500ms step settle remain required.
+- Fixed the slow-device sample-count bottleneck: minimum six distinct fresh samples across the full stable window instead of twelve. Added an 8Hz regression. Progress now accounts for the settling period and sample count. Added position-specific guidance and immediate Restart setup.
+- Framing feedback uses the engine's actual missing-body/edge issue instead of always asking the player to step back.
+- Every five completed reps triggers bounded canvas confetti and a short milestone label; reduced motion retains the label only. Milestones do not replay on camera remount, and scoring/detection/up-down order are unchanged. Added screen-reader milestone text.
+- Production Chromium with explicitly synthetic camera/pose input: both exercise calibration sequences reached gameplay; video element identity stayed stable from framing to measurement; full camera geometry verified at 320/390/430px; STOP exited immersive mode to results. Synthetic checks do not validate actual MediaPipe accuracy or physical-device performance.
+- Keyboard demo: five down/up pairs showed five reps and the celebration; pause and end-workout paths passed. Calibration and celebration screenshots inspected using synthetic input only.
+- No dependencies added. Physical iPhone Safari framing, tracking reliability, orientation, and calibration remain device QA items.
+- Final validation: typecheck, lint, 187 tests, audio asset check, production build and diff whitespace check passed.

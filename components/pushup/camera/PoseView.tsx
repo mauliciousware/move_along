@@ -31,7 +31,7 @@ export default function PoseView({ engine, lanes = false, runtime }: { engine: P
     <div className={`camera-stage ${lanes ? 'with-lanes' : ''}`} style={{ "--camera-opacity": runtime ? CONFIG.targets.cameraOpacity : CONFIG.tileVisual.cameraOpacity } as React.CSSProperties}>
       <CameraFeed engine={engine} videoRef={video} />
       <GameCanvas overlayMode={overlayMode} runtime={runtime} engine={engine} videoRef={video} lanes={lanes} calibration={state.calibrated ? engine.calibration ?? undefined : undefined} />
-      {state.phase === 'running' && <StepBackOverlay status={state.tracking} />}
+      {state.phase === 'running' && <StepBackOverlay status={state.tracking} issue={state.issue} />}
       {(state.phase === 'loading' || state.phase === 'requesting') && <div className="step-back" role="status">Starting your camera and local pose model…</div>}
       {state.phase === 'error' && <div className="step-back" role="alert"><span>{state.error}</span><Button onClick={() => void engine.start()}>RETRY CAMERA</Button></div>}
       <pre className="pose-diagnostics" ref={debug} />

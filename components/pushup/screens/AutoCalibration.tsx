@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import { CameraSurface } from '../camera/CameraSurface';
 import { Calibration } from './Calibration';
 import { Button } from '../ui/Button';
+import { FRAMING_COPY } from '@/lib/pose-engine/framing';
 import { unlockAudio } from '@/lib/audio-engine/cues';
 import { PUSHUP_CONFIG } from '@/lib/shared/config';
 import type { PoseEngine } from '@/lib/pushup/engine';
@@ -22,14 +23,19 @@ export function AutoCalibration({ engine, complete, onComplete }: { engine: Pose
     return () => clearTimeout(timer);
   }, [engine, state.usable, state.phase, measuring, complete]);
 
-  if (complete) return <section className="screen narrow calibration"><h1>Calibrated.</h1><p role="status">Getting your music ready…</p></section>;
-  if (measuring && state.phase === 'running') return <Calibration engine={engine} onNext={() => next.current()} />;
-
-  return <section className="screen narrow calibration">
-    <p className="chapter-label">Automatic calibration</p><h1>Step into view.</h1>
-    <p>{engine.exercise === 'pushup' ? 'Phone on the floor, facing you. Keep your head, shoulders and elbows in view.' : 'Phone upright beside you. Keep your waist, shoulders and head in view from lying to sitting.'}</p>
+  const framing = FRAMING_COPY[state.issue];
+  return <section className="screen calibration calibration-stage" aria-label="Camera calibration">
     <CameraSurface engine={engine} />
-    <p role="status">{state.error ?? (state.usable ? 'Hold your position. Measuring starts automatically.' : state.phase === 'requesting' ? 'Allow camera access, then get into position.' : state.phase === 'loading' ? 'Starting movement tracking…' : 'Stay in view. Calibration will guide you automatically.')}</p>
-    {['idle', 'error', 'suspended'].includes(state.phase) && <Button onClick={() => { void unlockAudio(); void engine.start(); }}>{state.phase === 'error' ? 'RETRY CAMERA' : 'RESUME CALIBRATION'}</Button>}
+    <div className="calibration-panel">
+      {complete ? <><p className="chapter-label">SETUP COMPLETE</p><h1>You’re ready.</h1><p role="status">Getting your music ready…</p></>
+        : measuring && state.phase === 'running' ? <Calibration embedded engine={engine} onNext={() => next.current()} />
+        : <>
+          <p className="chapter-label">01 / FIND YOUR POSITION</p>
+          <h1>{state.usable ? 'Stay right there.' : 'Get into view.'}</h1>
+          <p>{engine.exercise === 'pushup' ? 'Phone on the floor, facing you. Show your head, shoulders and elbows.' : 'Phone upright beside you. Show your head, shoulders, hips and knees.'}</p>
+          <p className="calibration-status" role="status">{state.error ?? (state.usable ? 'Position found. Calibration starts automatically.' : state.phase === 'requesting' ? 'Allow camera access to begin.' : state.phase === 'loading' ? 'Starting local movement tracking…' : `${framing.title}. ${framing.detail}`)}</p>
+        </>}
+      {['idle', 'error', 'suspended'].includes(state.phase) && <Button onClick={() => { void unlockAudio(); void engine.start(); }}>{state.phase === 'error' ? 'RETRY CAMERA' : 'RESUME CALIBRATION'}</Button>}
+    </div>
   </section>;
 }

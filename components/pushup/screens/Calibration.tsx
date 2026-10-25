@@ -9,13 +9,14 @@ import { PUSHUP_CONFIG as CONFIG } from '@/lib/shared/config';
 import { Button } from '@/components/pushup/ui/Button';
 import { PlacementGuide } from '@/components/pushup/ui/PlacementGuide';
 
-export function Calibration({ onNext, engine }: { onNext: () => void; engine?: PoseEngine }) {
+export function Calibration({ onNext, engine, embedded = false }: { onNext: () => void; engine?: PoseEngine; embedded?: boolean }) {
   const steps = CALIBRATION_STEPS[engine?.exercise ?? 'pushup'];
   const [state, setState] = useState<CalibrationState>({step: 0, phase: 'measuring', message: steps[0].instruction, revision: 0});
   const [voice, setVoice] = useState(true);
   const voiceRef = useRef(true), nextRef = useRef(onNext);
   const sessionRef = useRef<CalibrationSession | null>(null);
   const progress = useRef<HTMLDivElement>(null);
+  const guidance = useRef<HTMLParagraphElement>(null);
   useEffect(() => { nextRef.current = onNext; }, [onNext]);
   useEffect(() => {
     if (!engine) return;
@@ -37,25 +38,25 @@ export function Calibration({ onNext, engine }: { onNext: () => void; engine?: P
       if (!engine) return;
       session.update(engine.getSnapshot().tracking === 'TRACKING' ? engine.frame : null, now);
       if (progress.current) progress.current.style.transform = `scaleX(${session.progress})`;
+      if (guidance.current && guidance.current.textContent !== session.guidance) guidance.current.textContent = session.guidance;
       frameId = requestAnimationFrame(tick);
     }
     frameId = requestAnimationFrame(tick);
     return () => { cancelAnimationFrame(frameId); clearTimeout(readyTimer); sessionRef.current = null; stopSpeech(); };
   }, [engine, steps]);
   if (!engine) return <section className="screen narrow"><h1>KEYBOARD<br />MODE</h1><PlacementGuide /><p>No camera calibration is needed. Arrow Down and Arrow Up will use the same movement-event pipeline.</p><Button onClick={onNext}>SKIP (KEYBOARD)</Button></section>;
-  return <section className="screen narrow calibration">
+  return <section className={embedded ? "calibration-measurement" : "screen narrow calibration"}>
     <p className="muted">Calibration · {state.step + 1} / {steps.length}</p>
     <div className="step-indicator">{steps.map(({title}, i) => <span key={title} className={i <= state.step ? 'active' : ''} />)}</div>
     <h1>{state.phase === 'ready' ? 'READY' : steps[state.step].title}</h1>
     <p className="lead" role="status">{state.message}</p>
-    <svg className={`calibration-demo demo-${state.step}`} style={{'--demo-duration': `${CONFIG.calibration.demoMs}ms`} as React.CSSProperties} viewBox="0 0 320 100" role="img" aria-label={`Demonstration: ${steps[state.step].title.toLowerCase()} position`}>
-      <path d="M20 85h280" stroke="currentColor" opacity=".2" />
-      <g className="demo-body" fill="none" stroke="var(--color-up)" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round"><circle cx="72" cy="28" r="10" /><path d="m89 38 91 16 99 28M99 40 88 80H72" /></g>
-    </svg>
-    <CameraSurface engine={engine} />
+    {!embedded && <CameraSurface engine={engine} />}
     <div className="calibration-progress" aria-label="Hold steady to complete this step"><div ref={progress} /></div>
-    {state.phase === 'measuring' && <p className="muted">Move only when the instruction changes. Each step completes when you hold still.</p>}
+    {state.phase === 'measuring' && <p ref={guidance} className="calibration-status" role="status">Hold steady while we measure.</p>}
     {state.phase === 'retry' && <Button onClick={() => { void unlockAudio(); sessionRef.current?.restart(performance.now()); }}>TRY AGAIN</Button>}
+    <div className="calibration-actions">
     <Button variant="secondary" onClick={() => { const enabled = !voice; voiceRef.current = enabled; setVoice(enabled); if (!enabled) stopSpeech(); else speakLocally(state.message); }}>VOICE {voice ? 'ON' : 'OFF'}</Button>
+    {state.phase === 'measuring' && <button className="calibration-restart" onClick={() => sessionRef.current?.restart(performance.now())}>Restart setup</button>}
+    </div>
   </section>;
 }

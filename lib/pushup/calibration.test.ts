@@ -104,3 +104,21 @@ describe('session calibration storage',()=>{
     expect(loadCalibration()).toBeNull();expect(()=>saveCalibration(valid)).not.toThrow();
   });
 });
+
+describe('calibration on slower phones', () => {
+  it('accepts a real stable range at 8 pose frames per second', () => {
+    const session = new CalibrationSession('pushup', 0, () => {});
+    for (let t = 0; t <= 2500; t += 125) session.update(pose(t, .45), t);
+    expect(session.state.step).toBe(1);
+    for (let t = 2625; t <= 5000; t += 125) session.update(pose(t, .35), t);
+    expect(session.state.step).toBe(2);
+    for (let t = 5125; t <= 7500; t += 125) session.update(pose(t, .65), t);
+    expect(session.state.phase).toBe('ready');
+  });
+  it('does not show full progress before the settling period ends', () => {
+    const session = new CalibrationSession('pushup', 0, () => {});
+    steady(session, 0, 1000, .45);
+    expect(session.progress).toBeLessThan(1);
+    expect(session.state.step).toBe(0);
+  });
+});

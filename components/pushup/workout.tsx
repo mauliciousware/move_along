@@ -41,7 +41,7 @@ export default function Workout({ exercise = 'pushup' }: { exercise?: ExerciseId
 
   useEffect(() => { window.scrollTo({ top: 0, behavior: 'instant' }); }, [screen, attempt]);
   useEffect(() => {
-    const immersive = screen === 'game' && window.matchMedia('(max-width: 700px)').matches;
+    const immersive = screen === 'game' || screen === 'calibration';
     const root = document.documentElement;
     const meta = document.querySelector<HTMLMetaElement>('meta[name="theme-color"]');
     const previous = meta?.content;
@@ -126,9 +126,9 @@ export default function Workout({ exercise = 'pushup' }: { exercise?: ExerciseId
     setCalibrated(false); setAttempt(value => value + 1); setScreen('calibration');
   }
 
-  return <div className={`pushup-experience ${screen === 'game' ? 'in-game' : ''}`}>
+  return <div className={`pushup-experience ${screen === 'game' ? 'in-game camera-session' : screen === 'calibration' ? 'in-calibration camera-session' : ''}`}>
     <a className="skip-link" href="#main-content">Skip to content</a>
-    <header className="pushup-header"><Link className="brand" href="/">move along.</Link>{screen !== 'ready' && <span className="workout-name">{keyboard ? 'Keyboard demo' : movement.name}</span>}{screen === 'calibration' && <Button variant="danger" onClick={() => finish(runtime.end(true))}>STOP</Button>}</header>
+    <header className="pushup-header"><Link className="brand" href="/">move along.</Link>{screen !== 'ready' && <span className="workout-name">{keyboard ? 'Keyboard demo' : movement.name}</span>}{screen === 'calibration' && <button className="calibration-stop" onClick={() => finish(runtime.end(true))}>■ STOP</button>}</header>
     {['calibration', 'game'].includes(screen) && <div className="rotate-guard" role="status"><strong>TURN PHONE UPRIGHT</strong><span>Move Along plays in portrait. The camera pauses until you turn back.</span><Button variant="danger" onClick={() => finish(runtime.end(true))}>■ STOP</Button></div>}
     <main id="main-content">
       {screen === 'ready' && <section className="screen narrow exercise-ready">
@@ -160,6 +160,6 @@ export default function Workout({ exercise = 'pushup' }: { exercise?: ExerciseId
       {screen === 'game' && <Gameplay exercise={exercise} runtime={runtime} engine={keyboard ? undefined : engine} onEnd={finish} onCalibrate={recalibrate} />}
       {screen === 'results' && <Results exercise={exercise} flow={runtime.game.flow} analysis={analyzeSession(runtime.game.notes, stats, runtime.observedFrames, runtime.validFrames, keyboard, runtime.game.flow)} title={song.title} stats={stats} feedback={sessionFeedback(runtime.game.notes, stats, !keyboard, runtime.bodySamples, runtime.bodyVisibleSamples, exercise, runtime.game.flow)} onDone={() => router.push('/')} onReplay={() => play()} />}
     </main>
-    {screen !== 'game' && <footer className="pushup-footer">Camera stays on your device. Results aren’t saved.</footer>}
+    {screen !== 'game' && screen !== 'calibration' && <footer className="pushup-footer">Camera stays on your device. Results aren’t saved.</footer>}
   </div>;
 }

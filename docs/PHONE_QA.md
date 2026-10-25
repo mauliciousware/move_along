@@ -168,3 +168,13 @@ Open either exercise on the updated HTTPS build and enter gameplay.
 - Issues or untested paths:
 
 No physical-device rows have been signed off yet.
+
+
+### Full-camera calibration follow-up (pending real iPhone)
+
+- Verify camera fills the screen during framing, each calibration position, and play; STOP and the bottom controls remain inside Safari safe areas.
+- Verify camera preview does not blink between framing and measurement. Confirm missing elbows/hips/knees show useful placement guidance.
+- Test real push-up MIDDLE → UP → DOWN and sit-up DOWN → UP, including slower devices; progress must not reach 100% before a step completes.
+- Try Restart setup, tracking loss/recovery, camera permission denial, rotation, and background/resume.
+- Complete five reps and check the brief celebration; enable Reduce Motion and confirm only the milestone text remains.
+- Confirm camera alignment and up/down detection remain correct. Synthetic browser checks are not physical-device evidence.

@@ -6,6 +6,7 @@ import { BodyOverlay } from '@/components/pushup/pose/BodyOverlay';
 import type { BodyOverlayMode } from '@/lib/shared/pushup-types';
 import { HeadMarker } from "@/components/pushup/pose/HeadMarker";
 import { drawPositionGauge } from "@/components/pushup/pose/PositionGauge";
+import { RepCelebration } from '@/lib/game-engine/celebration';
 import { GameRenderer } from '@/lib/game-engine/renderer';
 import { holdLabel } from '@/lib/game-engine/labels';
 import type { GameRuntime } from '@/lib/game-engine/runtime';
@@ -25,6 +26,7 @@ export function GameCanvas({ preview = false, engine, videoRef, calibration, run
     const marker = new HeadMarker();
     const body = new BodyOverlay(fontFamily);
     const renderer = new GameRenderer(fontFamily);
+    const celebration = new RepCelebration(runtime?.game.stats.reps ?? 0);
     const motion = matchMedia("(prefers-reduced-motion: reduce)");
     const dev = new URLSearchParams(location.search).get("dev") === "1";
     let animation = 0, width = 0, height = 0, ratio = 1;
@@ -49,6 +51,7 @@ export function GameCanvas({ preview = false, engine, videoRef, calibration, run
         marker.draw(display, frame, video, width, height, motion.matches, dev, runtime?.game.flow ? runtime.game.current?.meter?.ratio : runtime?.game.notes.find(n => n.status === 'pending' && n.meter && runtime.songMs >= n.note.time - CONFIG.hold.entryMs && runtime.songMs <= n.note.time + n.note.duration)?.meter?.ratio);
         if (!runtime) drawPositionGauge(display, frame, calibration, width, height, fontFamily, calibration?.joint ?? 'nose');
       } else { marker.reset(); body.reset(); if (runtime) renderer.draw(display, width, height, runtime, now, motion.matches, dev); }
+      if (runtime) celebration.draw(display, width, height, runtime.game.stats.reps, now, motion.matches);
       engine?.noteDraw();
       if (engine || runtime) animation = requestAnimationFrame(render);
     }
