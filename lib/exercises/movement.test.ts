@@ -4,7 +4,7 @@ import type { InputEvent } from '../shared/pushup-types';
 
 it('counts a full down-up cycle from the normalized signal', () => {
   const events: InputEvent[] = [];
-  const movement = new ExerciseMovement('situp', event => events.push(event));
+  const movement = new ExerciseMovement('squat', event => events.push(event));
   movement.update(0, { p: 1, left: 0, right: 0, ok: true });
   movement.update(100, { p: 0.2, left: 0, right: 0, ok: true });
   for (let t = 200; t <= 600; t += 100) movement.update(t, { p: 0.2, left: 0, right: 0, ok: true });

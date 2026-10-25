@@ -540,7 +540,7 @@
   }
   .exercise-choice:last-child { border-bottom-width: 1px; }
   .exercise-choice::before { content: ''; position: absolute; inset: 0; z-index: -1; background: var(--accent); opacity: .2; transition: opacity 160ms var(--ease-ui-out); }
-  .exercise-choice.choice-situp::before { background: var(--secondary); opacity: .22; }
+  .exercise-choice.choice-squat::before { background: var(--secondary); opacity: .22; }
   .exercise-choice:hover { background: transparent; }
   .exercise-choice-number { font-variant-numeric: tabular-nums; text-align: center; font-size: 9px; }
   .exercise-choice > div { min-width: 0; }

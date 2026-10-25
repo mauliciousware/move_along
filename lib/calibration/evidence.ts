@@ -10,7 +10,7 @@ export function median(values: readonly number[]) {
   return sorted.length % 2 ? sorted[middle] : (sorted[middle - 1] + sorted[middle]) / 2;
 }
 export function readSample(frame: PoseFrame, exercise: ExerciseId): Sample | null {
-  const point = exercise === 'situp' ? frame.rawWaist ?? frame.waist : frame.rawNose ?? frame.nose;
+  const point = exercise === 'squat' ? frame.rawWaist ?? frame.waist : frame.rawNose ?? frame.nose;
   const shoulders = [frame.joints?.leftShoulder, frame.joints?.rightShoulder];
   if (exercise === 'pushup' && shoulders.some(p => !p || !Number.isFinite(p.visibility) || p.visibility < CONFIG.tracking.minConfidence)) return null;
   const shoulderY = frame.rawShoulderY ?? (shoulders.every(Boolean) ? (shoulders[0]!.y + shoulders[1]!.y) / 2 : point.y);

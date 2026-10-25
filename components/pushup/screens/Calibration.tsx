@@ -19,6 +19,7 @@ export function Calibration({ onNext, engine, embedded = false }: { onNext: () =
   const progress = useRef<HTMLDivElement>(null);
   const guidance = useRef<HTMLParagraphElement>(null);
   const diagnostics = useRef<HTMLPreElement>(null);
+  const postureLabel = useRef<HTMLParagraphElement>(null);
   const progressRegion = useRef<HTMLDivElement>(null);
   useEffect(() => { nextRef.current = onNext; }, [onNext]);
   useEffect(() => {
@@ -50,8 +51,9 @@ export function Calibration({ onNext, engine, embedded = false }: { onNext: () =
       if (guidance.current && guidance.current.textContent !== message) guidance.current.textContent = message;
       if (now - lastDiagnostics >= CONFIG.calibrationV2.diagnosticsMs) {
         lastDiagnostics = now;
+        if (postureLabel.current) postureLabel.current.textContent = session.posture ? `Position estimate: ${session.posture.label}` : 'Checking your position…';
         progressRegion.current?.setAttribute('aria-valuenow', String(Math.round(session.progress * 100)));
-        if (diagnostics.current) diagnostics.current.textContent = `Calibration v2 · ${session.reason}\nStep ${session.state.step + 1}/${steps.length} · ${engine.metrics.poseHz.toFixed(1)} pose Hz\nValid samples ${session.diagnostics.acceptedFrames} · rejected ${session.diagnostics.rejectedFrames}\nWindow resets ${session.diagnostics.windowResets} · noise ${session.diagnostics.noise.toFixed(4)}\nObserved step time ${(session.diagnostics.validStepMs / 1000).toFixed(1)}s`;
+        if (diagnostics.current) diagnostics.current.textContent = `Calibration v3 · ${session.reason}\nPosture ${session.posture?.label ?? "unclear"} · angle ${session.posture?.angle?.toFixed(0) ?? "—"}°\nStep ${session.state.step + 1}/${steps.length} · ${engine.metrics.poseHz.toFixed(1)} pose Hz\nValid samples ${session.diagnostics.acceptedFrames} · rejected ${session.diagnostics.rejectedFrames}\nWindow resets ${session.diagnostics.windowResets} · noise ${session.diagnostics.noise.toFixed(4)}\nObserved step time ${(session.diagnostics.validStepMs / 1000).toFixed(1)}s`;
       }
       frameId = requestAnimationFrame(tick);
     }
@@ -62,9 +64,10 @@ export function Calibration({ onNext, engine, embedded = false }: { onNext: () =
   return <section className={embedded ? "calibration-measurement" : "screen narrow calibration"}>
     <p className="muted">{steps[state.step].stage === 'verify' ? 'Checking your movement' : 'Learning your movement'} · {state.step + 1} / {steps.length}</p>
     <div className="step-indicator">{steps.map(({title}, i) => <span key={`${title}-${i}`} className={i <= state.step ? 'active' : ''} />)}</div>
-    <h1>{state.phase === 'ready' ? 'READY' : state.phase === 'retry' ? 'TRY AGAIN' : state.cue === 'hold' ? 'HOLD' : steps[state.step].title}</h1>
+    <h1>{state.phase === 'ready' ? 'READY' : state.phase === 'retry' ? 'TRY AGAIN' : state.cue === 'hold' ? 'HOLD' : engine.exercise === 'squat' ? (steps[state.step].kind === 'up' ? 'STAND' : 'SQUAT') : steps[state.step].title}</h1>
     <p className="lead" role="status">{state.message}</p>
     {!embedded && <CameraSurface engine={engine} />}
+    <p ref={postureLabel} className="muted">Checking your position…</p>
     <div ref={progressRegion} className="calibration-progress" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={0} aria-label="Current position measurement"><div ref={progress} /></div>
     {state.phase === 'measuring' && <p ref={guidance} className="calibration-status" role="status">Get into position. We will tell you when to hold.</p>}
     {state.phase === 'retry' && <Button onClick={() => { void unlockAudio(); sessionRef.current?.restart(performance.now()); }}>TRY AGAIN</Button>}

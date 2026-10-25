@@ -6,7 +6,7 @@ import { flowTarget } from './targets';
 import { validateMap } from './validator';
 
 const flow = () => new GameSession(songsFor('pushup')[0].map);
-const situpFlow = () => new GameSession(songsFor('situp')[0].map);
+const squatFlow = () => new GameSession(songsFor('squat')[0].map);
 
 describe('flow push-up script', () => {
   it('builds three sets of eight reps with 10/10/8 second holds and no rests', () => {
@@ -39,9 +39,9 @@ describe('flow push-up script', () => {
   });
 });
 
-describe('flow sit-up script', () => {
-  it('asks for DOWN then UP and counts a completed sit-up rep', () => {
-    const game = situpFlow();
+describe('flow squat script', () => {
+  it('asks for DOWN then UP and counts a completed squat rep', () => {
+    const game = squatFlow();
     expect(game.current?.note.type).toBe('DOWN');
     game.input('DOWN', 1000, true);
     expect(game.current?.note.type).toBe('UP');
@@ -51,13 +51,13 @@ describe('flow sit-up script', () => {
     expect(game.current?.note.type).toBe('DOWN');
   });
 
-  it('labels the top hold as HOLD for sit-ups and PLANK for push-ups', () => {
-    const situp = situpFlow();
+  it('labels the top hold as HOLD for squats and PLANK for push-ups', () => {
+    const squat = squatFlow();
     const pushup = flow();
-    for (const game of [situp, pushup]) {
+    for (const game of [squat, pushup]) {
       for (let index = 0; index < 16; index++) game.input(index % 2 ? 'UP' : 'DOWN', index, true);
     }
-    expect(flowTarget(situp, 1, true)).toMatchObject({ kind: 'HOLD', hold: { label: 'HOLD' } });
+    expect(flowTarget(squat, 1, true)).toMatchObject({ kind: 'HOLD', hold: { label: 'HOLD' } });
     expect(flowTarget(pushup, 1, true)).toMatchObject({ kind: 'HOLD', hold: { label: 'PLANK' } });
   });
 });

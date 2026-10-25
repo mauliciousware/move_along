@@ -18,7 +18,7 @@ export const CONFIG = {
   pose: {
     libraryPath: "/mediapipe/vision_bundle.js", wasmPath: "/mediapipe/wasm", modelPath: "/models/pose_landmarker_lite.task", numPoses: 1,
     jointIndices: { nose: 0, leftShoulder: 11, rightShoulder: 12, leftElbow: 13, rightElbow: 14, leftWrist: 15, rightWrist: 16, leftHip: 23, rightHip: 24, leftKnee: 25, rightKnee: 26, leftAnkle: 27, rightAnkle: 28, leftFoot: 31, rightFoot: 32 },
-    situpJoints: ["nose", "leftShoulder", "rightShoulder", "leftHip", "rightHip", "leftKnee", "rightKnee"],
+    squatJoints: ["nose", "leftShoulder", "rightShoulder", "leftHip", "rightHip", "leftKnee", "rightKnee", "leftAnkle", "rightAnkle"],
     pushupJoints: ["nose", "leftShoulder", "rightShoulder", "leftElbow", "rightElbow"],
     connections: [["leftShoulder", "rightShoulder"], ["leftShoulder", "leftElbow"], ["leftElbow", "leftWrist"], ["rightShoulder", "rightElbow"], ["rightElbow", "rightWrist"], ["leftShoulder", "leftHip"], ["rightShoulder", "rightHip"], ["leftHip", "rightHip"], ["leftHip", "leftKnee"], ["leftKnee", "leftAnkle"], ["rightHip", "rightKnee"], ["rightKnee", "rightAnkle"], ["leftAnkle", "leftFoot"], ["rightAnkle", "rightFoot"]],
   },
@@ -72,6 +72,13 @@ export const PUSHUP_CONFIG = {
   feedback: { minHits: 6, minDirectionHits: 3, biasRatio: 0.65, minBodySamples: 90, minBodyCoverage: 0.65, qualityDifference: 0.1 },
   overlay: { glow: 12, trailOpacity: 0.45, gaugeX: 0.04, gaugeY: 0.18, gaugeWidth: 0.018, gaugeHeight: 0.35, dotRadius: 3, fontSize: 11 },
   smoothing: { minCutoff: 1.2, beta: 0.05, dCutoff: 1 },
+  posture: {
+    minConfidence: 0.65, minSegment: 0.025, maxSideDifference: 30,
+    standingKnee: 160, standingHip: 150, squatKnee: 145, kneeTravel: 20,
+    uprightTorso: 0.6, squatTorso: 0.25, plankTorsoMax: 0.55,
+    straightElbow: 155, bentElbow: 140, elbowTravel: 20,
+    endpointAngleTolerance: 15, hipDescent: 0.15, feedbackSettleMs: 500,
+  },
   calibrationV2: {
     stableMs: 900, settleMs: 1400, cueLeadMs: 1300, captureHoldMs: 1600, minSamples: 6, minScale: 0.04,
     minStability: 0.004, maxStability: 0.012, stabilityScale: 0.025,

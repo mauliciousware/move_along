@@ -552,3 +552,14 @@ Verification:
 - Local voice prompts remain optional, with matching on-screen instructions and the existing completion chime. No video recording or additional data storage; no dependencies added.
 - Typecheck, lint and all 202 automated tests passed, including interrupted-hold recovery. Camera access and manual/device testing remain owner-operated.
 - Production build and diff whitespace check passed; local preview restarted on port 3101 for owner testing.
+
+## Squat correction and posture-gated calibration — 2026-10-25
+
+- Owner clarified that “sit-ups” meant squats (standing → squatting → standing). Migrated the exercise identity, labels, home link, instructions, voice cues, song descriptions, artwork and routine/game types to Squats. Added `/squat`; `/situp` redirects there.
+- Squat calibration now starts standing and verifies two squat/stand cycles. Framing requires ankles as well as hips/knees. Geometry checks require an upright extended starting posture and corroborating knee flexion/hip descent for the lower endpoint.
+- Push-up calibration now checks visible wrist/elbow/shoulder/hip geometry: upright or middle/bent-arm poses cannot establish the top plank. Down requires elbow flexion in addition to existing movement evidence. Guidance requests an appropriate diagonal camera view when geometry is unclear.
+- Forwarded full raw numeric landmarks and actual source-image aspect ratio into calibration. Added conservative, confidence-gated posture estimation, debounced correction prompts, a live position estimate and median posture references. No new ML model, form grade or camera recording was added.
+- Every captured hold requires compatible posture. Missing/ambiguous geometry blocks capture; interrupted posture resets only the active hold. Existing settling, repeatability, tracking-loss and setup-change guards remain active. Derived profiles use schema v3 so old assumptions are not restored.
+- No dependencies added. Typecheck, lint and 210 automated tests passed. Synthetic tests cover standing-vs-squat, middle-vs-top, joint confidence/visibility, aspect ratio/mirroring, recovery and raw-landmark forwarding. These are not physical-device evidence.
+- No camera/browser/manual testing by the agent, per owner instruction. Camera angle, occlusion and individual range remain owner testing items. See `docs/CALIBRATION_V3_TEST_GUIDE.md` for the expected flow and limitations.
+- Production build and diff whitespace check passed. Local app restarted on port 3101 for owner testing.

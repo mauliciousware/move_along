@@ -12,8 +12,8 @@ export function songsFor(exercise:ExerciseId):PushupSong[]{
  return PUSHUP_SONGS.map(song=>{
   const map=flowMap({...song.map,exercise,songId:`${exercise}-${song.id}`});
   const reps=map.meta.counts.reps, holds=map.meta.counts.holds;
-  const description=exercise==='situp'
-   ?`${reps} sit-ups · ${holds} holds · your pace · no rests`
+  const description=exercise==='squat'
+   ?`${reps} squats · ${holds} holds · your pace · no rests`
    :`${reps} push-ups · ${holds} plank holds · your pace · no rests`;
   return {...song,map,description};
  });

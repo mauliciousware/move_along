@@ -37,7 +37,7 @@ export function AutoCalibration({ engine, complete, onComplete }: { engine: Pose
          : secondsLeft > 0 && state.phase === 'running' ? <>
           <p className="chapter-label">READY TO CALIBRATE</p>
           <h1>Get ready.</h1>
-          <p>{engine.exercise === 'pushup' ? 'Place your phone and get into plank position.' : 'Place your phone beside you and get into your lying position.'}</p>
+          <p>{engine.exercise === 'pushup' ? 'Place your phone and get into plank position.' : 'Place your phone upright and stand in view. Show your hips, knees and ankles.'}</p>
           <div className="calibration-countdown" role="timer" aria-live="polite" aria-atomic="true">{secondsLeft}</div>
           <p className="calibration-status">Follow the position prompts and pause briefly at each one.</p>
         </>
@@ -45,8 +45,8 @@ export function AutoCalibration({ engine, complete, onComplete }: { engine: Pose
         : <>
           <p className="chapter-label">01 / FIND YOUR POSITION</p>
           <h1>{state.usable ? 'Stay right there.' : 'Get into view.'}</h1>
-          <p>{engine.exercise === 'pushup' ? 'Phone on the floor, facing you. Show your head, shoulders and elbows.' : 'Phone upright beside you. Show your head, shoulders, hips and knees.'}</p>
-          <p className="calibration-status" role="status">{state.error ?? (state.usable ? 'Position found. Calibration starts automatically.' : state.phase === 'requesting' ? 'Allow camera access to begin.' : state.phase === 'loading' ? 'Starting local movement tracking…' : `${framing.title}. ${framing.detail}`)}</p>
+          <p>{engine.exercise === 'pushup' ? 'Phone near the floor, slightly to your side. Show your shoulders, elbows, wrists and hips.' : 'Phone upright, slightly diagonal to you. Start standing; show your head, hips, knees and ankles.'}</p>
+          <p className="calibration-status" role="status">{state.error ?? (state.usable ? 'Body found. Next we will check your starting posture.' : state.phase === 'requesting' ? 'Allow camera access to begin.' : state.phase === 'loading' ? 'Starting local movement tracking…' : `${framing.title}. ${framing.detail}`)}</p>
         </>}
       {['idle', 'error', 'suspended'].includes(state.phase) && <Button onClick={() => { void unlockAudio(); void engine.start(); }}>{state.phase === 'error' ? 'RETRY CAMERA' : 'RESUME CALIBRATION'}</Button>}
     </div>

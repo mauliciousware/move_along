@@ -27,11 +27,11 @@ describe('push-up adapter',()=>{
   engine.stop();expect(engine.frame).toBeNull();
  });
 });
-describe('sit-up adapter',()=>{
+describe('squat adapter',()=>{
  const hips={leftHip:{x:.4,y:.7,visibility:.9},rightHip:{x:.6,y:.7,visibility:.9}};
  const base=(t:number):PoseFrame=>({tPerfMs:t,joints:{nose:{x:.5,y:.2,visibility:.9},leftShoulder:{x:.3,y:.5,visibility:.9},rightShoulder:{x:.7,y:.5,visibility:.9},...hips},usable:true,confidence:.9,issue:'none',setupId:'front-1'});
  it('tracks the waist midpoint and rejects frames without both hips',()=>{
-  const engine=new PoseEngine('situp');const camera=engine.camera as unknown as {emit:(f:PoseFrame)=>void};
+  const engine=new PoseEngine('squat');const camera=engine.camera as unknown as {emit:(f:PoseFrame)=>void};
   camera.emit(base(100));
   expect(engine.centerJoint).toBe('waist');
   expect(engine.frame?.waist).toEqual({x:.5,y:.7});
@@ -40,8 +40,8 @@ describe('sit-up adapter',()=>{
   expect(engine.frame?.ok).toBe(false);
   expect(engine.frame?.waist).toEqual({x:.5,y:.2});
  });
- it('normalizes the sit-up signal from the waist',()=>{
-  const engine=new PoseEngine('situp');const camera=engine.camera as unknown as {emit:(f:PoseFrame)=>void};
+ it('normalizes the squat signal from the waist',()=>{
+  const engine=new PoseEngine('squat');const camera=engine.camera as unknown as {emit:(f:PoseFrame)=>void};
   camera.emit(base(100));
   engine.setCalibration({joint:'waist',centerX:.5,centerY:.7,topY:.45,bottomY:.7,scale:.4});
   expect(engine.centerJoint).toBe('waist');
@@ -62,12 +62,15 @@ describe('raw calibration observations',()=>{
   const engine=new PoseEngine();
   (engine.camera as unknown as {emit:(f:PoseFrame)=>void}).emit({tPerfMs:100,
    joints:{nose:{x:.5,y:.4,visibility:.9},leftShoulder:{x:.3,y:.5,visibility:.9},rightShoulder:{x:.7,y:.5,visibility:.9}},
-   rawJoints:{nose:{x:.5,y:.32,visibility:.9},leftShoulder:{x:.3,y:.42,visibility:.9},rightShoulder:{x:.7,y:.42,visibility:.9}},
+   aspectRatio:.75, rawJoints:{leftHip:{x:.4,y:.6,visibility:.9},leftKnee:{x:.4,y:.7,visibility:.9},leftAnkle:{x:.4,y:.9,visibility:.9},nose:{x:.5,y:.32,visibility:.9},leftShoulder:{x:.3,y:.42,visibility:.9},rightShoulder:{x:.7,y:.42,visibility:.9}},
    usable:true,confidence:.9,issue:'none',setupId:'front-1'});
   expect(engine.frame?.nose.y).toBe(.4); expect(engine.frame?.rawNose?.y).toBe(.32);
   expect(engine.frame?.rawShoulderY).toBe(.42);
+  expect(engine.frame?.aspectRatio).toBe(.75);
+  expect(engine.frame?.postureJoints?.leftAnkle?.y).toBe(.9);
+  expect(engine.frame?.postureJoints?.nose?.y).toBe(.32);
  });
  it('rejects a calibration for a different exercise',()=>{
-  expect(()=>new PoseEngine('situp').setCalibration(cal)).toThrow('does not match');
+  expect(()=>new PoseEngine('squat').setCalibration(cal)).toThrow('does not match');
  });
 });

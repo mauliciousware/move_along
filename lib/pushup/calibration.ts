@@ -1,6 +1,7 @@
 import { PUSHUP_CONFIG as CONFIG } from '../shared/config';
 import type { Calibration, PoseFrame } from '../shared/pushup-types';
 import type { ExerciseId } from '../shared/types';
+import { assessPosture, type PostureReference, type PostureReading } from '../calibration/posture';
 import { EvidenceWindow, median, readSample, type Endpoint } from '../calibration/evidence';
 
 export interface CalibrationStep {
@@ -17,15 +18,16 @@ export const CALIBRATION_STEPS: Record<ExerciseId, readonly CalibrationStep[]> =
     { title: 'DOWN', instruction: 'Saved. Move down once more.', kind: 'down', stage: 'verify' },
     { title: 'UP', instruction: 'Saved. Move up one last time.', kind: 'up', stage: 'verify' },
   ],
-  situp: [
-    { title: 'DOWN', instruction: 'Lie back comfortably.', kind: 'down', stage: 'learn' },
-    { title: 'UP', instruction: 'Saved. Now sit up comfortably.', kind: 'up', stage: 'learn' },
-    { title: 'DOWN', instruction: 'Saved. Now lie back.', kind: 'down', stage: 'verify' },
-    { title: 'UP', instruction: 'Saved. Sit up one last time.', kind: 'up', stage: 'verify' },
+  squat: [
+    { title: 'UP', instruction: 'Stand up comfortably.', kind: 'up', stage: 'learn' },
+    { title: 'DOWN', instruction: 'Saved. Now squat down comfortably, then pause.', kind: 'down', stage: 'learn' },
+    { title: 'UP', instruction: 'Saved. Now stand up.', kind: 'up', stage: 'learn' },
+    { title: 'DOWN', instruction: 'Saved. Squat down once more.', kind: 'down', stage: 'verify' },
+    { title: 'UP', instruction: 'Saved. Stand up one last time.', kind: 'up', stage: 'verify' },
   ],
 };
 export type CalibrationState = { step: number; phase: 'measuring' | 'retry' | 'ready'; message: string; revision: number; cue: 'move' | 'hold' };
-export type CalibrationReason = 'observing' | 'missing' | 'stale' | 'unstable' | 'range' | 'repeat' | 'setup' | 'timeout' | 'body-motion' | 'verified';
+export type CalibrationReason = 'posture' | 'observing' | 'missing' | 'stale' | 'unstable' | 'range' | 'repeat' | 'setup' | 'timeout' | 'body-motion' | 'verified';
 const cfg = CONFIG.calibrationV2;
 
 export function validCalibration(value: unknown): value is Calibration {
@@ -40,8 +42,8 @@ export function validCalibration(value: unknown): value is Calibration {
   const p = c.profile;
   // Legacy objects remain usable by existing in-memory callers, but are never restored from storage.
   if (p === undefined) return true;
-  return !!p && typeof p === 'object' && p.schemaVersion === 2 &&
-    p.exercise === (c.joint === 'nose' ? 'pushup' : 'situp') && p.featureId === (c.joint === 'nose' ? 'nose-y' : 'waist-y') &&
+  return !!p && typeof p === 'object' && p.schemaVersion === 3 &&
+    p.exercise === (c.joint === 'nose' ? 'pushup' : 'squat') && p.featureId === (c.joint === 'nose' ? 'nose-y' : 'waist-y') &&
     p.modelVersion === 'mediapipe-lite-1.1.1' && p.verifiedCycles === 2 &&
     Number.isFinite(p.noise) && p.noise >= 0 && p.noise * cfg.noiseMultiplier <= c.bottomY - c.topY &&
     Number.isInteger(p.samples) && p.samples >= cfg.minSamples * CALIBRATION_STEPS[p.exercise].length &&
@@ -50,7 +52,7 @@ export function validCalibration(value: unknown): value is Calibration {
 export function loadCalibration(): Calibration | null {
   try {
     const value: unknown = JSON.parse(sessionStorage.getItem(CONFIG.sessionKeys.calibration) ?? 'null');
-    return validCalibration(value) && value.profile?.schemaVersion === 2 ? value : null;
+    return validCalibration(value) && value.profile?.schemaVersion === 3 ? value : null;
   } catch { return null; }
 }
 export function saveCalibration(value: Calibration) {
@@ -63,8 +65,13 @@ export class CalibrationSession {
   state: CalibrationState;
   result: Calibration | null = null;
   progress = 0;
-  guidance = 'Get into position, then hold briefly.';
+  guidance = 'Get into the starting position. We will check your posture before measuring.';
   reason: CalibrationReason = 'observing';
+  posture: PostureReading | null = null;
+  private postureEndpoints: PostureReference[] = [];
+  private postureEvidence: { t: number; angle: number; torso: number }[] = [];
+  private postureMessage = '';
+  private postureMessageSince = 0;
   readonly diagnostics = { acceptedFrames: 0, rejectedFrames: 0, windowResets: 0, validStepMs: 0, lastFrameAgeMs: 0, noise: 0 };
   private readonly steps: readonly CalibrationStep[];
   private readonly window = new EvidenceWindow();
@@ -90,25 +97,25 @@ export class CalibrationSession {
   private resetWindow() {
     this.pauseCapture();
     if (this.window.count) this.diagnostics.windowResets++;
-    this.window.clear(); this.progress = 0;
+    this.window.clear(); this.postureEvidence = []; this.progress = 0;
   }
   private enter(step: number) {
-    this.captureSince = null;
+    this.captureSince = null; this.posture = null; this.postureMessage = '';
     this.resetWindow(); this.diagnostics.validStepMs = 0;
-    this.reason = 'observing'; this.guidance = 'Get into position, then hold briefly.';
+    this.reason = 'observing'; this.guidance = 'Move to the requested position. We will check before measuring.';
     this.change({ step, phase: 'measuring', cue: 'move', message: this.steps[step].instruction });
   }
   restart(now: number) {
     if (!Number.isFinite(now)) return;
-    this.result = null; this.endpoints = []; this.lastFrame = this.lastSeen = -Infinity; this.missingSince = null;
+    this.result = null; this.endpoints = []; this.postureEndpoints = []; this.lastFrame = this.lastSeen = -Infinity; this.missingSince = null;
     this.enter(0);
   }
   private retry(reason: CalibrationReason, message: string) {
-    this.result = null; this.endpoints = []; this.captureSince = null; this.resetWindow(); this.reason = reason; this.guidance = message;
+    this.result = null; this.endpoints = []; this.postureEndpoints = []; this.captureSince = null; this.resetWindow(); this.reason = reason; this.guidance = message;
     this.change({ step: 0, phase: 'retry', message });
   }
   private reject(reason: CalibrationReason, message: string, now: number) {
-    this.resetWindow(); this.reason = reason; this.guidance = message;
+    this.posture = null; this.resetWindow(); this.reason = reason; this.guidance = message;
     this.missingSince ??= now;
     if (now - this.missingSince >= cfg.lossResetMs) this.retry(reason, 'Tracking was interrupted. Get back into view, then tap Try again.');
   }
@@ -131,10 +138,25 @@ export class CalibrationSession {
     else this.diagnostics.validStepMs += dt;
     this.missingSince = null; this.lastFrame = sample.t; this.diagnostics.acceptedFrames++;
     if (this.diagnostics.validStepMs >= cfg.validTimeoutMs) {
-      this.retry('timeout', this.reason === 'range' || this.reason === 'body-motion'
+      this.retry('timeout', this.reason === 'range' || this.reason === 'body-motion' || this.reason === 'posture'
         ? 'We could not distinguish your movement. Adjust the phone angle, then try again. Do not force a larger movement.'
         : 'This position did not settle. Rest or adjust the phone, then try again.'); return;
     }
+    const target = this.steps[this.state.step].kind;
+    const posture = assessPosture(frame!, this.exercise, target, this.postureEndpoints[0], this.postureEndpoints[1]);
+    this.posture = posture;
+    if (!posture.eligible) {
+      this.resetWindow(); this.reason = 'posture'; this.guidance = posture.message;
+      if (this.postureMessage !== posture.message) { this.postureMessage = posture.message; this.postureMessageSince = sample.t; }
+      if (sample.t - this.postureMessageSince >= CONFIG.posture.feedbackSettleMs && this.state.message !== posture.message) {
+        this.change({ cue: 'move', message: posture.message });
+      }
+      return;
+    }
+    this.postureMessage = '';
+    this.postureEvidence.push({t:sample.t,angle:posture.angle!,torso:posture.torso!});
+    while (this.postureEvidence.length > 1 && this.postureEvidence[0].t < sample.t - cfg.stableMs) this.postureEvidence.shift();
+    if (this.postureEvidence.length > CONFIG.calibration.sampleCapacity) this.postureEvidence.shift();
     this.window.add(sample);
     const estimate = this.window.estimate();
     if (!estimate) return;
@@ -189,6 +211,7 @@ export class CalibrationSession {
     this.progress = Math.min(1, (sample.t - this.captureSince) / cfg.captureHoldMs, this.window.span / cfg.stableMs, this.window.count / cfg.minSamples, this.diagnostics.validStepMs / cfg.settleMs);
     if (this.progress < 1) return;
     this.endpoints.push(endpoint);
+    this.postureEndpoints.push({ angle: median(this.postureEvidence.map(p => p.angle)), hipY: endpoint.y, torso: median(this.postureEvidence.map(p => p.torso)) });
     if (this.state.step < this.steps.length - 1) this.enter(this.state.step + 1);
     else this.finish();
   }
@@ -200,7 +223,7 @@ export class CalibrationSession {
       centerX: median(this.endpoints.map(p => p.x)), centerY: (topY + bottomY) / 2,
       topY, bottomY, scale: median(this.endpoints.map(p => p.scale)),
       scaleTop: median(values('up').map(p => p.scale)), scaleBottom: median(values('down').map(p => p.scale)),
-      profile: { schemaVersion: 2, exercise: this.exercise, featureId: this.exercise === 'pushup' ? 'nose-y' : 'waist-y',
+      profile: { schemaVersion: 3, exercise: this.exercise, featureId: this.exercise === 'pushup' ? 'nose-y' : 'waist-y',
         modelVersion: 'mediapipe-lite-1.1.1', verifiedCycles: 2, noise: Math.max(...this.endpoints.map(p => p.noise)),
         samples: this.endpoints.reduce((sum, p) => sum + p.samples, 0), createdAt: Date.now() },
     };

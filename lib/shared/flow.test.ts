@@ -39,7 +39,7 @@ describe("routine preview navigation", () => {
     const rest = flowReducer(state, { type: "skip" });
     expect(rest.screen).toBe("rest");
     const next = flowReducer(rest, { type: "next" });
-    expect(currentExercise(next)).toBe("situp");
+    expect(currentExercise(next)).toBe("squat");
     expect(next.screen).toBe("learn");
     expect(flowReducer({ ...state, block: 2 }, { type: "skip" }).screen).toBe("results");
   });
@@ -49,19 +49,19 @@ describe("routine preview navigation", () => {
     const next = flowReducer(state, { type: "recalibrate" });
     expect(next.screen).toBe("calibration");
     expect(next.calibrationStep).toBe(0);
-    expect(currentExercise(next)).toBe("situp");
+    expect(currentExercise(next)).toBe("squat");
   });
 });
 
 describe("two-exercise lineup", () => {
-  it("ships exactly push-ups and sit-ups", () => {
-    expect(EXERCISE_IDS).toEqual(["pushup", "situp"]);
-    expect(EXERCISES.situp.name).toBe("Sit-ups");
+  it("ships exactly push-ups and squats", () => {
+    expect(EXERCISE_IDS).toEqual(["pushup", "squat"]);
+    expect(EXERCISES.squat.name).toBe("Squats");
   });
 
-  it("builds rest-free flow maps for sit-ups", () => {
-    const maps = songsFor("situp").map(song => song.map);
+  it("builds rest-free flow maps for squats", () => {
+    const maps = songsFor("squat").map(song => song.map);
     expect(maps.length).toBeGreaterThan(0);
-    expect(maps.every(map => map.mode === "flow" && map.exercise === "situp" && map.rests.length === 0)).toBe(true);
+    expect(maps.every(map => map.mode === "flow" && map.exercise === "squat" && map.rests.length === 0)).toBe(true);
   });
 });

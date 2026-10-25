@@ -7,7 +7,7 @@ import { accuracy } from './scoring';
 import type { ExerciseId } from '../shared/types';
 
 describe('playable Move Along exercise maps',()=>{
- const exercises: ExerciseId[] = ['pushup','situp'];
+ const exercises: ExerciseId[] = ['pushup','squat'];
  for(const song of exercises.flatMap(exercise=>songsFor(exercise))){
   it(`${song.title} passes grammar and safe-work limits`,()=>{expect(validateMap(song.map)).toEqual([]);if(song.map.mode!=='flow')expect(validateWorkLimits(song.map)).toEqual([]);});
   if(song.map.mode==='flow')continue;

@@ -35,7 +35,7 @@ export function Results({ title, stats, onReplay, onDone, feedback, exercise, an
   const values: [string, string | number][] = flow
     ? [
       [repLabel(exercise), stats.reps],
-      [exercise === 'situp' ? 'HOLDS' : 'PLANK HOLDS', `${analysis.holds} / ${analysis.totalHolds}`],
+      [exercise === 'squat' ? 'HOLDS' : 'PLANK HOLDS', `${analysis.holds} / ${analysis.totalHolds}`],
       ['HOLD TIME', `${Math.round(stats.plankTimeMs / 1000)}s`],
       ['SESSION TIME', time(stats.workoutTimeMs)],
     ]

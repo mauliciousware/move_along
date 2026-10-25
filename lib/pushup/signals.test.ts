@@ -18,7 +18,7 @@ describe('tracked centre selection', () => {
     expect(normalizePose(frame, cal).p).toBeCloseTo(0.5);
   });
 
-  it('uses the waist for a sit-up calibration', () => {
+  it('uses the waist for a squat calibration', () => {
     const cal: Calibration = { joint: 'waist', centerX: 0.5, centerY: 0.6, topY: 0.4, bottomY: 0.6, scale: 0.4 };
     expect(normalizePose(frame, cal).p).toBeCloseTo(1);
   });

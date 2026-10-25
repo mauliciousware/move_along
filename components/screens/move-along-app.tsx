@@ -8,7 +8,7 @@ import type { ExerciseId } from '@/lib/shared/types';
 
 const descriptions: Record<ExerciseId, string> = {
   pushup: 'Down. Up. Make the floor your stage.',
-  situp: 'Lie back. Sit up. Meet the beat.',
+  squat: 'Stand tall. Squat down. Meet the beat.',
 };
 
 export function MoveAlongApp() {

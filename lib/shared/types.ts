@@ -1,4 +1,4 @@
-export type ExerciseId = "pushup" | "situp";
+export type ExerciseId = "pushup" | "squat";
 export type RoutineId = "mix" | "single";
 export type Screen = "landing" | "safety" | "routines" | "preview" | "library" | "how" | "learn" | "camera" | "calibration" | "practice" | "countdown" | "gameplay" | "rest" | "results";
 export interface Exercise {
@@ -22,7 +22,7 @@ export interface Routine {
 
 export type PoseJoint = keyof typeof import("./config").CONFIG.pose.jointIndices;
 export interface PosePoint { x: number; y: number; visibility: number }
-export interface RawPoseFrame { tPerfMs: number; joints: Partial<Record<PoseJoint, PosePoint>> }
+export interface RawPoseFrame { aspectRatio?: number; tPerfMs: number; joints: Partial<Record<PoseJoint, PosePoint>> }
 export type FramingIssue = "person" | "head" | "upper" | "legs" | "feet" | "edges" | "none";
 export interface PoseFrame extends RawPoseFrame {
   rawJoints?: RawPoseFrame["joints"];

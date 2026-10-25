@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { SetupGuard } from './setup-guard';
 import type { Calibration, PoseFrame } from '../shared/pushup-types';
 const calibration: Calibration = {joint:'nose',topY:.3,bottomY:.65,centerY:.475,centerX:.5,scale:.4,
-  profile:{schemaVersion:2,exercise:'pushup',featureId:'nose-y',modelVersion:'mediapipe-lite-1.1.1',verifiedCycles:2,noise:0,samples:100,createdAt:1}};
+  profile:{schemaVersion:3,exercise:'pushup',featureId:'nose-y',modelVersion:'mediapipe-lite-1.1.1',verifiedCycles:2,noise:0,samples:100,createdAt:1}};
 const frame=(t:number,x=.5,y=.3):PoseFrame=>({tPerfMs:t,nose:{x,y},waist:{x,y},shoulderWidth:.4,confidence:.9,ok:true});
 describe('setup guard',()=>{
   it('allows vertical exercise travel and never recalibrates from it',()=>{

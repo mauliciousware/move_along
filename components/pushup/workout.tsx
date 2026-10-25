@@ -134,7 +134,7 @@ export default function Workout({ exercise = 'pushup' }: { exercise?: ExerciseId
       {screen === 'ready' && <section className="screen narrow exercise-ready">
         <Link href="/" className="exercise-back">← All movements</Link>
         <h1>{movement.name}.</h1>
-        <p>{exercise === 'pushup' ? 'Two rings: lower to fill DOWN, rise to fill UP. The lit ring shows your next move. The song is background music.' : 'Two rings: lie down to fill DOWN, sit up to fill UP. The lit ring shows your next move. The song is background music.'}</p>
+        <p>{exercise === 'pushup' ? 'Two rings: lower to fill DOWN, rise to fill UP. The lit ring shows your next move. The song is background music.' : 'Two rings: squat down to fill DOWN, stand up to fill UP. The lit ring shows your next move. The song is background music.'}</p>
         <div className="compact-track">
           <label htmlFor="soundtrack">Soundtrack</label>
           <div className="track-picker">

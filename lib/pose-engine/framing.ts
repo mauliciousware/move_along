@@ -7,7 +7,7 @@ export function visible(point: PosePoint | undefined): point is PosePoint {
     point.x >= 0 && point.x <= 1 && point.y >= 0 && point.y <= 1;
 }
 export function requiredJoints(exercise: ExerciseId): readonly PoseJoint[] {
-  return exercise === "pushup" ? CONFIG.pose.pushupJoints : CONFIG.pose.situpJoints;
+  return exercise === "pushup" ? CONFIG.pose.pushupJoints : CONFIG.pose.squatJoints;
 }
 export interface PreviewBounds { videoWidth: number; videoHeight: number; width: number; height: number }
 export function assessFraming(frame: RawPoseFrame, exercise: ExerciseId, preview?: PreviewBounds): { usable: boolean; issue: FramingIssue; confidence: number } {
@@ -21,6 +21,7 @@ export function assessFraming(frame: RawPoseFrame, exercise: ExerciseId, preview
   if (exercise === "pushup") {
     if (!visible(joints.leftElbow) || !visible(joints.rightElbow)) return result("upper");
   } else if (![joints.leftHip, joints.rightHip, joints.leftKnee, joints.rightKnee].every(visible)) return result("legs");
+  if (exercise === "squat" && ![joints.leftAnkle, joints.rightAnkle].every(visible)) return result("feet");
   const margin = CONFIG.tracking.edgeMargin;
   if (required.some(name => {
     const p = joints[name]!;

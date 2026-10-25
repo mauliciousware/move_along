@@ -1,19 +1,19 @@
 import { describe, expect, it, vi, afterEach } from 'vitest';
 import { CALIBRATION_STEPS, CalibrationSession, validCalibration, saveCalibration, loadCalibration } from './calibration';
 import type { PoseFrame } from '../shared/pushup-types';
+import { pushupPose, squatPose } from '../calibration/test-poses';
 import { PUSHUP_CONFIG as CONFIG } from '../shared/config';
 
 function pose(t: number, y: number, overrides: Partial<PoseFrame> = {}): PoseFrame {
-  return { tPerfMs: t, nose: { x: .5, y }, waist: { x: .5, y }, shoulderWidth: .4, confidence: .95, ok: true,
-    joints: { leftShoulder: { x: .3, y: y + .1, visibility: .95 }, rightShoulder: { x: .7, y: y + .1, visibility: .95 } }, ...overrides };
+  return { ...pushupPose(t, y), ...overrides };
 }
-function driver(exercise: 'pushup' | 'situp' = 'pushup', hz = 20) {
+function driver(exercise: 'pushup' | 'squat' = 'pushup', hz = 20) {
   const changed = vi.fn();
   const session = new CalibrationSession(exercise, 0, changed);
   let now = 0;
   function hold(y: number, duration = 3400, overrides: Partial<PoseFrame> = {}) {
     const until = now + duration;
-    while (now < until) { now += 1000 / hz; session.update(pose(now, y, overrides), now); }
+    while (now < until) { now += 1000 / hz; session.update(exercise === 'squat' ? {...squatPose(now,y), ...overrides} : pose(now, y, overrides), now); }
   }
   function missing(duration: number) {
     const until = now + duration;
@@ -37,17 +37,17 @@ describe('learn-and-verify calibration', () => {
     }
     d.hold(.3);
     expect(d.session.state.phase).toBe('ready');
-    expect(d.session.result).toMatchObject({joint:'nose',topY:.3,bottomY:.65,profile:{schemaVersion:2,verifiedCycles:2,featureId:'nose-y'}});
+    expect(d.session.result).toMatchObject({joint:'nose',topY:.3,bottomY:.65,profile:{schemaVersion:3,verifiedCycles:2,featureId:'nose-y'}});
     expect(validCalibration(d.session.result)).toBe(true);
     const count = d.changed.mock.calls.length;
     d.hold(.65); expect(d.changed).toHaveBeenCalledTimes(count);
   });
-  it('verifies both sit-up waist endpoints twice, independent of nose height', () => {
-    const d = driver('situp');
-    expect(CALIBRATION_STEPS.situp.map(s => s.title)).toEqual(['DOWN','UP','DOWN','UP']);
-    for (const y of [.7, .4, .7, .4]) d.hold(.2, 3400, {waist:{x:.5,y}});
+  it('verifies both squat waist endpoints twice, independent of nose height', () => {
+    const d = driver('squat');
+    expect(CALIBRATION_STEPS.squat.map(s => s.title)).toEqual(['UP','DOWN','UP','DOWN','UP']);
+    for (const y of [.4, .7, .4, .7, .4]) d.hold(y, 3400, {nose:{x:.5,y:.2}});
     expect(d.session.state.phase).toBe('ready');
-    expect(d.session.result).toMatchObject({joint:'waist',topY:.4,bottomY:.7,profile:{exercise:'situp',featureId:'waist-y'}});
+    expect(d.session.result).toMatchObject({joint:'waist',topY:.4,bottomY:.7,profile:{exercise:'squat',featureId:'waist-y'}});
   });
   it.each([6,8,15,30])('collects evidence at %i Hz without counting render frames as samples', hz => {
     const d = driver('pushup', hz);
@@ -56,7 +56,7 @@ describe('learn-and-verify calibration', () => {
   });
   it('never accepts an unchanged position as a movement', () => {
     const d = driver(); d.hold(.3, 10000);
-    expect(d.session.state.step).toBe(1); expect(d.session.result).toBeNull(); expect(d.session.reason).toBe('range');
+    expect(d.session.state.step).toBe(1); expect(d.session.result).toBeNull(); expect(d.session.reason).toBe('posture');
   });
   it('rejects head-only motion without shoulder travel', () => {
     const d = driver(); d.hold(.3);
@@ -65,7 +65,7 @@ describe('learn-and-verify calibration', () => {
     d.hold(.65); expect(d.session.state.step).toBe(2);
   });
   it('keeps the current step when repeated endpoints disagree', () => {
-    const d = driver(); d.hold(.3); d.hold(.65); d.hold(.48);
+    const d = driver(); d.hold(.3); d.hold(.65); d.hold(.48, 3400, {postureJoints:pushupPose(0,.3).postureJoints});
     expect(d.session.state.step).toBe(2); expect(d.session.reason).toBe('repeat');
     d.hold(.3); expect(d.session.state.step).toBe(3);
   });
@@ -156,7 +156,7 @@ describe('versioned derived calibration storage', () => {
     const store=new Map<string,string>();
     vi.stubGlobal('sessionStorage',{getItem:(k:string)=>store.get(k)??null,setItem:(k:string,v:string)=>store.set(k,v)});
     const valid=verified(); saveCalibration(valid); expect(loadCalibration()).toEqual(valid);
-    for (const change of [{schemaVersion:3},{verifiedCycles:1},{exercise:'situp'},{featureId:'waist-y'},{noise:1},{samples:0},{modelVersion:'unknown'}]) {
+    for (const change of [{schemaVersion:4},{schemaVersion:2},{verifiedCycles:1},{exercise:'squat'},{featureId:'waist-y'},{noise:1},{samples:0},{modelVersion:'unknown'}]) {
       expect(validCalibration({...valid,profile:{...valid.profile,...change}})).toBe(false);
     }
     expect(validCalibration({...valid,scale:.001})).toBe(false);

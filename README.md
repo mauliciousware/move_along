@@ -2,7 +2,7 @@
 
 Learn a movement, make it yours, and play it to the beat.
 
-A camera-controlled movement game: choose Push-ups or Sit-ups, tap
+A camera-controlled movement game: choose Push-ups or Squats, tap
 Play, follow automatic calibration, then play and see results. The interface uses the owner-selected [8bitcn/ui](https://www.8bitcn.com)
 components, original pixel movement artwork and self-hosted fonts.
 

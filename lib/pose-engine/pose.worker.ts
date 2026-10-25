@@ -32,7 +32,7 @@ scope.onmessage = async (event: MessageEvent<WorkerRequest>) => {
       const started = performance.now();
       const result = await detector.detect(request.bitmap, request.tPerfMs);
       try {
-        send({ type: "frame", frame: readLandmarks(result.landmarks[0] ?? [], request.tPerfMs), requestId: request.requestId, inferenceMs: performance.now() - started, delegate: detector.delegate });
+        send({ type: "frame", frame: { ...readLandmarks(result.landmarks[0] ?? [], request.tPerfMs), aspectRatio: request.bitmap.width / request.bitmap.height }, requestId: request.requestId, inferenceMs: performance.now() - started, delegate: detector.delegate });
       } finally { result.close(); }
     }
   } catch (error) {

@@ -8,6 +8,9 @@ export interface InputEvent { type: InputType; tPerfMs: number }
 export type TrackedJoint = 'nose' | 'waist';
 export interface PoseFrame {
   tPerfMs: number;
+  /** Full raw landmarks for posture checks; never stored camera frames. */
+  postureJoints?: import('./types').RawPoseFrame['joints'];
+  aspectRatio?: number;
   nose: { x: number; y: number };
   /** Midpoint of the left and right hips; equals the nose when hips are hidden. */
   waist: { x: number; y: number };
@@ -30,7 +33,7 @@ export interface Calibration {
   scale: number;
   scaleTop?: number; scaleBottom?: number;
   profile?: {
-    schemaVersion: 2;
+    schemaVersion: 3;
     exercise: import('./types').ExerciseId;
     featureId: 'nose-y' | 'waist-y';
     modelVersion: 'mediapipe-lite-1.1.1';

@@ -40,7 +40,7 @@ export class PoseEngine {
       const rawNose = raw?.nose;
       const rawWaist = raw?.leftHip && raw.rightHip ? { x: (raw.leftHip.x + raw.rightHip.x) / 2, y: (raw.leftHip.y + raw.rightHip.y) / 2 } : undefined;
       const rawShoulderY = raw?.leftShoulder && raw.rightShoulder ? (raw.leftShoulder.y + raw.rightShoulder.y) / 2 : undefined;
-      const current: PoseFrame = { tPerfMs: frame.tPerfMs, nose: nose ?? {x:0,y:0}, waist, shoulderWidth, confidence: frame.confidence, rawNose, rawWaist, rawShoulderY,
+      const current: PoseFrame = { postureJoints: raw ?? frame.joints, aspectRatio: frame.aspectRatio, tPerfMs: frame.tPerfMs, nose: nose ?? {x:0,y:0}, waist, shoulderWidth, confidence: frame.confidence, rawNose, rawWaist, rawShoulderY,
         ok: frame.usable && shoulderWidth >= CONFIG.pose.minShoulderWidth && (this.centerJoint === 'nose' || hipsVisible),
         joints: { face:nose, leftShoulder, rightShoulder, leftElbow, rightElbow, leftWrist, rightWrist } };
       this.current = current;

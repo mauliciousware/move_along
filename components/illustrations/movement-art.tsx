@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils";
 /** Original geometric character artwork; illustrative, never pose measurements. */
 export function MovementArt({ exercise = "pushup", className, decorative = false }: { exercise?: ExerciseId; className?: string; decorative?: boolean }) {
   const push = exercise === "pushup";
-  return <svg viewBox="0 0 240 200" className={cn("movement-art", className)} role={decorative ? undefined : "img"} aria-hidden={decorative || undefined} aria-label={decorative ? undefined : `${push ? "Push-up" : "Sit-up"} movement illustration`} shapeRendering="crispEdges">
+  return <svg viewBox="0 0 240 200" className={cn("movement-art", className)} role={decorative ? undefined : "img"} aria-hidden={decorative || undefined} aria-label={decorative ? undefined : `${push ? "Push-up" : "Squat"} movement illustration`} shapeRendering="crispEdges">
     <ellipse cx="120" cy="177" rx="72" ry="7" fill="currentColor" opacity=".10" />
     <g stroke="var(--foreground)" strokeWidth="5" strokeLinejoin="miter">
       {push ? <>
@@ -14,15 +14,15 @@ export function MovementArt({ exercise = "pushup", className, decorative = false
         <path d="M57 87H87V119H57Z" fill="var(--art-skin)" />
         <path d="M52 84H89V98H66V107H52Z" fill="var(--foreground)" />
       </> : <>
-        <path d="M82 100 112 122 136 150 120 164 94 138 62 118Z" fill="var(--primary)" />
-        <path d="M118 144 168 128 180 150 152 162 132 168Z" fill="var(--art-pants)" />
-        <path d="M172 132 190 164 206 164 206 177 168 177 158 148Z" fill="var(--art-pants)" />
-        <path d="M108 110 138 128 130 140 100 120Z" fill="var(--art-skin)" />
-        <path d="M56 70H92V102H56Z" fill="var(--art-skin)" />
-        <path d="M50 66H98V80H72V90H50Z" fill="var(--foreground)" />
+        <path d="M107 72 133 82 115 124 94 121Z" fill="var(--primary)" />
+        <path d="M98 115 151 124 160 141 126 148 95 134Z" fill="var(--art-pants)" />
+        <path d="M143 131 160 164 182 164 182 177 143 177 125 143Z" fill="var(--art-pants)" />
+        <path d="M119 82 166 96 185 96 185 109 161 109 111 98Z" fill="var(--art-skin)" />
+        <path d="M110 39H142V73H110Z" fill="var(--art-skin)" />
+        <path d="M105 35H146V49H122V58H105Z" fill="var(--foreground)" />
       </>}
     </g>
-    <rect x="78" y={push ? 100 : 88} width="4" height="5" fill="var(--foreground)" />
+    <rect x={push ? 78 : 134} y={push ? 100 : 55} width="4" height="5" fill="var(--foreground)" />
     <path d="M29 151V161H19M205 47V57H215" fill="none" stroke="var(--foreground)" strokeWidth="4" opacity=".35" />
   </svg>;
 }
