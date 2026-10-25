@@ -9,7 +9,8 @@ export function visible(point: PosePoint | undefined): point is PosePoint {
 export function requiredJoints(exercise: ExerciseId): readonly PoseJoint[] {
   return exercise === "pushup" ? CONFIG.pose.pushupJoints : CONFIG.pose.situpJoints;
 }
-export function assessFraming(frame: RawPoseFrame, exercise: ExerciseId): { usable: boolean; issue: FramingIssue; confidence: number } {
+export interface PreviewBounds { videoWidth: number; videoHeight: number; width: number; height: number }
+export function assessFraming(frame: RawPoseFrame, exercise: ExerciseId, preview?: PreviewBounds): { usable: boolean; issue: FramingIssue; confidence: number } {
   const { joints } = frame;
   const required = requiredJoints(exercise);
   const confidence = Math.min(...required.map(name => visible(joints[name]) ? joints[name]!.visibility : 0));
@@ -25,6 +26,12 @@ export function assessFraming(frame: RawPoseFrame, exercise: ExerciseId): { usab
     const p = joints[name]!;
     return p.x < margin || p.x > 1 - margin || p.y < margin || p.y > 1 - margin;
   })) return result("edges");
+  if (preview && preview.videoWidth > 0 && preview.videoHeight > 0 && preview.width > 0 && preview.height > 0 && required.some(name => {
+    const p = joints[name]!;
+    const projected = projectPoint(p.x, p.y, preview.videoWidth, preview.videoHeight, preview.width, preview.height, false, 'cover');
+    return projected.x < margin * preview.width || projected.x > (1 - margin) * preview.width ||
+      projected.y < margin * preview.height || projected.y > (1 - margin) * preview.height;
+  })) return result('edges');
   return result("none");
 }
 

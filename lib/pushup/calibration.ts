@@ -1,145 +1,211 @@
 import { PUSHUP_CONFIG as CONFIG } from '../shared/config';
 import type { Calibration, PoseFrame } from '../shared/pushup-types';
 import type { ExerciseId } from '../shared/types';
+import { EvidenceWindow, median, readSample, type Endpoint } from '../calibration/evidence';
 
-export type CalibrationStepKind = 'baseline' | 'up' | 'down';
 export interface CalibrationStep {
-  title: string;
+  title: 'UP' | 'DOWN';
   instruction: string;
-  kind: CalibrationStepKind;
+  kind: 'up' | 'down';
+  stage: 'learn' | 'verify';
 }
-
 export const CALIBRATION_STEPS: Record<ExerciseId, readonly CalibrationStep[]> = {
   pushup: [
-    { title: 'MIDDLE', instruction: 'Start halfway down in a comfortable push-up. Hold still.', kind: 'baseline' },
-    { title: 'UP', instruction: 'Push up to your comfortable top position and hold.', kind: 'up' },
-    { title: 'DOWN', instruction: 'Lower to your comfortable bottom position and hold.', kind: 'down' },
+    { title: 'UP', instruction: 'Move up into your plank position.', kind: 'up', stage: 'learn' },
+    { title: 'DOWN', instruction: 'Saved. Now move down comfortably.', kind: 'down', stage: 'learn' },
+    { title: 'UP', instruction: 'Saved. Now move up.', kind: 'up', stage: 'learn' },
+    { title: 'DOWN', instruction: 'Saved. Move down once more.', kind: 'down', stage: 'verify' },
+    { title: 'UP', instruction: 'Saved. Move up one last time.', kind: 'up', stage: 'verify' },
   ],
   situp: [
-    { title: 'DOWN', instruction: 'Lie back in a comfortable sit-up position. Hold still.', kind: 'baseline' },
-    { title: 'UP', instruction: 'Sit up to your comfortable top position and hold.', kind: 'up' },
+    { title: 'DOWN', instruction: 'Lie back comfortably.', kind: 'down', stage: 'learn' },
+    { title: 'UP', instruction: 'Saved. Now sit up comfortably.', kind: 'up', stage: 'learn' },
+    { title: 'DOWN', instruction: 'Saved. Now lie back.', kind: 'down', stage: 'verify' },
+    { title: 'UP', instruction: 'Saved. Sit up one last time.', kind: 'up', stage: 'verify' },
   ],
 };
-export type CalibrationState = { step: number; phase: 'measuring' | 'retry' | 'ready'; message: string; revision: number };
+export type CalibrationState = { step: number; phase: 'measuring' | 'retry' | 'ready'; message: string; revision: number; cue: 'move' | 'hold' };
+export type CalibrationReason = 'observing' | 'missing' | 'stale' | 'unstable' | 'range' | 'repeat' | 'setup' | 'timeout' | 'body-motion' | 'verified';
+const cfg = CONFIG.calibrationV2;
 
 export function validCalibration(value: unknown): value is Calibration {
   if (!value || typeof value !== 'object') return false;
   const c = value as Calibration;
   if (c.joint !== 'nose' && c.joint !== 'waist') return false;
   const coordinates = [c.centerY, c.topY, c.bottomY, c.centerX];
-  return coordinates.every(n => typeof n === 'number' && Number.isFinite(n) && n >= 0 && n <= 1) &&
-    Number.isFinite(c.scale) && c.scale >= CONFIG.pose.minShoulderWidth && c.scale <= Math.SQRT2 &&
-    c.topY <= c.centerY && c.centerY <= c.bottomY &&
-    c.bottomY - c.topY >= CONFIG.calibration.minVerticalRange * c.scale;
+  if (!coordinates.every(n => typeof n === 'number' && Number.isFinite(n) && n >= 0 && n <= 1) ||
+    !Number.isFinite(c.scale) || c.scale < cfg.minScale || c.scale > Math.SQRT2 ||
+    c.topY > c.centerY || c.centerY > c.bottomY ||
+    c.bottomY - c.topY < Math.max(cfg.minRange, cfg.rangeScale * c.scale)) return false;
+  const p = c.profile;
+  // Legacy objects remain usable by existing in-memory callers, but are never restored from storage.
+  if (p === undefined) return true;
+  return !!p && typeof p === 'object' && p.schemaVersion === 2 &&
+    p.exercise === (c.joint === 'nose' ? 'pushup' : 'situp') && p.featureId === (c.joint === 'nose' ? 'nose-y' : 'waist-y') &&
+    p.modelVersion === 'mediapipe-lite-1.1.1' && p.verifiedCycles === 2 &&
+    Number.isFinite(p.noise) && p.noise >= 0 && p.noise * cfg.noiseMultiplier <= c.bottomY - c.topY &&
+    Number.isInteger(p.samples) && p.samples >= cfg.minSamples * CALIBRATION_STEPS[p.exercise].length &&
+    Number.isFinite(p.createdAt) && p.createdAt > 0;
 }
 export function loadCalibration(): Calibration | null {
-  try { const value: unknown = JSON.parse(sessionStorage.getItem(CONFIG.sessionKeys.calibration) ?? 'null'); return validCalibration(value) ? value : null; } catch { return null; }
+  try {
+    const value: unknown = JSON.parse(sessionStorage.getItem(CONFIG.sessionKeys.calibration) ?? 'null');
+    return validCalibration(value) && value.profile?.schemaVersion === 2 ? value : null;
+  } catch { return null; }
 }
 export function saveCalibration(value: Calibration) {
   if (!validCalibration(value)) throw new Error('Invalid calibration');
-  try { sessionStorage.setItem(CONFIG.sessionKeys.calibration, JSON.stringify(value)); } catch { /* Memory still works when storage is unavailable. */ }
+  try { sessionStorage.setItem(CONFIG.sessionKeys.calibration, JSON.stringify(value)); } catch { /* Memory still works without storage. */ }
 }
-function median(values: number[]) { values.sort((a,b) => a-b); const mid = Math.floor(values.length / 2); return values.length % 2 ? values[mid] : (values[mid-1] + values[mid]) / 2; }
 
-const RETRY_MESSAGE: Record<ExerciseId, string> = {
-  pushup: 'Try again, or hold your middle push-up position for 3 seconds.',
-  situp: 'Try again, or hold your lying position for 3 seconds.',
-};
-const RANGE_MESSAGE: Record<ExerciseId, string> = {
-  pushup: 'The camera could not distinguish that range. Adjust its placement and try again, or stop.',
-  situp: 'We could not see enough waist travel. Move the phone so your waist stays in view, then try the sit-up again.',
-};
-
-/** Pure hands-free state machine. Only step/timeout/validation events notify UI. */
+/** Pure calibration protocol. Only transitions notify React; frames stay transient. */
 export class CalibrationSession {
   state: CalibrationState;
   result: Calibration | null = null;
   progress = 0;
-  guidance = 'Hold steady while we measure.';
+  guidance = 'Get into position, then hold briefly.';
+  reason: CalibrationReason = 'observing';
+  readonly diagnostics = { acceptedFrames: 0, rejectedFrames: 0, windowResets: 0, validStepMs: 0, lastFrameAgeMs: 0, noise: 0 };
   private readonly steps: readonly CalibrationStep[];
-  private samples: {t:number;x:number;y:number;sw:number}[] = [];
-  private enteredAt: number;
-  private timeoutAt: number;
-  private timeoutCount = 0;
-  private retryAt: number | null = null;
+  private readonly window = new EvidenceWindow();
+  private endpoints: Endpoint[] = [];
   private lastFrame = -Infinity;
-  private neutral: { x:number;y:number;sw:number } | null = null;
-  private top = 0;
-  constructor(readonly exercise: ExerciseId, now: number, private readonly onChange: (state: CalibrationState) => void) {
+  private lastSeen = -Infinity;
+  private missingSince: number | null = null;
+  private captureSince: number | null = null;
+  constructor(readonly exercise: ExerciseId, _now: number, private readonly onChange: (state: CalibrationState) => void) {
     this.steps = CALIBRATION_STEPS[exercise];
-    this.enteredAt = this.timeoutAt = now;
-    this.state = { step: 0, phase: 'measuring', message: this.steps[0].instruction, revision: 0 };
+    this.state = { step: 0, phase: 'measuring', message: this.steps[0].instruction, revision: 0, cue: 'move' };
   }
   private change(update: Partial<CalibrationState>) {
-    this.state = {...this.state, ...update, revision: this.state.revision + 1}; this.onChange(this.state);
+    this.state = { ...this.state, ...update, revision: this.state.revision + 1 };
+    this.onChange(this.state);
   }
-  private enter(step: number, now: number, message: string = this.steps[step].instruction) {
-    this.guidance = 'Get into position, then hold steady.';
-    this.samples.length = 0; this.progress = 0; this.enteredAt = this.timeoutAt = now; this.timeoutCount = 0; this.retryAt = null;
-    this.change({ step, phase: 'measuring', message });
+  private pauseCapture() {
+    this.progress = 0;
+    if (this.captureSince === null) return;
+    this.captureSince = null;
+    this.change({ cue: 'move', message: 'Pause in this position. We need a steady measurement.' });
   }
-  restart(now: number) { this.neutral = null; this.top = 0; this.result = null; this.lastFrame = -Infinity; this.enter(0, now); }
+  private resetWindow() {
+    this.pauseCapture();
+    if (this.window.count) this.diagnostics.windowResets++;
+    this.window.clear(); this.progress = 0;
+  }
+  private enter(step: number) {
+    this.captureSince = null;
+    this.resetWindow(); this.diagnostics.validStepMs = 0;
+    this.reason = 'observing'; this.guidance = 'Get into position, then hold briefly.';
+    this.change({ step, phase: 'measuring', cue: 'move', message: this.steps[step].instruction });
+  }
+  restart(now: number) {
+    if (!Number.isFinite(now)) return;
+    this.result = null; this.endpoints = []; this.lastFrame = this.lastSeen = -Infinity; this.missingSince = null;
+    this.enter(0);
+  }
+  private retry(reason: CalibrationReason, message: string) {
+    this.result = null; this.endpoints = []; this.captureSince = null; this.resetWindow(); this.reason = reason; this.guidance = message;
+    this.change({ step: 0, phase: 'retry', message });
+  }
+  private reject(reason: CalibrationReason, message: string, now: number) {
+    this.resetWindow(); this.reason = reason; this.guidance = message;
+    this.missingSince ??= now;
+    if (now - this.missingSince >= cfg.lossResetMs) this.retry(reason, 'Tracking was interrupted. Get back into view, then tap Try again.');
+  }
   update(frame: PoseFrame | null, now: number) {
-    if (this.state.phase === 'ready') return;
-    const cfg = CONFIG.calibration;
-    if (this.state.phase === 'measuring' && now - this.timeoutAt >= cfg.timeoutMs) {
-      this.timeoutAt = now; this.timeoutCount++;
-      this.samples.length = 0; this.progress = 0;
-      if (this.timeoutCount >= cfg.maxTimeouts) { this.neutral = null; this.top = 0; }
-      this.change({ phase: this.timeoutCount >= cfg.maxTimeouts ? 'retry' : 'measuring', message: this.timeoutCount >= cfg.maxTimeouts ? RETRY_MESSAGE[this.exercise] : this.steps[this.state.step].instruction });
-    }
-    if (!frame?.ok || now - frame.tPerfMs > CONFIG.camera.staleMs) { this.guidance = 'Keep the required body points in view.'; this.samples.length = 0; this.progress = 0; this.retryAt = null; return; }
-    if (frame.tPerfMs <= this.lastFrame) return;
-    if (frame.tPerfMs - this.lastFrame > CONFIG.camera.staleMs) { this.samples.length = 0; this.retryAt = null; }
-    this.lastFrame = frame.tPerfMs;
-    const point = this.exercise === 'situp' ? frame.waist : frame.nose;
-    this.samples.push({ t: frame.tPerfMs, x: point.x, y: point.y, sw: frame.shoulderWidth });
-    while (this.samples.length > 1 && this.samples[1].t <= frame.tPerfMs - cfg.stableMs) this.samples.shift();
-    if (this.samples.length > cfg.sampleCapacity) this.samples.shift();
-    const n = this.samples.length;
-    const meanX = this.samples.reduce((s,p) => s+p.x, 0)/n, meanY = this.samples.reduce((s,p) => s+p.y, 0)/n;
-    const stdX = Math.sqrt(this.samples.reduce((s,p) => s+(p.x-meanX)**2, 0)/n);
-    const stdY = Math.sqrt(this.samples.reduce((s,p) => s+(p.y-meanY)**2, 0)/n);
-    const quiet = stdX < cfg.stableStd && stdY < cfg.stableStd;
-    const span = frame.tPerfMs - this.samples[0].t;
-    if (!quiet) { this.guidance = 'Hold this position a little steadier.'; this.progress = 0; this.retryAt = null; return; }
-    if (this.state.phase === 'retry') {
-      const atBaseline = !this.neutral || Math.abs(meanY - this.neutral.y) <= cfg.retryTolerance * this.neutral.sw;
-      if (!atBaseline) { this.retryAt = null; return; }
-      this.retryAt ??= frame.tPerfMs;
-      this.progress = Math.min(1, (frame.tPerfMs - this.retryAt) / cfg.retryPlankMs);
-      if (this.progress >= 1) this.restart(now);
+    if (this.state.phase !== 'measuring' || !Number.isFinite(now)) return;
+    this.diagnostics.lastFrameAgeMs = frame ? now - frame.tPerfMs : Infinity;
+    const sample = frame?.ok ? readSample(frame, this.exercise) : null;
+    if (!sample || sample.t > now || now - sample.t > CONFIG.camera.staleMs) {
+      if (frame && frame.tPerfMs !== this.lastSeen) { this.diagnostics.rejectedFrames++; this.lastSeen = frame.tPerfMs; }
+      this.reject(sample ? 'stale' : 'missing', sample ? 'Tracking is delayed. Keep your position while it catches up.' : 'Keep the required body points in view.', now);
       return;
     }
-    const kind = this.steps[this.state.step].kind;
-    let appropriate = true;
-    // The baseline is the middle for push-ups and the lying position for sit-ups.
-    if (kind === 'up' && this.neutral) appropriate = meanY <= this.neutral.y - cfg.minUpLift * this.neutral.sw;
-    if (kind === 'down' && this.neutral) appropriate = meanY >= this.neutral.y + cfg.minDownDrop * this.neutral.sw;
-    this.progress = appropriate ? Math.min(1, span / cfg.stableMs, n / cfg.minSamples, (now - this.enteredAt) / cfg.stepSettleMs) : 0;
-    this.guidance = !appropriate ? (kind === 'up' ? 'Move up from your starting position, then hold.' : 'Move down past your starting position, then hold.') : this.progress < 1 ? 'Position found. Hold steady…' : 'Position captured.';
-    if (!appropriate || span < cfg.stableMs || n < cfg.minSamples || now - this.enteredAt < cfg.stepSettleMs) return;
-    const y = median(this.samples.map(p => p.y));
-    if (kind === 'baseline') {
-      this.neutral = { x: median(this.samples.map(p=>p.x)), y, sw: median(this.samples.map(p=>p.sw)) };
-      this.enter(this.state.step + 1, now);
-    } else if (kind === 'up') {
-      if (!this.neutral) return;
-      this.top = Math.min(this.neutral.y, y);
-      if (this.state.step + 1 < this.steps.length) this.enter(this.state.step + 1, now);
-      else this.finish(now);
-    } else {
-      this.finish(now, y);
+    if (sample.t <= this.lastFrame) return;
+    this.lastSeen = sample.t;
+    const dt = sample.t - this.lastFrame;
+    if (this.missingSince !== null && now - this.missingSince >= cfg.lossResetMs) {
+      this.retry('missing', 'Tracking was interrupted. Get back into view, then tap Try again.'); return;
     }
+    if (dt > CONFIG.camera.staleMs || this.missingSince !== null) this.resetWindow();
+    else this.diagnostics.validStepMs += dt;
+    this.missingSince = null; this.lastFrame = sample.t; this.diagnostics.acceptedFrames++;
+    if (this.diagnostics.validStepMs >= cfg.validTimeoutMs) {
+      this.retry('timeout', this.reason === 'range' || this.reason === 'body-motion'
+        ? 'We could not distinguish your movement. Adjust the phone angle, then try again. Do not force a larger movement.'
+        : 'This position did not settle. Rest or adjust the phone, then try again.'); return;
+    }
+    this.window.add(sample);
+    const estimate = this.window.estimate();
+    if (!estimate) return;
+    const { endpoint, stable } = estimate;
+    this.diagnostics.noise = endpoint.noise;
+    if (!stable) { this.reason = 'unstable'; this.guidance = 'Pause briefly at this position so we can measure it.'; this.pauseCapture(); return; }
+    const baseline = this.endpoints[0];
+    if (baseline && (Math.abs(endpoint.x - baseline.x) > Math.max(cfg.minSetupShift, cfg.setupShiftScale * baseline.scale) ||
+      endpoint.scale / baseline.scale > cfg.maxScaleRatio || baseline.scale / endpoint.scale > cfg.maxScaleRatio)) {
+      // Wait for a full stable window before discarding completed checkpoints.
+      this.reason = 'setup'; this.guidance = 'Your position or camera distance changed. Hold still to recheck.';
+      this.pauseCapture();
+      if (this.window.span >= cfg.stableMs && this.window.count >= cfg.minSamples) this.retry('setup', 'Your position or camera distance changed. Place the phone again and tap Try again.');
+      return;
+    }
+    const step = this.steps[this.state.step];
+    const previous = this.endpoints.at(-1);
+    if (previous) {
+      const travel = (endpoint.y - previous.y) * (step.kind === 'down' ? 1 : -1);
+      const required = Math.max(cfg.minRange, cfg.rangeScale * baseline.scale, cfg.noiseMultiplier * Math.max(previous.noise, endpoint.noise));
+      if (travel < required) {
+        this.reason = 'range'; this.guidance = step.kind === 'up' ? 'Move to your comfortable top position, then pause.' : 'Move to your comfortable lower position, then pause.';
+        this.pauseCapture(); return;
+      }
+      if (this.exercise === 'pushup' && (endpoint.shoulderY - previous.shoulderY) * (step.kind === 'down' ? 1 : -1) < Math.max(cfg.minShoulderTravel, baseline.scale * cfg.shoulderTravelScale)) {
+        this.reason = 'body-motion'; this.guidance = 'Keep your shoulders visible as your body moves; head movement alone is not enough.';
+        this.pauseCapture(); return;
+      }
+      const referenceIndex = this.steps.findIndex((s, i) => i < this.state.step && s.kind === step.kind);
+      if (referenceIndex >= 0) {
+        const reference = this.endpoints[referenceIndex];
+        const learnedRange = Math.abs(this.endpoints[1].y - baseline.y);
+        const tolerance = Math.max(learnedRange * cfg.repeatTolerance, cfg.repeatNoiseMultiplier * Math.max(reference.noise, endpoint.noise));
+        if (Math.abs(endpoint.y - reference.y) > tolerance) {
+          this.reason = 'repeat'; this.guidance = 'Return to the same comfortable position as before, or restart setup.';
+          this.pauseCapture(); return;
+        }
+      }
+    }
+    this.reason = 'observing';
+    // Give the movement instruction time to land, then announce a distinct hold.
+    // Only fresh, eligible observations advance this hold; interruptions reset it.
+    if (this.diagnostics.validStepMs < cfg.cueLeadMs) {
+      this.guidance = 'Get into position. We will tell you when to hold.';
+      return;
+    }
+    if (this.captureSince === null) {
+      this.captureSince = sample.t;
+      this.change({ cue: 'hold', message: 'Stay there. Hold still while we measure.' });
+    }
+    this.guidance = 'Measuring your position… Keep holding.';
+    this.progress = Math.min(1, (sample.t - this.captureSince) / cfg.captureHoldMs, this.window.span / cfg.stableMs, this.window.count / cfg.minSamples, this.diagnostics.validStepMs / cfg.settleMs);
+    if (this.progress < 1) return;
+    this.endpoints.push(endpoint);
+    if (this.state.step < this.steps.length - 1) this.enter(this.state.step + 1);
+    else this.finish();
   }
-  private finish(now: number, bottom = this.neutral?.y ?? 0) {
-    if (!this.neutral) return;
+  private finish() {
+    const values = (kind: 'up' | 'down') => this.endpoints.filter((_, i) => this.steps[i].kind === kind);
+    const topY = median(values('up').map(p => p.y)), bottomY = median(values('down').map(p => p.y));
     const result: Calibration = {
       joint: this.exercise === 'pushup' ? 'nose' : 'waist',
-      centerX: this.neutral.x, centerY: this.neutral.y, scale: this.neutral.sw,
-      topY: this.top, bottomY: this.exercise === 'situp' ? this.neutral.y : bottom,
+      centerX: median(this.endpoints.map(p => p.x)), centerY: (topY + bottomY) / 2,
+      topY, bottomY, scale: median(this.endpoints.map(p => p.scale)),
+      scaleTop: median(values('up').map(p => p.scale)), scaleBottom: median(values('down').map(p => p.scale)),
+      profile: { schemaVersion: 2, exercise: this.exercise, featureId: this.exercise === 'pushup' ? 'nose-y' : 'waist-y',
+        modelVersion: 'mediapipe-lite-1.1.1', verifiedCycles: 2, noise: Math.max(...this.endpoints.map(p => p.noise)),
+        samples: this.endpoints.reduce((sum, p) => sum + p.samples, 0), createdAt: Date.now() },
     };
-    if (!validCalibration(result)) { this.enter(1, now, RANGE_MESSAGE[this.exercise]); return; }
-    this.result = result; this.progress = 1; this.change({phase: 'ready', message: 'Tracking ready · Try your movement'});
+    if (!validCalibration(result)) { this.retry('range', 'The movement range was not clear enough. Adjust the phone angle and try again.'); return; }
+    this.result = result; this.progress = 1; this.reason = 'verified'; this.guidance = 'Two movement sequences verified.';
+    this.change({ phase: 'ready', message: 'Saved. Calibration complete. Get ready to play.' });
   }
 }

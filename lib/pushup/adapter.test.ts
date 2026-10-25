@@ -55,3 +55,19 @@ describe('sit-up adapter',()=>{
   expect(engine.signal().p).toBeCloseTo(1);
  });
 });
+
+
+describe('raw calibration observations',()=>{
+ it('keeps unfiltered points separate from the displayed signal',()=>{
+  const engine=new PoseEngine();
+  (engine.camera as unknown as {emit:(f:PoseFrame)=>void}).emit({tPerfMs:100,
+   joints:{nose:{x:.5,y:.4,visibility:.9},leftShoulder:{x:.3,y:.5,visibility:.9},rightShoulder:{x:.7,y:.5,visibility:.9}},
+   rawJoints:{nose:{x:.5,y:.32,visibility:.9},leftShoulder:{x:.3,y:.42,visibility:.9},rightShoulder:{x:.7,y:.42,visibility:.9}},
+   usable:true,confidence:.9,issue:'none',setupId:'front-1'});
+  expect(engine.frame?.nose.y).toBe(.4); expect(engine.frame?.rawNose?.y).toBe(.32);
+  expect(engine.frame?.rawShoulderY).toBe(.42);
+ });
+ it('rejects a calibration for a different exercise',()=>{
+  expect(()=>new PoseEngine('situp').setCalibration(cal)).toThrow('does not match');
+ });
+});

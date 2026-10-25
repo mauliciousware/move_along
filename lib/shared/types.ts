@@ -25,6 +25,7 @@ export interface PosePoint { x: number; y: number; visibility: number }
 export interface RawPoseFrame { tPerfMs: number; joints: Partial<Record<PoseJoint, PosePoint>> }
 export type FramingIssue = "person" | "head" | "upper" | "legs" | "feet" | "edges" | "none";
 export interface PoseFrame extends RawPoseFrame {
+  rawJoints?: RawPoseFrame["joints"];
   usable: boolean;
   issue: FramingIssue;
   confidence: number;

@@ -537,3 +537,18 @@ Verification:
 - Keyboard demo: five down/up pairs showed five reps and the celebration; pause and end-workout paths passed. Calibration and celebration screenshots inspected using synthetic input only.
 - No dependencies added. Physical iPhone Safari framing, tracking reliability, orientation, and calibration remain device QA items.
 - Final validation: typecheck, lint, 187 tests, audio asset check, production build and diff whitespace check passed.
+
+
+## Three-second preparation — 2026-10-25
+
+- Added a visible 3 → 2 → 1 countdown once the camera/model is running, before collecting calibration samples. Push-ups prompt phone placement and plank position; sit-ups prompt the lying position.
+- Countdown is independent of framing fluctuations. Existing valid-tracking checks still gate measurement; no positions or successful calibration are fabricated.
+- No camera access or live-camera testing by the agent for this change, per owner instruction.
+
+## Spoken calibration coaching — 2026-10-25
+
+- Added distinct movement and hold cues to the v2 learn-and-verify sequence. Each position now says/shows “Stay there” while measuring, then confirms “Saved” before directing the next movement. The main heading changes to HOLD during measurement.
+- Added a 1.3-second movement-cue lead and 1.6-second continuous eligible hold, centrally configured. Interrupted or unsuitable observations reset the active hold; completed positions retain existing recovery behavior. Progress now reflects the announced hold, avoiding instant acceptance after movement.
+- Local voice prompts remain optional, with matching on-screen instructions and the existing completion chime. No video recording or additional data storage; no dependencies added.
+- Typecheck, lint and all 202 automated tests passed, including interrupted-hold recovery. Camera access and manual/device testing remain owner-operated.
+- Production build and diff whitespace check passed; local preview restarted on port 3101 for owner testing.

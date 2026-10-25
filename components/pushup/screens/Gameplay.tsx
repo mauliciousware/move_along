@@ -47,7 +47,7 @@ export function Gameplay({ onEnd, onCalibrate, engine, runtime, exercise="pushup
       runtime.setSignal(p,velocity,ok?frame.tPerfMs:-Infinity);previousP=p;previousTime=frame.tPerfMs;
       movement.update(frame.tPerfMs,{...signal,ok});
     });
-    function tracking(){runtime.setTracking(engine ? (engine.getSnapshot().usable ? 'TRACKING' : engine.getSnapshot().tracking === 'LOST_LONG' ? 'LOST_LONG' : 'LOST') : 'TRACKING');if(runtime.tracking!=='TRACKING')movement.interrupt();}
+    function tracking(){runtime.setTracking(engine ? (!engine.calibration ? 'LOST_LONG' : engine.getSnapshot().usable ? 'TRACKING' : engine.getSnapshot().tracking === 'LOST_LONG' ? 'LOST_LONG' : 'LOST') : 'TRACKING');if(runtime.tracking!=='TRACKING')movement.interrupt();}
     const untrack=engine?.subscribe(tracking);tracking();
     function key(event:KeyboardEvent) {
       if(event.key==='Escape'){runtime.pause();movement.interrupt();setSheet('pause');return;}
@@ -92,7 +92,7 @@ export function Gameplay({ onEnd, onCalibrate, engine, runtime, exercise="pushup
         {engine?<CameraSurface engine={engine} lanes runtime={runtime}/>:<GameCanvas runtime={runtime}/>}
         {(state.phase==='countdown' || state.phase==='reentry') && <Countdown count={state.count} reentry={state.phase==='reentry'}/>}
         {state.phase==='loading' && <div className="game-message" role="status">Loading local audio…</div>}
-        {state.phase==='lost' && <div className="game-message" role="status">TRACKING LOST — CHECK YOUR POSITION<br/><small>Music paused. Find your position, then resume.</small><Button onClick={resume}>READY TO RESUME</Button></div>}
+        {state.phase==='lost' && <div className="game-message" role="status">{engine && !engine.calibration ? 'SETUP CHANGED — RECALIBRATE' : 'TRACKING LOST — CHECK YOUR POSITION'}<br/><small>Music paused. Your score is kept.</small>{engine && !engine.calibration ? <Button onClick={async()=>{if(await runtime.prepareCalibration())onCalibrate();}}>RECALIBRATE</Button> : <Button onClick={resume}>READY TO RESUME</Button>}</div>}
         {state.phase==='error' && <div className="game-message" role="alert"><p>{state.error}</p><Button onClick={()=>void runtime.start()}>RETRY AUDIO</Button></div>}
       </div>
       <header className="song-console">

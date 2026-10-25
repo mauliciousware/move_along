@@ -225,7 +225,10 @@ export class PoseEngine {
     if (message.type !== "frame" || message.requestId !== this.inFlightId) return;
     this.busy = false; this.inFlightId = 0; this.poseCount++;
     const raw = message.frame;
-    const quality = assessFraming(raw, this.exercise);
+    const rect = this.video?.getBoundingClientRect?.();
+    const preview = rect && this.video ? { videoWidth: this.video.videoWidth, videoHeight: this.video.videoHeight, width: rect.width, height: rect.height } : undefined;
+    const quality = assessFraming(raw, this.exercise, preview);
+    const rawJoints = Object.fromEntries(Object.entries(raw.joints).map(([key, point]) => [key, point ? { ...point } : undefined]));
     const previous = this.frame;
     for (const name of JOINT_NAMES) {
       const point = raw.joints[name];
@@ -235,7 +238,7 @@ export class PoseEngine {
       point.x = filter.x.update(point.x, raw.tPerfMs);
       point.y = filter.y.update(point.y, raw.tPerfMs);
     }
-    this.frame = { ...raw, ...quality, setupId: this.setupId };
+    this.frame = { ...raw, rawJoints, ...quality, setupId: this.setupId };
     this.frameListeners.forEach(listener => listener(this.frame!));
     this.inferenceTotal += message.inferenceMs; this.inferenceCount++;
     this.metrics.inferenceMs = this.inferenceTotal / this.inferenceCount;

@@ -12,6 +12,10 @@ export interface PoseFrame {
   /** Midpoint of the left and right hips; equals the nose when hips are hidden. */
   waist: { x: number; y: number };
   shoulderWidth: number;
+  /** Unfiltered observations used only for calibration quality checks. */
+  rawNose?: { x: number; y: number };
+  rawWaist?: { x: number; y: number };
+  rawShoulderY?: number;
   confidence: number;
   ok: boolean;
   joints?: Partial<Record<BodyJoint, BodyPoint>>;
@@ -25,6 +29,16 @@ export interface Calibration {
   topY: number; bottomY: number;
   scale: number;
   scaleTop?: number; scaleBottom?: number;
+  profile?: {
+    schemaVersion: 2;
+    exercise: import('./types').ExerciseId;
+    featureId: 'nose-y' | 'waist-y';
+    modelVersion: 'mediapipe-lite-1.1.1';
+    verifiedCycles: 2;
+    noise: number;
+    samples: number;
+    createdAt: number;
+  };
 }
 export interface Note {
   id: string; time: number; type: NoteType; duration: number;

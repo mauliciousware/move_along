@@ -658,3 +658,16 @@
 .calibration-actions { display: flex; align-items: center; gap: 12px; }
 .pushup-experience .calibration-panel .calibration-actions .pushup-button { flex: 1; width: auto; }
 .calibration-restart { min-height: 44px; padding: 8px; color: #e2d5ff; text-decoration: underline; text-underline-offset: 4px; font-size: 12px; }
+
+.pushup-experience .calibration-countdown {
+  font-family: var(--font-pixel), monospace;
+  font-size: clamp(44px, 12vw, 64px);
+  line-height: 1.4;
+  color: #c9edb0;
+  margin: 12px 0;
+  font-variant-numeric: tabular-nums;
+}
+
+.calibration-details { color: #c4bfd5; font-size: 11px; text-align: left; margin-top: 10px; }
+.calibration-details summary { min-height: 44px; display: flex; align-items: center; justify-content: center; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
+.calibration-details pre { white-space: pre-wrap; font: 11px/1.5 monospace; padding: 10px; background: #07070d80; }

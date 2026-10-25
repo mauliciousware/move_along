@@ -89,3 +89,15 @@ it("extracts only configured numeric landmarks and respects presence confidence"
   expect(frame.tPerfMs).toBe(123);
   expect(assessFraming(frame, "situp").usable).toBe(false);
 });
+
+describe('visible preview crop', () => {
+  it('rejects required joints cropped off-screen even when visible in the camera source', () => {
+    const frame = fullPose();
+    frame.joints.leftElbow = {x:.1,y:.5,visibility:.99};
+    expect(assessFraming(frame,'pushup').usable).toBe(true);
+    expect(assessFraming(frame,'pushup',{videoWidth:640,videoHeight:480,width:390,height:844}).issue).toBe('edges');
+  });
+  it('keeps centered required joints usable in a portrait preview', () => {
+    expect(assessFraming(fullPose(),'pushup',{videoWidth:480,videoHeight:640,width:390,height:844}).usable).toBe(true);
+  });
+});
