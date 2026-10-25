@@ -18,10 +18,7 @@ export function assessFraming(frame: RawPoseFrame, exercise: ExerciseId, preview
   if (!Object.values(joints).some(visible) || !Number.isFinite(frame.tPerfMs)) return result("person");
   if (!visible(joints.nose)) return result("head");
   if (!visible(joints.leftShoulder) || !visible(joints.rightShoulder)) return result("upper");
-  if (exercise === "pushup") {
-    if (!visible(joints.leftElbow) || !visible(joints.rightElbow)) return result("upper");
-  } else if (![joints.leftHip, joints.rightHip, joints.leftKnee, joints.rightKnee].every(visible)) return result("legs");
-  if (exercise === "squat" && ![joints.leftAnkle, joints.rightAnkle].every(visible)) return result("feet");
+  if (exercise === "squat" && ![joints.leftHip, joints.rightHip].every(visible)) return result("legs");
   const margin = CONFIG.tracking.edgeMargin;
   if (required.some(name => {
     const p = joints[name]!;
@@ -63,7 +60,7 @@ export const FRAMING_COPY: Record<FramingIssue, { title: string; detail: string 
   person: { title: "Step into the frame", detail: "Face the camera in a well-lit space." },
   head: { title: "Bring your head into view", detail: "Adjust your distance or the phone angle." },
   upper: { title: "Show your shoulders and arms", detail: "Keep both sides of your upper body visible." },
-  legs: { title: "Show your hips and knees", detail: "Step back so your lower body is in the frame." },
+  legs: { title: "Show your hips", detail: "Keep both hips in view while you lower and rise." },
   feet: { title: "Bring both feet into view", detail: "Step back or adjust the phone angle." },
   edges: { title: "Give yourself a little more room", detail: "Keep your movement away from the edge of the frame." },
   none: { title: "Your framing looks ready", detail: "Hold your position while tracking settles." },

@@ -27,7 +27,7 @@ export const CALIBRATION_STEPS: Record<ExerciseId, readonly CalibrationStep[]> =
   ],
 };
 export type CalibrationState = { step: number; phase: 'measuring' | 'retry' | 'ready'; message: string; revision: number; cue: 'move' | 'hold' };
-export type CalibrationReason = 'posture' | 'observing' | 'missing' | 'stale' | 'unstable' | 'range' | 'repeat' | 'setup' | 'timeout' | 'body-motion' | 'verified';
+export type CalibrationReason = 'observing' | 'missing' | 'stale' | 'unstable' | 'range' | 'repeat' | 'setup' | 'timeout' | 'body-motion' | 'verified';
 const cfg = CONFIG.calibrationV2;
 
 export function validCalibration(value: unknown): value is Calibration {
@@ -65,13 +65,11 @@ export class CalibrationSession {
   state: CalibrationState;
   result: Calibration | null = null;
   progress = 0;
-  guidance = 'Get into the starting position. We will check your posture before measuring.';
+  guidance = 'Get into your comfortable starting position, then hold briefly.';
   reason: CalibrationReason = 'observing';
   posture: PostureReading | null = null;
-  private postureEndpoints: PostureReference[] = [];
+  private postureEndpoints: (PostureReference | undefined)[] = [];
   private postureEvidence: { t: number; angle: number; torso: number }[] = [];
-  private postureMessage = '';
-  private postureMessageSince = 0;
   readonly diagnostics = { acceptedFrames: 0, rejectedFrames: 0, windowResets: 0, validStepMs: 0, lastFrameAgeMs: 0, noise: 0 };
   private readonly steps: readonly CalibrationStep[];
   private readonly window = new EvidenceWindow();
@@ -100,9 +98,9 @@ export class CalibrationSession {
     this.window.clear(); this.postureEvidence = []; this.progress = 0;
   }
   private enter(step: number) {
-    this.captureSince = null; this.posture = null; this.postureMessage = '';
+    this.captureSince = null; this.posture = null;
     this.resetWindow(); this.diagnostics.validStepMs = 0;
-    this.reason = 'observing'; this.guidance = 'Move to the requested position. We will check before measuring.';
+    this.reason = 'observing'; this.guidance = 'Move to the requested position, then hold briefly.';
     this.change({ step, phase: 'measuring', cue: 'move', message: this.steps[step].instruction });
   }
   restart(now: number) {
@@ -138,23 +136,18 @@ export class CalibrationSession {
     else this.diagnostics.validStepMs += dt;
     this.missingSince = null; this.lastFrame = sample.t; this.diagnostics.acceptedFrames++;
     if (this.diagnostics.validStepMs >= cfg.validTimeoutMs) {
-      this.retry('timeout', this.reason === 'range' || this.reason === 'body-motion' || this.reason === 'posture'
+      this.retry('timeout', this.reason === 'range' || this.reason === 'body-motion'
         ? 'We could not distinguish your movement. Adjust the phone angle, then try again. Do not force a larger movement.'
         : 'This position did not settle. Rest or adjust the phone, then try again.'); return;
     }
     const target = this.steps[this.state.step].kind;
     const posture = assessPosture(frame!, this.exercise, target, this.postureEndpoints[0], this.postureEndpoints[1]);
     this.posture = posture;
-    if (!posture.eligible) {
-      this.resetWindow(); this.reason = 'posture'; this.guidance = posture.message;
-      if (this.postureMessage !== posture.message) { this.postureMessage = posture.message; this.postureMessageSince = sample.t; }
-      if (sample.t - this.postureMessageSince >= CONFIG.posture.feedbackSettleMs && this.state.message !== posture.message) {
-        this.change({ cue: 'move', message: posture.message });
-      }
-      return;
+    // Posture geometry is advisory for the demo. Perspective and hidden limbs
+    // must not veto otherwise usable head/shoulder or hip movement samples.
+    if (posture.angle !== undefined && posture.torso !== undefined && Number.isFinite(posture.angle) && Number.isFinite(posture.torso)) {
+      this.postureEvidence.push({t:sample.t,angle:posture.angle,torso:posture.torso});
     }
-    this.postureMessage = '';
-    this.postureEvidence.push({t:sample.t,angle:posture.angle!,torso:posture.torso!});
     while (this.postureEvidence.length > 1 && this.postureEvidence[0].t < sample.t - cfg.stableMs) this.postureEvidence.shift();
     if (this.postureEvidence.length > CONFIG.calibration.sampleCapacity) this.postureEvidence.shift();
     this.window.add(sample);
@@ -211,7 +204,7 @@ export class CalibrationSession {
     this.progress = Math.min(1, (sample.t - this.captureSince) / cfg.captureHoldMs, this.window.span / cfg.stableMs, this.window.count / cfg.minSamples, this.diagnostics.validStepMs / cfg.settleMs);
     if (this.progress < 1) return;
     this.endpoints.push(endpoint);
-    this.postureEndpoints.push({ angle: median(this.postureEvidence.map(p => p.angle)), hipY: endpoint.y, torso: median(this.postureEvidence.map(p => p.torso)) });
+    this.postureEndpoints.push(this.postureEvidence.length ? { angle: median(this.postureEvidence.map(p => p.angle)), hipY: endpoint.y, torso: median(this.postureEvidence.map(p => p.torso)) } : undefined);
     if (this.state.step < this.steps.length - 1) this.enter(this.state.step + 1);
     else this.finish();
   }

@@ -30,11 +30,13 @@ export function MoveAlongApp() {
         </div>
       </section>
       <div className="exercise-home-heading"><h2>Choose your movement</h2><span>01 — 02</span></div>
-      <div className="exercise-choices">{EXERCISE_IDS.map((id, index) => <Link href={`/${id}`} className={`exercise-choice choice-${id}`} key={id}>
+      {/* Squats used to have a permanent redirect. A distinct entry URL bypasses
+          cached redirects; native links also avoid stale client router entries. */}
+      <div className="exercise-choices">{EXERCISE_IDS.map((id, index) => <a href={id === 'squat' ? '/squat?entry=home' : `/${id}`} className={`exercise-choice choice-${id}`} key={id}>
         <span className="exercise-choice-number">0{index + 1}</span>
         <div><h2>{EXERCISES[id].name}</h2><p>{descriptions[id]}</p></div>
         <ArrowUpRight aria-hidden="true" />
-      </Link>)}</div>
+      </a>)}</div>
     </main>
     <footer className="exercise-home-footer"><LockKeyhole aria-hidden="true" /><span>Camera stays on your device.<br />Results stay in this session.</span></footer>
   </div>;

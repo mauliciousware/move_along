@@ -1,12 +1,13 @@
 import { describe, expect, it } from "vitest";
 import nextConfig from "./next.config";
+import { EXERCISE_IDS } from "./data/catalog";
 
-describe("retired exercise routes", () => {
-  it("redirects squat and march URLs home permanently", async () => {
+describe("exercise routes", () => {
+  it.each(EXERCISE_IDS)("keeps the active %s route reachable", async exercise => {
     const redirects = await nextConfig.redirects!();
-    expect(redirects).toEqual(expect.arrayContaining([
-      { source: "/squat", destination: "/", permanent: true },
-      { source: "/march", destination: "/", permanent: true },
-    ]));
+    expect(redirects.some(rule => rule.source === `/${exercise}`)).toBe(false);
+  });
+  it("redirects the retired march URL home", async () => {
+    expect(await nextConfig.redirects!()).toContainEqual({ source: "/march", destination: "/", permanent: true });
   });
 });

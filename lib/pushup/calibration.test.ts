@@ -56,7 +56,7 @@ describe('learn-and-verify calibration', () => {
   });
   it('never accepts an unchanged position as a movement', () => {
     const d = driver(); d.hold(.3, 10000);
-    expect(d.session.state.step).toBe(1); expect(d.session.result).toBeNull(); expect(d.session.reason).toBe('posture');
+    expect(d.session.state.step).toBe(1); expect(d.session.result).toBeNull(); expect(d.session.reason).toBe('range');
   });
   it('rejects head-only motion without shoulder travel', () => {
     const d = driver(); d.hold(.3);
@@ -87,6 +87,20 @@ describe('learn-and-verify calibration', () => {
   it('does not show completed progress before enough valid settling time', () => {
     const d = driver(); d.hold(.3, 1000);
     expect(d.session.state.step).toBe(0); expect(d.session.progress).toBeLessThan(1);
+  });
+  it('accepts a smaller comfortable range despite ambiguous limb geometry', () => {
+    const d=driver();
+    for(const y of [.3,.38,.3,.38,.3]) d.hold(y);
+    expect(d.session.state.phase).toBe('ready');
+    expect(d.session.result?.bottomY).toBeCloseTo(.38);
+  });
+  it('accepts modest natural wobble while still separating up and down', () => {
+    const session=new CalibrationSession('pushup',0,()=>{});
+    let t=0;
+    for(const y of [.3,.65,.3,.65,.3]) for(let i=0;i<75;i++) {
+      t+=50; session.update(pose(t,y+(i%3-1)*.008),t);
+    }
+    expect(session.state.phase).toBe('ready');
   });
   it('accepts repeatable endpoints with small measurement noise', () => {
     const session = new CalibrationSession('pushup', 0, () => {});

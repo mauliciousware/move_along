@@ -12,24 +12,34 @@ describe("exercise-aware camera framing", () => {
   it.each(["pushup", "squat"] as const)("accepts a fully visible %s pose", exercise => {
     expect(assessFraming(fullPose(), exercise).usable).toBe(true);
   });
-  it("requires hips, knees and ankles for squats, but not foot tips", () => {
+  it("requires hips for squats but allows hidden knees and ankles", () => {
     const frame = fullPose();
     delete frame.joints.leftFoot;
     expect(assessFraming(frame, "squat").usable).toBe(true);
-    delete frame.joints.leftKnee;
+    delete frame.joints.leftHip;
     expect(assessFraming(frame, "squat").issue).toBe("legs");
     expect(assessFraming(frame, "pushup").usable).toBe(true);
   });
-  it("asks to show the ankles before squat calibration", () => {
+  it("allows squat framing without ankles", () => {
     const frame = fullPose(); delete frame.joints.leftAnkle;
-    expect(assessFraming(frame, "squat").issue).toBe("feet");
+    expect(assessFraming(frame, "squat").usable).toBe(true);
+  });
+  it("keeps only movement-critical joints mandatory", () => {
+    const frame = fullPose();
+    for (const joint of ["leftElbow","rightElbow","leftWrist","rightWrist","leftKnee","rightKnee","leftAnkle","rightAnkle"] as const) delete frame.joints[joint];
+    for (const exercise of ["pushup","squat"] as const) {
+      expect(assessFraming(frame,exercise)).toMatchObject({usable:true,confidence:.95});
+    }
+    delete frame.joints.leftHip; delete frame.joints.rightHip;
+    expect(assessFraming(frame,"pushup").usable).toBe(true);
+    expect(assessFraming(frame,"squat").usable).toBe(false);
   });
   it("never accepts guessed, low-confidence or non-finite required joints", () => {
     const frame = fullPose();
-    frame.joints.leftKnee!.visibility = CONFIG.tracking.minConfidence - 0.01;
+    frame.joints.leftHip!.visibility = CONFIG.tracking.minConfidence - 0.01;
     expect(assessFraming(frame, "squat").issue).toBe("legs");
-    frame.joints.leftKnee!.visibility = 1;
-    frame.joints.leftKnee!.x = NaN;
+    frame.joints.leftHip!.visibility = 1;
+    frame.joints.leftHip!.x = NaN;
     expect(assessFraming(frame, "squat").usable).toBe(false);
     expect(visible({ x: 0.5, y: 1.1, visibility: 1 })).toBe(false);
   });
@@ -97,7 +107,7 @@ it("extracts only configured numeric landmarks and respects presence confidence"
 describe('visible preview crop', () => {
   it('rejects required joints cropped off-screen even when visible in the camera source', () => {
     const frame = fullPose();
-    frame.joints.leftElbow = {x:.1,y:.5,visibility:.99};
+    frame.joints.leftShoulder = {x:.1,y:.5,visibility:.99};
     expect(assessFraming(frame,'pushup').usable).toBe(true);
     expect(assessFraming(frame,'pushup',{videoWidth:640,videoHeight:480,width:390,height:844}).issue).toBe('edges');
   });

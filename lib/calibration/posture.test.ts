@@ -10,15 +10,17 @@ describe('posture-aware calibration', () => {
     expect(assessPosture(squatPose(0), 'squat', 'down', top)).toMatchObject({label:'standing',eligible:false});
     expect(assessPosture(squatPose(0,.7), 'squat', 'down', top)).toMatchObject({label:'lowered',eligible:true});
   });
-  it('cannot begin at a squat or save a middle position as standing', () => {
-    const session = new CalibrationSession('squat',0,()=>{});
-    for(let t=50;t<=4000;t+=50)session.update(squatPose(t,.7),t);
-    expect(session.state.step).toBe(0);
-    expect(session.reason).toBe('posture');
-    expect(session.progress).toBe(0);
-    expect(session.state.message).toContain('Stand');
-    for(let t=4050;t<=7500;t+=50)session.update(squatPose(t),t);
-    expect(session.state.step).toBe(1);
+  it.each(['pushup','squat'] as const)('completes %s calibration without optional posture landmarks', exercise => {
+    const session = new CalibrationSession(exercise,0,()=>{});
+    let t=0;
+    const heights=exercise==='squat'?[.4,.7,.4,.7,.4]:[.3,.65,.3,.65,.3];
+    for(const y of heights) for(let i=0;i<70;i++) {
+      t+=50;
+      const frame=exercise==='squat'?squatPose(t,y):pushupPose(t,y);
+      session.update({...frame,postureJoints:undefined,aspectRatio:undefined},t);
+    }
+    expect(session.state.phase).toBe('ready');
+    expect(session.result?.profile?.verifiedCycles).toBe(2);
   });
   it('blocks upright people and bent-arm middle positions from the push-up top', () => {
     const standing = pushupPose(0,.3);
@@ -50,12 +52,14 @@ describe('posture-aware calibration', () => {
     expect(changed.angle).toBeCloseTo(original.angle!);
     expect(changed.eligible).toBe(original.eligible);
   });
-  it('restarts a measurement hold if the posture becomes wrong', () => {
+  it('keeps measuring when optional joints disappear during a steady hold', () => {
     const session=new CalibrationSession('pushup',0,()=>{});
     for(let t=50;t<=1800;t+=50)session.update(pushupPose(t,.3),t);
     expect(session.state.cue).toBe('hold');
-    session.update(pushupPose(1850,.65),1850);
-    expect(session.progress).toBe(0); expect(session.state.cue).toBe('move');
+    const before=session.progress;
+    session.update({...pushupPose(1850,.3),postureJoints:undefined},1850);
+    expect(session.progress).toBeGreaterThan(before);
+    expect(session.state.cue).toBe('hold');
     expect(session.state.step).toBe(0);
   });
 });

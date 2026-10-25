@@ -1,30 +1,29 @@
-# Calibration v3: owner test guide
+# Calibration: forgiving demo flow
 
-The second exercise is now **Squats** (stand → squat → stand), as clarified by the owner. The old `/situp` URL redirects to `/squat`. There is no floor sit-up mode in this version.
+Updated 2026-10-25 after the owner reported that mandatory posture checks blocked both exercises on the real camera. The second exercise is Squats (stand → squat → stand); `/situp` redirects to `/squat`.
 
 ## Squats
 
-1. Prop the phone upright, slightly diagonally in front of you. Step back until your head, shoulders, hips, knees and ankles are visible throughout the movement. A diagonal view helps the camera see knee bending.
-2. Tap Play. The preparation countdown remains three seconds. Calibration waits for usable framing.
-3. Start standing comfortably. The app checks torso alignment and knee/hip angles before it measures the top position.
-4. Follow **STAND → SQUAT → STAND → SQUAT → STAND**. At each accepted posture, it says “Stay there. Measuring,” fills the hold bar, then confirms “Saved” and announces the next movement.
-5. Standing during a SQUAT prompt should show “You are still standing.” Beginning in a crouch should ask you to stand. Intermediate or unclear geometry should not fill the measurement bar.
-6. The repeated squat is compared with the first comfortable squat endpoint. Calibration does not ask you to reach a universal squat depth.
+1. Prop the phone upright facing you. Keep your head, both shoulders and both hips visible. Knees and ankles are optional.
+2. Tap Play. There is a three-second preparation countdown, then calibration waits for usable tracking.
+3. Start standing comfortably and follow **STAND → SQUAT → STAND → SQUAT → STAND**.
+4. Each position says “Stay there. Measuring,” fills the hold bar, then says “Saved” and announces the next move.
+5. Squat within your comfortable range. The app learns your height change and checks that you can repeat it; no exact knee angle or universal depth is required.
 
 ## Push-ups
 
-Place the phone near the floor, slightly to your side, keeping your head, shoulders, elbows, wrists and hips visible. A clear arm and torso view is now needed for calibration.
+Place the phone near the floor, facing you. Keep your head and both shoulders visible. Wrists, elbows and hips are optional for calibration.
 
-Follow **UP → DOWN → UP → DOWN → UP**. An upright torso cannot establish the top plank. Bent arms cannot establish the top position. A lower position needs visible arm bending, head/shoulder travel and a steady hold. Repeated endpoints must agree. If the view is unclear, adjust the phone rather than forcing more movement.
+Start in your comfortable top position and follow **UP → DOWN → UP → DOWN → UP**. The app measures your head movement with shoulder movement as corroboration. It allows moderate wobble and variation between repetitions.
 
-## What changed
+## What still matters
 
-- Full raw numeric landmarks and source aspect ratio now reach calibration. Angle calculations correct for the source aspect ratio.
-- Posture checks gate every measurement frame. Interrupted or incompatible posture resets the active hold while retaining earlier valid endpoints.
-- The screen shows a live **Position estimate**. Specific correction messages settle for 500 ms before they are spoken, reducing prompt flicker.
-- A bounded sample window supplies median angle and torso references. No video or images are saved; posture buffers stay in memory.
-- Derived calibration profiles use version 3. Older profiles are not restored.
+- Follow the starting-position prompt. Posture estimates are advisory diagnostics and do not verify that your form is correct.
+- Up and down must be visibly different. Remaining still cannot complete calibration.
+- Fresh, usable samples and a short steady hold are still required. No progress is fabricated when tracking is missing.
+- Brief tracking loss resets the current measurement hold; earlier saved positions are kept. A longer interruption offers Try again.
+- Large camera/distance changes can still require restarting setup.
 
-These are view-dependent geometric estimates, not a trained posture classifier or a form/safety grade. A single 2D view cannot always distinguish poses; uncertain evidence blocks measurement. Thresholds need physical-device feedback. The agent has not accessed the camera or performed manual tests.
+Posture geometry is available under Setup details for debugging, but uncertain angles cannot block setup or interrupt a valid hold. The camera saves no video or pictures. No manual/camera testing was performed by the agent for this revision.
 
-If stuck, report the exercise, current prompt, Position estimate, and the reason/angle/pose Hz shown under **Setup details**. No camera photo is required.
+If it gets stuck, report the exercise, exact prompt and the reason/pose Hz under Setup details. The owner performs the real-device test.

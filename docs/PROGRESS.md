@@ -563,3 +563,29 @@ Verification:
 - No dependencies added. Typecheck, lint and 210 automated tests passed. Synthetic tests cover standing-vs-squat, middle-vs-top, joint confidence/visibility, aspect ratio/mirroring, recovery and raw-landmark forwarding. These are not physical-device evidence.
 - No camera/browser/manual testing by the agent, per owner instruction. Camera angle, occlusion and individual range remain owner testing items. See `docs/CALIBRATION_V3_TEST_GUIDE.md` for the expected flow and limitations.
 - Production build and diff whitespace check passed. Local app restarted on port 3101 for owner testing.
+
+## Forgiving demo calibration — 2026-10-25
+
+- Ran `git pull --ff-only` on main: already up to date with origin/main at ede54d8. The working tree was clean before this change.
+- Owner reported that v3 posture checks blocked both exercises on the real camera. Changed joint-angle classification to advisory diagnostics; it no longer vetoes capture or resets a measurement hold. Optional missing geometry is never stored as NaN references.
+- Reduced mandatory framing to head/both shoulders for push-ups, plus both hips for squats. Knees, ankles, wrists and elbows are optional; optional joints no longer lower framing confidence or trigger crop rejection.
+- Relaxed stability/noise, minimum movement, shoulder-travel and repeated-endpoint tolerances. Retained actual directional movement, fresh/confident core points, brief hold/voice cues, tracking-loss recovery and setup-change detection. No fabricated progress or blanket skip.
+- Updated setup copy and the owner test guide to match the relaxed requirements. Removed potentially confusing public posture estimates; diagnostic estimates remain available in Setup details.
+- Typecheck, lint and 214 automated tests passed, including both exercises without optional posture joints, moderate wobble, smaller ranges and uninterrupted holds when optional joints disappear. Existing no-movement, head-only, frozen-frame and missing-tracking regressions still pass.
+- No camera/browser/manual testing performed by the agent. Real-device confirmation remains with the owner.
+- Production build and diff whitespace check passed. Restarted the local production app on port 3101 for owner testing.
+
+## Squats navigation repair — 2026-10-25
+
+- Reproduced the owner's click failure in a mobile-sized Chromium browser: clicking Squats returned to `/` with no JavaScript error. Direct `/squat` returned HTTP 308 to `/`.
+- Removed the obsolete permanent `/squat` → `/` redirect from next.config.ts. It took precedence over the restored squat page. Kept the retired march redirect.
+- Replaced the stale redirect test with guards covering every active exercise route, so an exercise cannot simultaneously appear in the catalog and be redirected away.
+- Typecheck, lint, 216 unit tests and production build passed. Restarted the local production server on port 3101.
+- Browser verification at 390 × 844: home → Squats opened the Squats screen with PLAY and soundtrack controls; back → Push-ups passed; legacy `/situp` reached Squats; direct `/squat` returned HTTP 200. No browser JavaScript errors and zero camera requests. This verifies navigation, not physical calibration.
+
+## Home navigation with an already-cached redirect — 2026-10-25
+
+- A fresh browser passed while the owner still could not navigate. Reproduced the missing case using a local HTTP proxy and real Chromium cache: cached a permanent `/squat` → `/` response, removed it server-side, and confirmed the same browser still returned home.
+- Home exercise choices now use native anchor navigation. The squat entry uses `/squat?entry=home`, a distinct URL that bypasses the historical cached redirect and stale client router entries. The canonical squat route remains available.
+- Verified mobile touch navigation (390 × 844) in the same cache-contaminated browser: tapping Squats reached its heading, soundtrack/PLAY screen; back and Push-ups passed. No JavaScript errors or camera requests. This specifically covers the case missed by the previous fresh-browser test.
+- Typecheck, lint and production build passed; local production app restarted on port 3101. Queued a fresh homepage URL in Codex so the owner can load the updated link. All 216 unit tests also passed.

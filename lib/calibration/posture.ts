@@ -16,8 +16,8 @@ function angle(a: Point, b: Point, c: Point) {
 }
 
 /** View-dependent geometry estimates, not a form grade or a trained posture model.
- * Missing/ambiguous evidence blocks capture. A comfortable lower endpoint is learned
- * only after a verified top and a stable hold; repeat passes check that endpoint.
+ * These estimates are diagnostics only: missing/ambiguous geometry does not block
+ * calibration. Actual movement separation and stable samples still gate capture.
  */
 export function assessPosture(frame: PoseFrame, exercise: ExerciseId, target: 'up' | 'down', top?: PostureReference, bottom?: PostureReference): PostureReading {
   const unclear = (message: string): PostureReading => ({ label: 'unclear', eligible: false, message });
