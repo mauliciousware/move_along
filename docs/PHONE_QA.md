@@ -120,6 +120,28 @@ Old squat/march URLs must return home. Physical trials remain deferred by the
 owner; automated, mocked and keyboard tests do not sign off physical exercise
 detection, iPhone Safari support or the waist-centre signal on real hardware.
 
+## Immersive gameplay shell (phone)
+
+Open either exercise on the updated HTTPS build and enter gameplay.
+
+1. The camera must fill the portrait screen edge to edge. No site header, white
+   page margin, instruction line or footer may remain around the stage.
+2. Confirm the top HUD clears the notch/status area and the bottom dock clears the
+   home indicator and Safari's bottom toolbar while it is visible. Pause and STOP
+   must both remain reachable at 56px and must not sit over the movement area.
+3. Read the title/time, set/score and reps/progress/hold time over a bright, busy
+   room. Nothing should disappear against the camera.
+4. Rotate to landscape: the `TURN PHONE UPRIGHT` guard must cover the screen and
+   STOP must still end the workout.
+5. Pause, STOP and finish. The phone must leave the fixed dark stage, restore the
+   normal results page and scrolling, and leave no dark background lock behind.
+6. In `?debug=1`, start the keyboard demo. It should use the same full-screen dark
+   stage without requesting the camera or showing white page chrome.
+7. Record whether the 3:4 camera stream's cover crop still keeps your head,
+   shoulders and elbows visible enough to track during the whole set. If it does
+   not, report the missing body parts; do not switch the detector to a different
+   joint silently.
+
 ## Record actual evidence
 
 - iPhone model / iOS / Safari version:
@@ -137,6 +159,9 @@ detection, iPhone Safari support or the waist-centre signal on real hardware.
 - Push-up calibration still MIDDLE → UP → DOWN:
 - `/squat` and `/march` redirect home:
 - Push-up upper-body framing:
+- Immersive stage: full-bleed camera / HUD safe areas / Safari toolbar clearance:
+- Immersive stage: camera cover crop keeps head, shoulders and elbows visible:
+- Immersive stage: pause/STOP reachable; landscape guard STOP works:
 - Loss / stable recovery / rotation / background / STOP:
 - Pose Hz / inference ms / render FPS / React updates after 60 seconds:
 - Network audit:

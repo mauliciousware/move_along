@@ -453,3 +453,62 @@ units and divide it by the measured shoulder width. If travel is below
 `minVerticalRange` (0.25 × shoulder width), stop and report the measured values
 rather than switching to the shoulder centre. Run the sit-up checklist in
 `docs/PHONE_QA.md` on an HTTPS build and record the rows there.
+
+## Immersive portrait gameplay shell — 2026-10-24
+
+Owner feedback: during play the camera should fill the portrait screen, with the
+controls and score floating over it rather than sitting in a framed card on a
+white page. The supplied reference image guided the layout. The existing 8bitcn
+pixel identity and colours were retained; this is not a glossy-neon restyle.
+
+- On phone-width viewports (`max-width: 700px`) the gameplay screen is now a
+  fixed, full-viewport stage using `100dvh` with a `100svh` fallback. The site
+  header, page margins, instruction line and footer are removed from view, and
+  the camera/canvas fills the stage. Desktop keeps the existing centred arena.
+- The HUD floats over the camera in safe-area bands. The top gradient holds the
+  song title, artist, elapsed/total time, a 56px pause control and a 56px STOP.
+  Set/combo and score/streak sit in the upper corners. Reps, session progress and
+  hold time (or accuracy for rhythm play) sit in the bottom gradient. `STOP` stays
+  visible in every game state, including countdown, tracking loss and pause.
+- `html.gameplay-immersive` locks the page background and scrolling only while the
+  phone game is active; the theme colour changes to `#07070d` and is restored on
+  pause, results and unmount. The pause glyph is now an SVG with an accessible
+  label, and STOP has an explicit accessible name. There are no per-frame React
+  updates, and no changes to game logic, scoring, audio, camera constraints,
+  persistence, analytics or privacy behaviour.
+- The keyboard demo uses the same full-viewport dark stage. `?dev=1` diagnostics
+  are moved above the bottom dock on phone widths.
+- Phone and desktop stay intentionally different: the immersive stage begins at
+  700px so a wide desktop window keeps the readable centred card.
+
+Verification:
+
+- `npm run typecheck`, `npm run lint`, all 183 tests and `npm run build` pass.
+- Headless Chrome against the production build at 390×844 and 360×800 measured
+  the arena at the full viewport, equal document and viewport scroll sizes
+  (`390×844`, `360×800`), hidden header and instruction, a 102–104px top console
+  and an 86–88px bottom dock. Pause and STOP measured 56px high.
+- The same check at 1440×900 kept the previous centred arena (540×772) with the
+  header visible, confirming the phone-only boundary.
+- A synthetic background image was injected only in the headless test browser to
+  check HUD contrast. No camera was opened, and no frames were captured or saved.
+- A stale Turbopack production cache initially served the previous CSS chunk;
+  clearing `.next/cache/turbopack` produced a build containing the new block. The
+  final checks used that clean build.
+- Physical iPhone Safari remains pending. The full-bleed stage uses `dvh`, so the
+  phone check must confirm that the bottom dock clears Safari's toolbar and the
+  home indicator, that the 3:4 camera stream's cover crop keeps head, shoulders and
+  elbows visible, and that the landscape guard still shows STOP. No device evidence
+  is claimed from these local checks. The new phone steps are in `docs/PHONE_QA.md`.
+
+
+## Mobile UI polish — 2026-10-24
+
+- Verified `main` matches fetched `origin/main` at `ccac6ab`; no open PRs.
+- Preserved the existing uncommitted immersive-gameplay changes.
+- Refined mobile home row surfaces, arrow affordances and header contrast without changing layout dimensions.
+- Styled the native soundtrack picker with decorative music/chevron icons and associated its description for assistive technology. Selection and workout behavior remain unchanged.
+- Added 160ms press feedback with reduced-motion and pointer gating; no dependencies added.
+- Production Chromium checks: home, push-up and sit-up ready screens at 320, 390, 430 and 768px; no horizontal overflow and unchanged page/control geometry. Song selection and keyboard focus passed. Mobile screenshots inspected; reduced-motion transforms suppressed.
+- Passed typecheck, lint, 183 tests and production build (including audio asset check).
+- Physical iPhone Safari remains untested in this UI pass.

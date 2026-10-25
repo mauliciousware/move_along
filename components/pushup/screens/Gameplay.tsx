@@ -98,8 +98,10 @@ export function Gameplay({ onEnd, onCalibrate, engine, runtime, exercise="pushup
         <div className="song-emblem" aria-hidden="true"><svg viewBox="0 0 64 64"><path d="M4 34h12l7-20 12 37 9-27 6 10h10"/><circle cx="32" cy="32" r="28"/></svg></div>
         <div className="song-console-title"><span className="console-eyebrow">MOVE ALONG / NOW PLAYING</span><strong>{runtime.title}</strong><span className="console-artist">{runtime.artist} · INTERMEDIATE</span></div>
         <div className="song-time"><span ref={elapsed}>0:00</span><span> / {formatTime(runtime.game.map.durationMs)}</span></div>
-        <button className="pause-button" aria-label="Pause workout" onClick={()=>pause('pause')}>Ⅱ</button>
-        <button className="stop-button" onClick={finish}>■ STOP</button>
+        <button className="pause-button" aria-label="Pause workout" onClick={()=>pause('pause')}>
+          <svg viewBox="0 0 12 16" aria-hidden="true" focusable="false"><rect x="1" y="1" width="3.5" height="14"/><rect x="7.5" y="1" width="3.5" height="14"/></svg>
+        </button>
+        <button className="stop-button" aria-label="Stop workout and see results" onClick={finish}><span aria-hidden="true">■</span> STOP</button>
       </header>
       <div className="arena-stats">
         <div className="combo-block"><span className="console-eyebrow">{flow?'SET':'COMBO'}</span><strong key={flow?summary.set:stats.combo} className="combo-number">{flow?`${summary.set}/${summary.sets}`:String(stats.combo).padStart(2,'0')}</strong><span className="combo-caption">{flow?`${summary.repsInSet}/${summary.repsPerSet} REPS THIS SET`:stats.combo>=CONFIG.game.tierCombos[3]?'ON FIRE':stats.combo?'KEEP THE RHYTHM':'FIND YOUR RHYTHM'}</span></div>

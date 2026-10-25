@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
+import { ChevronDown, Music2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { Button } from './ui/Button';
 import { AutoCalibration } from './screens/AutoCalibration';
@@ -39,6 +40,18 @@ export default function Workout({ exercise = 'pushup' }: { exercise?: ExerciseId
   const movement = EXERCISES[exercise];
 
   useEffect(() => { window.scrollTo({ top: 0, behavior: 'instant' }); }, [screen, attempt]);
+  useEffect(() => {
+    const immersive = screen === 'game' && window.matchMedia('(max-width: 700px)').matches;
+    const root = document.documentElement;
+    const meta = document.querySelector<HTMLMetaElement>('meta[name="theme-color"]');
+    const previous = meta?.content;
+    root.classList.toggle('gameplay-immersive', immersive);
+    if (immersive && meta) meta.content = '#07070d';
+    return () => {
+      root.classList.remove('gameplay-immersive');
+      if (meta && previous) meta.content = previous;
+    };
+  }, [screen]);
   useEffect(() => () => { ++run.current; engine.stop(); stopSpeech(); }, [engine]);
   useEffect(() => () => runtime.dispose(), [runtime]);
   useEffect(() => {
@@ -122,7 +135,17 @@ export default function Workout({ exercise = 'pushup' }: { exercise?: ExerciseId
         <Link href="/" className="exercise-back">← All movements</Link>
         <h1>{movement.name}.</h1>
         <p>{exercise === 'pushup' ? 'Two rings: lower to fill DOWN, rise to fill UP. The lit ring shows your next move. The song is background music.' : 'Two rings: lie down to fill DOWN, sit up to fill UP. The lit ring shows your next move. The song is background music.'}</p>
-        <div className="compact-track"><label htmlFor="soundtrack">Soundtrack</label><select id="soundtrack" value={song.id} onChange={event => setSong(songs.find(track => track.id === event.target.value)!)}>{songs.map(track => <option key={track.id} value={track.id}>{track.title} · {track.artist}</option>)}</select><span>{song.description}</span></div>
+        <div className="compact-track">
+          <label htmlFor="soundtrack">Soundtrack</label>
+          <div className="track-picker">
+            <Music2 className="track-picker-note" aria-hidden="true" />
+            <select id="soundtrack" aria-describedby="soundtrack-description" value={song.id} onChange={event => setSong(songs.find(track => track.id === event.target.value)!)}>
+              {songs.map(track => <option key={track.id} value={track.id}>{track.title} · {track.artist}</option>)}
+            </select>
+            <ChevronDown className="track-picker-chevron" aria-hidden="true" />
+          </div>
+          <span id="soundtrack-description">{song.description}</span>
+        </div>
         <Button onClick={() => play()}>PLAY</Button>
         <p className="ready-hint">Allow the camera, get into position, and follow automatic calibration. The game starts when you’re ready.</p>
         <p className="ready-safety">Rest or stop anytime. Stop if you feel pain or dizziness.</p>
